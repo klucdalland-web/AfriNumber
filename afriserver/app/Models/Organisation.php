@@ -11,4 +11,9 @@ class Organisation extends Model
     {
         return $this->hasMany(Pays::class);
     }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
 }

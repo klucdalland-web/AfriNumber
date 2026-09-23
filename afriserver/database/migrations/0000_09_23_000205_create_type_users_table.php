@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('type_users', function (Blueprint $table) {
             $table->id();
+            $table->string('label', 200);
+            $table->string('code', 50)->unique();
+            $table->string('description', 500)->nullable();
+            $table->boolean('actif')->default(true);
             $table->timestamps();
         });
     }
