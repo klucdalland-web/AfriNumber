@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Organisation extends Model
 {
+    protected $fillable = [
+        'label',
+        'description',
+        'actif',
+    ];
     public function pays(): HasMany
     {
         return $this->hasMany(Pays::class);

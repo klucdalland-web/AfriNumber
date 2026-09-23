@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('organisations', function (Blueprint $table) {
             $table->id();
+            $table->string('label', 200);
+            $table->string('description', 500)->nullable();
+            $table->boolean('actif')->default(true);
             $table->timestamps();
         });
     }
