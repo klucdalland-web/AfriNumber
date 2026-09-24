@@ -25,8 +25,15 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'organisation_id' => null,
+            'type_user_id' => null,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'phone_number' => fake()->unique()->e164PhoneNumber(),
+            'statut' => 'actif',
+                    'first_name' => fake()->firstName(), // <-- Ajoutez cette ligne
+
+            'status_valide' => 'non_valide',
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
