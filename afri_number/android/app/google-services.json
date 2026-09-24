@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "561914010451",
+    "project_id": "afrinet-d6fb8",
+    "storage_bucket": "afrinet-d6fb8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561914010451:android:7412b2125dbe4ce1091fa6",
+        "android_client_info": {
+          "package_name": "com.example.afri_number"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVkRSRzQFsV2VoOP9ZNXSRDaUhWtskroU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
