@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'check.token.expiration' => \App\Http\Middleware\CheckTokenExpiration::class,
         'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+        "x-api-key-v1" => \App\Http\Middleware\XApiKeyV1Middleware::class,
     ]);
         $middleware->redirectGuestsTo(function (Request $request): ?string {
             if ($request->is('api/*')) {

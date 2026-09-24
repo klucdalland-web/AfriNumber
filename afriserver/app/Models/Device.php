@@ -8,6 +8,19 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Device extends Model
 {
+    protected $fillable = [
+    'user_id',
+    'platform_id',
+    'name',
+    'type',
+    'identifier',
+    'os',
+    'os_version',
+    'model',
+    'manufacturer',
+    'actif',
+    'last_used_at',
+];
     public function sessionUser(): HasOne
     {
         return $this->hasOne(SessionUser::class);

@@ -8,15 +8,19 @@ use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
+use App\Models\Device;
+use App\Models\DeviceTokenFcm;
 use App\Models\Pays;
+use App\Models\Platform;
+use App\Models\SessionUser;
 use App\Models\TypeUser;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
-        use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
@@ -91,6 +95,55 @@ class AuthController extends Controller
         }
 
         $user->load(['typeUser', 'organisation']);
+
+        $platform = Platform::query()
+            ->whereRaw('LOWER(label) = ?', [strtolower($validated['platform'])])
+            ->first();
+
+        if (! $platform) {
+            return ApiResponse::error('Application invalide. Veuillez changer de plateforme.', null, 400);
+        }
+
+       $device = Device::query()->updateOrCreate(
+        [
+            'user_id' => $user->id,
+            'identifier' => $validated['device_id'],
+        ],
+        [
+            'platform_id' => $platform->id,
+            'name' => $validated['device_name'] ?? 'Appareil',
+            'model' => $validated['device_model'],
+            'os_version' => $validated['os_version'],
+            'actif' => true,
+            'last_used_at' => now(),
+        ]
+    );
+
+    SessionUser::query()->updateOrCreate(
+        ['device_id' => $device->id],
+        [
+            'user_id' => $user->id,
+            'user_agent' => $request->userAgent(),
+            'ip_address' => $request->ip(),
+            'is_active' => true,
+        ]
+    );
+
+  // Supprime toute association existante pour ce token (appartenant à un autre device)
+    DeviceTokenFcm::query()
+        ->where('token', $validated['fcm_token'])
+        ->where('device_id', '!=', $device->id)
+        ->delete();
+
+    // Puis crée/actualise pour ce device précis
+    DeviceTokenFcm::query()->updateOrCreate(
+        ['device_id' => $device->id],
+        [
+            'token' => $validated['fcm_token'],
+            'actif' => true,
+        ]
+    );
+
 
         $deviceName = $validated['device_name'] ?? 'api';
 

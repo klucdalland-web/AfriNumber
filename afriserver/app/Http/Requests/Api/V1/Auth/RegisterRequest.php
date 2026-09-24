@@ -24,8 +24,16 @@ class RegisterRequest extends FormRequest
             'phone_number' => ['required', 'string', 'max:30', 'unique:users,phone_number'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'type_user_id' => ['nullable', 'integer', 'exists:type_users,id'],
-            'device_name' => ['nullable', 'string', 'max:255'],
             'first_name' => ['required', 'string', 'max:255'],
+
+
+            'platform' => ['required', 'string', 'in:android,ios'],
+            'device_id' => ['required', 'string'],
+            'device_name' => ['required', 'string', 'max:100'],
+            'device_model' => ['required', 'string', 'max:100'],
+            'os_version' => ['required', 'string', 'max:50'],
+            'app_version' => ['required', 'string', 'max:20'],
+            'fcm_token' => ['required', 'string', 'max:1000'],
             
         ];
     }
