@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,8 +15,12 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    public function boot(): void
+    public function boot(UrlGenerator $url): void
     {
+        if ($this->app->environment('production')) {
+            $url->forceScheme('https');
+        }
+
             RateLimiter::for('login', function (Request $request) {
                     $key = $request->ip();
 
