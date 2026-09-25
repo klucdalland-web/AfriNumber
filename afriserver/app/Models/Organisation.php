@@ -13,7 +13,6 @@ class Organisation extends Model
         'description',
         'actif',
     ];
-
     public function pays(): HasMany
     {
         return $this->hasMany(Pays::class);
