@@ -9,7 +9,7 @@ COPY public ./public
 RUN npm run build
 
 # PHP / Nginx runtime (Render has no native PHP runtime)
-FROM richarvey/nginx-php-fpm:3.1.6
+FROM hrvoice/nginx-php-fpm:8.3.13
 
 COPY . .
 COPY --from=frontend /app/public/build /var/www/html/public/build
