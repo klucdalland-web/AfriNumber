@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\NumberController;
+
+Route::get('/numbers/search', [NumberController::class, 'search']);
+Route::post('/numbers/buy', [NumberController::class, 'buy']);
 
 Route::prefix('v1')
     ->name('v1.')
