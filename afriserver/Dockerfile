@@ -1,4 +1,6 @@
-# Frontend build
+# syntax=docker/dockerfile:1.4
+
+# --- Frontend build ---
 FROM node:22-alpine AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -8,20 +10,67 @@ COPY resources ./resources
 COPY public ./public
 RUN npm run build
 
-# PHP / Nginx runtime (Render has no native PHP runtime)
-FROM hrvoice/nginx-php-fpm:8.3.13
+# --- PHP / Nginx runtime ---
+FROM php:8.3-fpm-alpine
+
+RUN apk add --no-cache \
+    nginx supervisor bash git unzip \
+    libzip-dev oniguruma-dev icu-dev postgresql-dev \
+    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip intl bcmath opcache \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+WORKDIR /var/www/html
 
 COPY . .
-COPY --from=frontend /app/public/build /var/www/html/public/build
+COPY --from=frontend /app/public/build ./public/build
 
-ENV SKIP_COMPOSER=1
-ENV WEBROOT=/var/www/html/public
-ENV PHP_ERRORS_STDERR=1
-ENV RUN_SCRIPTS=1
-ENV REAL_IP_HEADER=1
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-ENV LOG_CHANNEL=stderr
-ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-interaction \
+    && mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-CMD ["/start.sh"]
+RUN cat <<'EOF' > /etc/nginx/http.d/default.conf
+server {
+    listen 10000;
+    server_name _;
+    root /var/www/html/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+EOF
+
+RUN cat <<'EOF' > /etc/supervisord.conf
+[supervisord]
+nodaemon=true
+
+[program:php-fpm]
+command=php-fpm -F
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+EOF
+
+EXPOSE 10000
+
+CMD
