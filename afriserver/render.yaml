@@ -1,9 +1,3 @@
-databases:
-  - name: afriserver-db
-    plan: free
-    databaseName: afriserver
-    user: afriserver
-
 services:
   - type: web
     name: afriserver
@@ -15,6 +9,8 @@ services:
     dockerContext: .
     healthCheckPath: /
     envVars:
+      - key: PORT
+        value: "80"
       - key: APP_NAME
         value: AfriNumber
       - key: APP_ENV
@@ -29,10 +25,16 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: pgsql
-      - key: DB_URL
-        fromDatabase:
-          name: afriserver-db
-          property: connectionString
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
       - key: SESSION_DRIVER
         value: database
       - key: QUEUE_CONNECTION
