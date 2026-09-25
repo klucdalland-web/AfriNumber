@@ -240,7 +240,7 @@ class ObservabilityService
      */
     private function resolveLocation(?string $ip, ?array $session): ?array
     {
-        if ($session && ($session['country'] ?? null || $session['city'] ?? null)) {
+        if ($session && (($session['country'] ?? null) || ($session['city'] ?? null))) {
             return [
                 'country' => $session['country'] ?? null,
                 'city' => $session['city'] ?? null,
