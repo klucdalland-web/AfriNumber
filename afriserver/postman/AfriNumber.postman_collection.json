@@ -263,6 +263,51 @@
 					"response": []
 				},
 				{
+					"name": "🔁 Resend OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Resend OTP', function () {",
+									"    pm.expect([200, 423, 429]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set('otp_code', '123456');",
+									"    console.log('✅ Nouveau OTP envoyé (test: 123456)');",
+									"} else if (pm.response.code === 423) {",
+									"    console.warn('🔒 OTP verrouillé — attendre locked_minutes_left');",
+									"} else if (pm.response.code === 429) {",
+									"    console.warn('⏳ Cooldown 60s — attendre retry_after_seconds');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "x-api-key", "value": "{{x_api_key}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"purpose\": \"{{otp_purpose}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/resend-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "resend-otp"]
+						},
+						"description": "Renvoie un OTP en gardant le payload.\n\n**Login / register / resend partagent le même compteur d'envois.**\n\nDélais :\n- 2e envoi → **1 min** (429)\n- 3e envoi → **5 min** → email/tél **bloqués** (423)\n- puis 10, 15, 30, 60 min\n\nAussi : 5 codes erronés → lock **5 min** (423)"
+					},
+					"response": []
+				},
+				{
 					"name": "📧 Forgot Password",
 					"event": [
 						{
@@ -270,9 +315,8 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test('Forgot password OK', function () {",
-									"    pm.response.to.have.status(200);",
-									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"pm.test('Forgot password', function () {",
+									"    pm.expect([200, 423, 429]).to.include(pm.response.code);",
 									"});",
 									"",
 									"try {",
@@ -281,7 +325,14 @@
 									"    if (body.phone_number) pm.collectionVariables.set('phone_number', body.phone_number);",
 									"} catch (e) {}",
 									"",
-									"console.log('ℹ️ Voir le code reset dans les logs Laravel (TODO SMS/email)');"
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set('otp_code', '123456');",
+									"    console.log('✅ Code reset test: 123456 — voir data.next_resend_at');",
+									"} else if (pm.response.code === 423) {",
+									"    console.warn('🔒 Email/tél bloqué (envois ou codes erronés)');",
+									"} else if (pm.response.code === 429) {",
+									"    console.warn('⏳ Cooldown 1 min');",
+									"}"
 								]
 							}
 						}
@@ -303,7 +354,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["auth", "forgot-password"]
 						},
-						"description": "Envoie un code de reset (email **ou** phone_number)."
+						"description": "Demande un code reset (email **ou** phone).\n\nMême logique anti-spam que l'OTP :\n- 2e envoi → 1 min (429)\n- 3e → 5 min → email/tél bloqués (423)\n- puis 10, 15, 30, 60 min\n\nRéponse générique si compte inconnu. Code test : `123456`."
 					},
 					"response": []
 				},
@@ -315,16 +366,17 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test('Reset password OK', function () {",
-									"    pm.response.to.have.status(200);",
-									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"pm.test('Reset password', function () {",
+									"    pm.expect([200, 422, 423]).to.include(pm.response.code);",
 									"});",
 									"",
 									"try {",
 									"    const body = JSON.parse(pm.request.body.raw);",
-									"    if (body.password) pm.collectionVariables.set('password', body.password);",
+									"    if (pm.response.code === 200 && body.password) {",
+									"        pm.collectionVariables.set('password', body.password);",
+									"        console.log('✅ Nouveau password sauvegardé');",
+									"    }",
 									"    if (body.email) pm.collectionVariables.set('email', body.email);",
-									"    console.log('✅ Nouveau password sauvegardé dans {{password}}');",
 									"} catch (e) {}"
 								]
 							}
@@ -347,7 +399,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["auth", "reset-password"]
 						},
-						"description": "Réinitialise le mot de passe avec le code reçu. Met à jour `{{password}}`."
+						"description": "Nouveau password + code.\n\n- 5 codes erronés → lock **5 min** (423) sur email/tél\n- Succès → invalide toutes les sessions, code one-shot\n- Code test : `123456`"
 					},
 					"response": []
 				},

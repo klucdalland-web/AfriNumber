@@ -13,6 +13,7 @@ class OtpVerification extends Model
         'code',
         'payload',
         'attempts',
+        'resend_count',
         'locked_until',
         'expires_at',
     ];

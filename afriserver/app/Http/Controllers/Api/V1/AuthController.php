@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Auth\ChangePasswordRequest;
 use App\Http\Requests\Api\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
+use App\Http\Requests\Api\V1\Auth\ResendOtpRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
@@ -35,6 +36,8 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $email = $validated['email'] ?? null;
+        $phoneNumber = $validated['phone_number'] ?? null;
 
         $pays = Pays::query()->where('id', $validated['contrie_id'])->first();
 
@@ -64,14 +67,16 @@ class AuthController extends Controller
             'organisation_id' => $pays->organisation_id,
         ]);
 
-        $this->issueOtp(
-            email: $validated['email'] ?? null,
-            phoneNumber: $validated['phone_number'] ?? null,
-            purpose: 'register',
-            payload: $payload
-        );
+        $send = $this->sendOtpOrThrottle($email, $phoneNumber, 'register', $payload);
 
-        return ApiResponse::success('Un code de vérification a été envoyé. Veuillez le saisir pour finaliser votre inscription.');
+        if ($send instanceof JsonResponse) {
+            return $send;
+        }
+
+        return ApiResponse::success(
+            'Un code de vérification a été envoyé. Veuillez le saisir pour finaliser votre inscription.',
+            $this->otpResendMeta($send['resend_count'])
+        );
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -124,26 +129,27 @@ class AuthController extends Controller
         $payload = array_merge($validated, ['user_id' => $user->id]);
         unset($payload['password']);
 
-        $this->issueOtp(
-            email: $user->email,
-            phoneNumber: $user->phone_number,
-            purpose: 'login',
-            payload: $payload
-        );
+        $send = $this->sendOtpOrThrottle($user->email, $user->phone_number, 'login', $payload);
 
-        return ApiResponse::success('Un code de vérification a été envoyé. Veuillez le saisir pour finaliser la connexion.');
+        if ($send instanceof JsonResponse) {
+            return $send;
+        }
+
+        return ApiResponse::success(
+            'Un code de vérification a été envoyé. Veuillez le saisir pour finaliser la connexion.',
+            $this->otpResendMeta($send['resend_count'])
+        );
     }
 
     public function verifyOtp(VerifyOtpRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
-        $otp = OtpVerification::query()
-            ->when($validated['email'] ?? null, fn ($q, $email) => $q->where('email', $email))
-            ->when($validated['phone_number'] ?? null, fn ($q, $phone) => $q->where('phone_number', $phone))
-            ->where('purpose', $validated['purpose'])
-            ->latest()
-            ->first();
+        $otp = $this->findOtp(
+            $validated['email'] ?? null,
+            $validated['phone_number'] ?? null,
+            $validated['purpose']
+        );
 
         if (! $otp) {
             throw ValidationException::withMessages([
@@ -153,20 +159,30 @@ class AuthController extends Controller
 
         // Vérifie si bloqué suite à trop de tentatives
         if ($otp->locked_until && $otp->locked_until->isFuture()) {
-            $minutesLeft = (int) ceil(now()->diffInMinutes($otp->locked_until));
+            $minutesLeft = max(1, (int) ceil(now()->diffInMinutes($otp->locked_until)));
 
             return ApiResponse::error(
                 "Trop de tentatives échouées. Veuillez réessayer dans {$minutesLeft} minute(s).",
-                ['locked_minutes_left' => $minutesLeft],
+                [
+                    'locked_minutes_left' => $minutesLeft,
+                    'locked_until' => $otp->locked_until->toIso8601String(),
+                ],
                 423
             );
         }
 
-        if ($otp->expires_at->isPast()) {
-            $otp->delete();
+        // Lock expiré → on remet les tentatives à zéro
+        if ($otp->attempts > 0 && $otp->locked_until && $otp->locked_until->isPast()) {
+            $otp->update([
+                'attempts' => 0,
+                'locked_until' => null,
+            ]);
+            $otp->refresh();
+        }
 
+        if ($otp->expires_at->isPast()) {
             throw ValidationException::withMessages([
-                'code' => ['Ce code a expiré. Veuillez recommencer.'],
+                'code' => ['Ce code a expiré. Utilisez resend-otp pour en recevoir un nouveau.'],
             ]);
         }
 
@@ -174,11 +190,11 @@ class AuthController extends Controller
             $otp->increment('attempts');
 
             if ($otp->attempts >= 5) {
-                $otp->update(['locked_until' => now()->addMinutes(15)]);
+                $otp->update(['locked_until' => now()->addMinutes(5)]);
 
                 return ApiResponse::error(
-                    'Trop de tentatives échouées. Veuillez réessayer dans 15 minute(s).',
-                    ['locked_minutes_left' => 15],
+                    'Trop de tentatives échouées. Veuillez réessayer dans 5 minute(s).',
+                    ['locked_minutes_left' => 5],
                     423
                 );
             }
@@ -250,13 +266,226 @@ class AuthController extends Controller
     }
 
     /**
+     * Renvoie un nouveau code OTP en réutilisant le payload déjà stocké
+     * (pas besoin de renvoyer password / device / etc.).
+     */
+    public function resendOtp(ResendOtpRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $email = $validated['email'] ?? null;
+        $phoneNumber = $validated['phone_number'] ?? null;
+        $purpose = $validated['purpose'];
+
+        $otp = $this->findOtp($email, $phoneNumber, $purpose);
+
+        if (! $otp) {
+            throw ValidationException::withMessages([
+                'code' => ['Aucune demande en cours. Veuillez recommencer la connexion ou l\'inscription.'],
+            ]);
+        }
+
+        $send = $this->sendOtpOrThrottle(
+            $otp->email,
+            $otp->phone_number,
+            $purpose,
+            $otp->payload ?? []
+        );
+
+        if ($send instanceof JsonResponse) {
+            return $send;
+        }
+
+        return ApiResponse::success(
+            'Un nouveau code de vérification a été envoyé.',
+            $this->otpResendMeta($send['resend_count'])
+        );
+    }
+
+    /**
+     * Envoie un OTP en respectant :
+     * - lock codes erronés (locked_until)
+     * - compteur d'envois progressif (login / register / resend partagent le même compteur)
+     * - à partir du délai de 5 min → email/téléphone considérés comme bloqués
+     *
+     * @return array{resend_count: int}|JsonResponse
+     */
+    private function sendOtpOrThrottle(
+        ?string $email,
+        ?string $phoneNumber,
+        string $purpose,
+        array $payload
+    ): array|JsonResponse {
+        $existing = $this->findOtp($email, $phoneNumber, $purpose);
+
+        if ($existing && $existing->locked_until && $existing->locked_until->isFuture()) {
+            return $this->otpLockResponse($email, $phoneNumber, $purpose)
+                ?? ApiResponse::error('Trop de tentatives échouées.', null, 423);
+        }
+
+        if ($existing) {
+            $throttle = $this->otpSendThrottleResponse($existing, $purpose);
+
+            if ($throttle) {
+                return $throttle;
+            }
+        }
+
+        $isSubsequentSend = $existing !== null;
+        $resendCount = $this->issueOtp(
+            email: $existing?->email ?? $email,
+            phoneNumber: $existing?->phone_number ?? $phoneNumber,
+            purpose: $purpose,
+            payload: $payload,
+            isResend: $isSubsequentSend
+        );
+
+        return ['resend_count' => $resendCount];
+    }
+
+    /**
+     * Si le cooldown d'envoi n'est pas écoulé → bloque email/téléphone.
+     * À partir de 5 min d'attente → message de blocage (423).
+     */
+    private function otpSendThrottleResponse(OtpVerification $otp, string $purpose): ?JsonResponse
+    {
+        $requiredWaitMinutes = $this->resendCooldownMinutes((int) $otp->resend_count);
+        $availableAt = $otp->updated_at?->copy()->addMinutes($requiredWaitMinutes);
+
+        if (! $availableAt || ! $availableAt->isFuture()) {
+            return null;
+        }
+
+        $secondsLeft = max(1, (int) now()->diffInSeconds($availableAt));
+        $minutesLeft = max(1, (int) ceil($secondsLeft / 60));
+        $action = $purpose === 'register' ? 'inscription' : 'connexion';
+
+        $payload = [
+            'retry_after_seconds' => $secondsLeft,
+            'retry_after_minutes' => $minutesLeft,
+            'required_wait_minutes' => $requiredWaitMinutes,
+            'resend_count' => (int) $otp->resend_count,
+            'next_resend_at' => $availableAt->toIso8601String(),
+            'purpose' => $purpose,
+        ];
+
+        // Délai >= 5 min → email / numéro bloqués
+        if ($requiredWaitMinutes >= 5) {
+            return ApiResponse::error(
+                "Trop de codes envoyés. {$action} impossible avec cet email ou ce numéro pendant encore {$minutesLeft} minute(s).",
+                array_merge($payload, [
+                    'locked_minutes_left' => $minutesLeft,
+                    'locked_until' => $availableAt->toIso8601String(),
+                ]),
+                423
+            );
+        }
+
+        return ApiResponse::error(
+            "Veuillez patienter {$minutesLeft} minute(s) avant de renvoyer un code.",
+            $payload,
+            429
+        );
+    }
+
+    /**
+     * Métadonnées pour le timer "renvoyer le code" côté client.
+     *
+     * @return array{resend_count: int, next_resend_wait_minutes: int, next_resend_at: string}
+     */
+    private function otpResendMeta(int $resendCount): array
+    {
+        $nextWaitMinutes = $this->resendCooldownMinutes($resendCount);
+
+        return [
+            'resend_count' => $resendCount,
+            'next_resend_wait_minutes' => $nextWaitMinutes,
+            'next_resend_at' => now()->addMinutes($nextWaitMinutes)->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Recherche un OTP par email et/ou téléphone + purpose.
+     * Si les deux sont fournis → match si email OU téléphone correspond
+     * (évite de contourner un lock en changeant d'identifiant).
+     */
+    private function findOtp(?string $email, ?string $phoneNumber, string $purpose): ?OtpVerification
+    {
+        return OtpVerification::query()
+            ->where('purpose', $purpose)
+            ->where(function ($query) use ($email, $phoneNumber): void {
+                if ($email) {
+                    $query->where('email', $email);
+                }
+
+                if ($phoneNumber) {
+                    $email
+                        ? $query->orWhere('phone_number', $phoneNumber)
+                        : $query->where('phone_number', $phoneNumber);
+                }
+            })
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Bloque login / register / resend tant que l'OTP est verrouillé
+     * pour cet email OU ce numéro.
+     */
+    private function otpLockResponse(?string $email, ?string $phoneNumber, string $purpose): ?JsonResponse
+    {
+        $otp = $this->findOtp($email, $phoneNumber, $purpose);
+
+        if (! $otp || ! $otp->locked_until || ! $otp->locked_until->isFuture()) {
+            return null;
+        }
+
+        $minutesLeft = max(1, (int) ceil(now()->diffInMinutes($otp->locked_until)));
+        $action = $purpose === 'register' ? 'inscription' : 'connexion';
+
+        return ApiResponse::error(
+            "Trop de tentatives échouées sur le code OTP. {$action} impossible avec cet email ou ce numéro pendant encore {$minutesLeft} minute(s).",
+            [
+                'locked_minutes_left' => $minutesLeft,
+                'locked_until' => $otp->locked_until->toIso8601String(),
+                'purpose' => $purpose,
+            ],
+            423
+        );
+    }
+
+    /**
+     * Délai d'attente progressif avant chaque nouvel envoi (en minutes).
+     * 2e envoi → 1 min, 3e → 5 min, puis 10, 15, 30, 60 (plafond).
+     */
+    private function resendCooldownMinutes(int $resendCount): int
+    {
+        $delays = [1, 5, 10, 15, 30, 60];
+
+        return $delays[min($resendCount, count($delays) - 1)];
+    }
+
+    /**
      * Génère, stocke et envoie un code OTP.
      * Une seule ligne par (email/téléphone, purpose) — mise à jour à chaque nouvelle demande.
+     *
+     * @return int Nouveau resend_count
      */
-    private function issueOtp(?string $email, ?string $phoneNumber, string $purpose, array $payload): void
-    {
+    private function issueOtp(
+        ?string $email,
+        ?string $phoneNumber,
+        string $purpose,
+        array $payload,
+        bool $isResend = false
+    ): int {
         $code = (string) random_int(100000, 999999);
-        $code =123456; // Pour tests, à retirer en production
+        $code = 123456; // Pour tests, à retirer en production
+
+        $resendCount = 0;
+
+        if ($isResend) {
+            $existing = $this->findOtp($email, $phoneNumber, $purpose);
+            $resendCount = (int) ($existing?->resend_count ?? 0) + 1;
+        }
 
         OtpVerification::query()->updateOrCreate(
             [
@@ -268,13 +497,23 @@ class AuthController extends Controller
                 'code' => Hash::make($code),
                 'payload' => $payload,
                 'attempts' => 0,
+                'resend_count' => $resendCount,
+                // Ne pas effacer un lock codes-erronés ici si encore actif — géré en amont.
+                // Pour un envoi autorisé, on repart sur un code neuf.
                 'locked_until' => null,
                 'expires_at' => now()->addMinutes(10),
             ]
         );
 
         // TODO : envoyer $code par email ou SMS
-        Log::info('Code OTP généré.', ['email' => $email, 'phone_number' => $phoneNumber, 'purpose' => $purpose]);
+        Log::info('Code OTP généré.', [
+            'email' => $email,
+            'phone_number' => $phoneNumber,
+            'purpose' => $purpose,
+            'resend_count' => $resendCount,
+        ]);
+
+        return $resendCount;
     }
 
     /**
@@ -535,70 +774,93 @@ class AuthController extends Controller
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $email = $validated['email'] ?? null;
+        $phoneNumber = $validated['phone_number'] ?? null;
 
-        $user = User::query()
-            ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-            ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-            ->first();
+        $genericMessage = 'Si ce compte existe, un code de réinitialisation a été envoyé.';
 
-        $genericResponse = ApiResponse::success('Si ce compte existe, un code de réinitialisation a été envoyé.');
+        $user = $this->findUserByEmailOrPhone($email, $phoneNumber);
 
+        // Compte inconnu : même forme de réponse (anti-énumération)
         if (! $user) {
-            return $genericResponse;
+            return ApiResponse::success($genericMessage, $this->otpResendMeta(0));
         }
 
-        $code = (string) random_int(100000, 999999);
+        $send = $this->sendPasswordResetOrThrottle($user->email, $user->phone_number);
 
-        $code = 123456; // Pour tests, à retirer en production
-        PasswordResetCode::query()->updateOrCreate(
-            [
-                'email' => $validated['email'] ?? null,
-                'phone_number' => $validated['phone_number'] ?? null,
-            ],
-            [
-                'code' => Hash::make($code),
-                'expires_at' => now()->addMinutes(15),
-            ]
-        );
+        if ($send instanceof JsonResponse) {
+            return $send;
+        }
 
-        // TODO : envoyer $code par email (si 'email' fourni) ou SMS (si 'phone_number' fourni)
-
-        Log::info('Code de réinitialisation généré.', [
-            'email' => $validated['email'] ?? null,
-            'phone_number' => $validated['phone_number'] ?? null,
-        ]);
-
-        return $genericResponse;
+        return ApiResponse::success($genericMessage, $this->otpResendMeta($send['resend_count']));
     }
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $email = $validated['email'] ?? null;
+        $phoneNumber = $validated['phone_number'] ?? null;
 
-        $resetCode = PasswordResetCode::query()
-            ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-            ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-            ->latest()
-            ->first();
+        $resetCode = $this->findPasswordResetCode($email, $phoneNumber);
 
-        if (! $resetCode || ! Hash::check($validated['code'], $resetCode->code)) {
+        if (! $resetCode) {
             throw ValidationException::withMessages([
-                'code' => ['Code invalide.'],
+                'code' => ['Code invalide ou expiré. Veuillez recommencer.'],
             ]);
+        }
+
+        if ($resetCode->locked_until && $resetCode->locked_until->isFuture()) {
+            $minutesLeft = max(1, (int) ceil(now()->diffInMinutes($resetCode->locked_until)));
+
+            return ApiResponse::error(
+                "Trop de tentatives échouées. Réinitialisation impossible avec cet email ou ce numéro pendant encore {$minutesLeft} minute(s).",
+                [
+                    'locked_minutes_left' => $minutesLeft,
+                    'locked_until' => $resetCode->locked_until->toIso8601String(),
+                ],
+                423
+            );
+        }
+
+        // Lock expiré → reset des tentatives
+        if ($resetCode->attempts > 0 && $resetCode->locked_until && $resetCode->locked_until->isPast()) {
+            $resetCode->update([
+                'attempts' => 0,
+                'locked_until' => null,
+            ]);
+            $resetCode->refresh();
         }
 
         if ($resetCode->expires_at->isPast()) {
-            $resetCode->delete();
-
             throw ValidationException::withMessages([
-                'code' => ['Ce code a expiré. Veuillez en demander un nouveau.'],
+                'code' => ['Ce code a expiré. Utilisez forgot-password pour en recevoir un nouveau.'],
             ]);
         }
 
-        $user = User::query()
-            ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-            ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-            ->first();
+        if (! Hash::check($validated['code'], $resetCode->code)) {
+            $resetCode->increment('attempts');
+
+            if ($resetCode->attempts >= 5) {
+                $resetCode->update(['locked_until' => now()->addMinutes(5)]);
+
+                return ApiResponse::error(
+                    'Trop de tentatives échouées. Veuillez réessayer dans 5 minute(s).',
+                    ['locked_minutes_left' => 5],
+                    423
+                );
+            }
+
+            $remaining = max(0, 5 - $resetCode->attempts);
+
+            throw ValidationException::withMessages([
+                'code' => ["Code incorrect. Il vous reste {$remaining} tentative(s)."],
+            ]);
+        }
+
+        $user = $this->findUserByEmailOrPhone(
+            $resetCode->email ?? $email,
+            $resetCode->phone_number ?? $phoneNumber
+        );
 
         if (! $user) {
             throw ValidationException::withMessages([
@@ -627,6 +889,168 @@ class AuthController extends Controller
 
             return ApiResponse::error('Une erreur est survenue lors de la réinitialisation.', null, 500);
         }
+    }
+
+    /**
+     * Envoie un code reset password avec la même logique anti-spam que l'OTP.
+     *
+     * @return array{resend_count: int}|JsonResponse
+     */
+    private function sendPasswordResetOrThrottle(?string $email, ?string $phoneNumber): array|JsonResponse
+    {
+        $existing = $this->findPasswordResetCode($email, $phoneNumber);
+
+        if ($existing && $existing->locked_until && $existing->locked_until->isFuture()) {
+            $minutesLeft = max(1, (int) ceil(now()->diffInMinutes($existing->locked_until)));
+
+            return ApiResponse::error(
+                "Trop de tentatives échouées. Réinitialisation impossible avec cet email ou ce numéro pendant encore {$minutesLeft} minute(s).",
+                [
+                    'locked_minutes_left' => $minutesLeft,
+                    'locked_until' => $existing->locked_until->toIso8601String(),
+                ],
+                423
+            );
+        }
+
+        if ($existing) {
+            $throttle = $this->passwordResetSendThrottleResponse($existing);
+
+            if ($throttle) {
+                return $throttle;
+            }
+        }
+
+        $resendCount = $this->issuePasswordResetCode(
+            email: $existing?->email ?? $email,
+            phoneNumber: $existing?->phone_number ?? $phoneNumber,
+            isResend: $existing !== null
+        );
+
+        return ['resend_count' => $resendCount];
+    }
+
+    private function passwordResetSendThrottleResponse(PasswordResetCode $reset): ?JsonResponse
+    {
+        $requiredWaitMinutes = $this->resendCooldownMinutes((int) $reset->resend_count);
+        $availableAt = $reset->updated_at?->copy()->addMinutes($requiredWaitMinutes);
+
+        if (! $availableAt || ! $availableAt->isFuture()) {
+            return null;
+        }
+
+        $secondsLeft = max(1, (int) now()->diffInSeconds($availableAt));
+        $minutesLeft = max(1, (int) ceil($secondsLeft / 60));
+
+        $payload = [
+            'retry_after_seconds' => $secondsLeft,
+            'retry_after_minutes' => $minutesLeft,
+            'required_wait_minutes' => $requiredWaitMinutes,
+            'resend_count' => (int) $reset->resend_count,
+            'next_resend_at' => $availableAt->toIso8601String(),
+        ];
+
+        if ($requiredWaitMinutes >= 5) {
+            return ApiResponse::error(
+                "Trop de codes envoyés. Réinitialisation impossible avec cet email ou ce numéro pendant encore {$minutesLeft} minute(s).",
+                array_merge($payload, [
+                    'locked_minutes_left' => $minutesLeft,
+                    'locked_until' => $availableAt->toIso8601String(),
+                ]),
+                423
+            );
+        }
+
+        return ApiResponse::error(
+            "Veuillez patienter {$minutesLeft} minute(s) avant de renvoyer un code.",
+            $payload,
+            429
+        );
+    }
+
+    private function findPasswordResetCode(?string $email, ?string $phoneNumber): ?PasswordResetCode
+    {
+        if (! $email && ! $phoneNumber) {
+            return null;
+        }
+
+        return PasswordResetCode::query()
+            ->where(function ($query) use ($email, $phoneNumber): void {
+                if ($email) {
+                    $query->where('email', $email);
+                }
+
+                if ($phoneNumber) {
+                    $email
+                        ? $query->orWhere('phone_number', $phoneNumber)
+                        : $query->where('phone_number', $phoneNumber);
+                }
+            })
+            ->latest()
+            ->first();
+    }
+
+    private function findUserByEmailOrPhone(?string $email, ?string $phoneNumber): ?User
+    {
+        if (! $email && ! $phoneNumber) {
+            return null;
+        }
+
+        return User::query()
+            ->where(function ($query) use ($email, $phoneNumber): void {
+                if ($email) {
+                    $query->where('email', $email);
+                }
+
+                if ($phoneNumber) {
+                    $email
+                        ? $query->orWhere('phone_number', $phoneNumber)
+                        : $query->where('phone_number', $phoneNumber);
+                }
+            })
+            ->first();
+    }
+
+    /**
+     * @return int Nouveau resend_count
+     */
+    private function issuePasswordResetCode(
+        ?string $email,
+        ?string $phoneNumber,
+        bool $isResend = false
+    ): int {
+        $code = (string) random_int(100000, 999999);
+        $code = 123456; // Pour tests, à retirer en production
+
+        $resendCount = 0;
+
+        if ($isResend) {
+            $existing = $this->findPasswordResetCode($email, $phoneNumber);
+            $resendCount = (int) ($existing?->resend_count ?? 0) + 1;
+        }
+
+        PasswordResetCode::query()->updateOrCreate(
+            [
+                'email' => $email,
+                'phone_number' => $phoneNumber,
+            ],
+            [
+                'code' => Hash::make($code),
+                'attempts' => 0,
+                'resend_count' => $resendCount,
+                'locked_until' => null,
+                'expires_at' => now()->addMinutes(15),
+            ]
+        );
+
+        // TODO : envoyer $code par email ou SMS
+        Log::info('Code de réinitialisation généré.', [
+            'email' => $email,
+            'phone_number' => $phoneNumber,
+            'resend_count' => $resendCount,
+        ]);
+
+        return $resendCount;
     }
 
     private function getClientIp(Request $request): string

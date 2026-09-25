@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('code'); // haché
             $table->text('payload')->nullable();
             $table->unsignedTinyInteger('attempts')->default(0);
+            $table->unsignedTinyInteger('resend_count')->default(0);
             $table->timestamp('locked_until')->nullable();
             $table->timestamp('expires_at');
             $table->timestamps();
