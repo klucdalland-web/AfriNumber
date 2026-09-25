@@ -21,6 +21,10 @@ return [
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
+    'zavu' => [
+        'key' => env('ZAVU_API_KEY'),
+        'base_url' => 'https://zavu.dev',
+    ],
 
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
