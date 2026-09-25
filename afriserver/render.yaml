@@ -1,6 +1,6 @@
 databases:
   - name: afriserver-db
-    plan: basic-256mb
+    plan: free
     databaseName: afriserver
     user: afriserver
 
@@ -8,7 +8,7 @@ services:
   - type: web
     name: afriserver
     runtime: docker
-    plan: starter
+    plan: free
     region: oregon
     rootDir: afriserver
     dockerfilePath: ./Dockerfile
