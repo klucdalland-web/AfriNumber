@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Organisation extends Model
 {
@@ -12,13 +13,14 @@ class Organisation extends Model
         'description',
         'actif',
     ];
+
     public function pays(): HasMany
     {
         return $this->hasMany(Pays::class);
     }
 
-    public function users(): HasMany
+    public function users(): HasManyThrough
     {
-        return $this->hasMany(User::class);
+        return $this->hasManyThrough(User::class, Pays::class);
     }
 }

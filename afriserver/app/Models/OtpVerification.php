@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PasswordResetCode extends Model
+class OtpVerification extends Model
 {
     protected $fillable = [
         'email',
         'phone_number',
+        'purpose',
         'code',
+        'payload',
         'attempts',
         'resend_count',
         'locked_until',
@@ -19,6 +21,7 @@ class PasswordResetCode extends Model
     protected function casts(): array
     {
         return [
+            'payload' => 'array',
             'locked_until' => 'datetime',
             'expires_at' => 'datetime',
         ];

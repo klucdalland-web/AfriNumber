@@ -1,13 +1,21 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\ObservabilityController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::prefix('auth')->name('auth.')->group(function (): void {
-    Route::post('register', [AuthController::class, 'register'])->name('register') ->middleware('throttle:register');
-    Route::post('login', [AuthController::class, 'login'])->name('login') ->middleware('throttle:login');
+    Route::post('register', [AuthController::class, 'register'])->name('register')->middleware('throttle:register');
+    Route::post('login', [AuthController::class, 'login'])->name('login')->middleware('throttle:login');
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp'])
+        ->name('verify-otp')
+        ->middleware('throttle:10,1');
+
+    Route::post('resend-otp', [AuthController::class, 'resendOtp'])
+        ->name('resend-otp')
+        ->middleware('throttle:5,1');
 
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])
         ->name('forgot-password')
@@ -17,7 +25,6 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
         ->name('reset-password')
         ->middleware('throttle:5,1');
 
-        
     // Seul un refresh token (ability 'issue-access-token') peut appeler ceci
     Route::middleware(['auth:sanctum', 'abilities:issue-access-token'])->group(function (): void {
         Route::post('refresh-token', [AuthController::class, 'refreshToken'])->name('refresh-token');
@@ -27,10 +34,16 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
     Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expiration'])->group(function (): void {
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('me', [AuthController::class, 'me'])->name('me');
-        Route::put('password', [AuthController::class, 'changePassword'])->name('password') ->middleware('throttle:5,1');
+        Route::put('password', [AuthController::class, 'changePassword'])->name('password')->middleware('throttle:5,1');
     });
 });
 
 Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expiration'])->group(function (): void {
     Route::get('/user', [UserController::class, 'show'])->name('user.show');
+
+    Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
+    Route::delete('/devices/others', [DeviceController::class, 'destroyOthers'])->name('devices.destroy-others');
+    Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
+
+    Route::get('/observability/logs', [ObservabilityController::class, 'index'])->name('observability.logs');
 });
