@@ -36,3 +36,4 @@ test('every referential seeder is registered in RequiredDataSeeder', function ()
 
     expect($registered)->toBe($discovered);
 });
+
