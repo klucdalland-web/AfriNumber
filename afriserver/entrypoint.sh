@@ -30,6 +30,10 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 php artisan migrate --force
+# Référentiels idempotents (updateOrCreate) — nécessaires sur Render (DB ≠ local)
+php artisan db:seed --class=ContinentSeeder --force --no-interaction
+php artisan db:seed --class=PaysSeeder --force --no-interaction
+php artisan db:seed --class=OrganisationSeeder --force --no-interaction
 php artisan storage:link || true
 
 exec /usr/bin/supervisord -c /etc/supervisord.conf
