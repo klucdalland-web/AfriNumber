@@ -14,10 +14,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     final result = await _remote.login(email: email, password: password);
-    final token = result['token'] as String? ??
-        (result['data'] is Map
-            ? (result['data'] as Map)['token'] as String?
-            : null);
+    final token = _extractToken(result);
     if (token != null) {
       await _storage.saveAccessToken(token);
     }
@@ -34,13 +31,29 @@ class AuthRepositoryImpl implements AuthRepository {
       email: email,
       password: password,
     );
-    final token = result['token'] as String? ??
-        (result['data'] is Map
-            ? (result['data'] as Map)['token'] as String?
-            : null);
+    final token = _extractToken(result);
     if (token != null) {
       await _storage.saveAccessToken(token);
     }
+  }
+
+  @override
+  Future<void> verifyOtp({
+    required String code,
+    String? email,
+  }) async {
+    final result = await _remote.verifyOtp(code: code, email: email);
+    final token = _extractToken(result);
+    if (token != null) {
+      await _storage.saveAccessToken(token);
+    }
+  }
+
+  @override
+  Future<void> resendOtp({
+    String? email,
+  }) async {
+    await _remote.resendOtp(email: email);
   }
 
   @override
@@ -48,4 +61,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Map<String, dynamic>?> me() => _remote.me();
+
+  String? _extractToken(Map<String, dynamic> result) {
+    return result['token'] as String? ??
+        (result['data'] is Map
+            ? (result['data'] as Map)['token'] as String?
+            : null);
+  }
 }

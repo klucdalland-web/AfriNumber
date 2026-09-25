@@ -36,6 +36,32 @@ class AuthRemoteDataSource {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
+  Future<Map<String, dynamic>> verifyOtp({
+    required String code,
+    String? email,
+  }) async {
+    final response = await _client.post(
+      '/auth/verify-otp',
+      data: {
+        'code': code,
+        'email': email,
+      },
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  Future<Map<String, dynamic>> resendOtp({
+    String? email,
+  }) async {
+    final response = await _client.post(
+      '/auth/resend-otp',
+      data: {
+        'email': email,
+      },
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Future<void> logout() async {
     await _client.post(ApiConstants.logout);
     await _storage.clearTokens();
