@@ -64,7 +64,7 @@ class AuthController extends Controller
         $payload = array_merge($validated, [
             'password' => Hash::make($validated['password']),
             'type_user_id' => $typeUserId,
-            'organisation_id' => $pays->organisation_id,
+            'pays_id' => $pays->id,
         ]);
 
         $send = $this->sendOtpOrThrottle($email, $phoneNumber, 'register', $payload);
@@ -233,14 +233,14 @@ class AuthController extends Controller
                         'type_user_id' => $payload['type_user_id'],
                         'statut' => 'actif',
                         'status_valide' => 'non_valide',
-                        'organisation_id' => $payload['organisation_id'],
+                        'pays_id' => $payload['pays_id'] ?? $payload['contrie_id'] ?? null,
                     ]);
 
                 } else {
                     $user = User::query()->findOrFail($payload['user_id']);
                 }
 
-                $user->load(['typeUser', 'organisation']);
+                $user->load(['typeUser', 'pays.organisation']);
 
                 $tokens = $this->registerDeviceAndTokens($user, $payload, $request);
 
@@ -720,7 +720,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user()->load(['typeUser', 'organisation']);
+        $user = $request->user()->load(['typeUser', 'pays.organisation']);
 
         return ApiResponse::success(null, [
             'user' => UserResource::make($user),

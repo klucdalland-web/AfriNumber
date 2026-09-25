@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        $user = $request->user()->load(['typeUser', 'organisation']);
+        $user = $request->user()->load(['typeUser', 'pays.organisation']);
 
         return ApiResponse::success(null, [
             'user' => UserResource::make($user),

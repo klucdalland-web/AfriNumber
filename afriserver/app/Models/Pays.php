@@ -6,6 +6,7 @@ use Database\Factories\PaysFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pays extends Model
 {
@@ -43,5 +44,10 @@ class Pays extends Model
     public function organisation(): BelongsTo
     {
         return $this->belongsTo(Organisation::class);
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
     }
 }
