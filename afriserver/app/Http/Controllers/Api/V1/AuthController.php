@@ -12,6 +12,7 @@ use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
+use App\Exceptions\InvalidPhoneNumberException;
 use App\Models\Device;
 use App\Models\DeviceTokenFcm;
 use App\Models\OtpVerification;
@@ -21,6 +22,7 @@ use App\Models\Platform;
 use App\Models\SessionUser;
 use App\Models\TypeUser;
 use App\Models\User;
+use App\Services\PhoneNumberService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -33,11 +35,9 @@ use Throwable;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request): JsonResponse
+    public function register(RegisterRequest $request, PhoneNumberService $phones): JsonResponse
     {
         $validated = $request->validated();
-        $email = $validated['email'] ?? null;
-        $phoneNumber = $validated['phone_number'] ?? null;
 
         $pays = Pays::query()->where('id', $validated['contrie_id'])->first();
 
@@ -47,13 +47,22 @@ class AuthController extends Controller
             ]);
         }
 
+        try {
+            $phoneNumber = $phones->normalize($validated['phone_number'], $pays);
+        } catch (InvalidPhoneNumberException $e) {
+            throw ValidationException::withMessages([
+                $e->errorKey => [$e->getMessage()],
+            ]);
+        }
+        $email = $validated['email'] ?? null;
+
         if (User::query()->where('email', $validated['email'])->exists()) {
             throw ValidationException::withMessages([
                 'email' => ['Cette adresse email est déjà utilisée.'],
             ]);
         }
 
-        if (User::query()->where('phone_number', $validated['phone_number'])->exists()) {
+        if (User::query()->where('phone_number', $phoneNumber)->exists()) {
             throw ValidationException::withMessages([
                 'phone_number' => ['Ce numéro de téléphone est déjà utilisé.'],
             ]);
@@ -62,6 +71,7 @@ class AuthController extends Controller
         $typeUserId = TypeUser::query()->where('code', 'user')->value('id');
 
         $payload = array_merge($validated, [
+            'phone_number' => $phoneNumber,
             'password' => Hash::make($validated['password']),
             'type_user_id' => $typeUserId,
             'pays_id' => $pays->id,
@@ -79,10 +89,10 @@ class AuthController extends Controller
         );
     }
 
-    public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request, PhoneNumberService $phones): JsonResponse
     {
         $validated = $request->validated();
-        $login = $validated['email'];
+        $login = $phones->normalizeForLookup($validated['email']) ?? $validated['email'];
 
         $user = User::query()
             ->where(function ($query) use ($login): void {
@@ -771,11 +781,11 @@ class AuthController extends Controller
         }
     }
 
-    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    public function forgotPassword(ForgotPasswordRequest $request, PhoneNumberService $phones): JsonResponse
     {
         $validated = $request->validated();
         $email = $validated['email'] ?? null;
-        $phoneNumber = $validated['phone_number'] ?? null;
+        $phoneNumber = $phones->normalizeForLookup($validated['phone_number'] ?? null);
 
         $genericMessage = 'Si ce compte existe, un code de réinitialisation a été envoyé.';
 
@@ -795,11 +805,11 @@ class AuthController extends Controller
         return ApiResponse::success($genericMessage, $this->otpResendMeta($send['resend_count']));
     }
 
-    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    public function resetPassword(ResetPasswordRequest $request, PhoneNumberService $phones): JsonResponse
     {
         $validated = $request->validated();
         $email = $validated['email'] ?? null;
-        $phoneNumber = $validated['phone_number'] ?? null;
+        $phoneNumber = $phones->normalizeForLookup($validated['phone_number'] ?? null);
 
         $resetCode = $this->findPasswordResetCode($email, $phoneNumber);
 
