@@ -11,7 +11,7 @@ COPY public ./public
 RUN npm run build
 
 # --- PHP / Nginx runtime ---
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     nginx supervisor bash git unzip \
