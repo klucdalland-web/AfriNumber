@@ -73,4 +73,5 @@ EOF
 
 EXPOSE 10000
 
-CMD
+ENTRYPOINT []
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
