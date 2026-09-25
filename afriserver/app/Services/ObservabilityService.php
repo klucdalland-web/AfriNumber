@@ -91,13 +91,20 @@ class ObservabilityService
             default => 'info',
         };
 
+        $error = $status >= 400 ? $this->extractError($response) : null;
+        $summary = strtoupper($request->method()).' '.$request->path().' → '.$status;
+
+        if ($error && ! empty($error['message']) && is_string($error['message'])) {
+            $summary = $error['message'];
+        }
+
         $this->write([
             'user_id' => $request->user()?->id,
             'device_identifier' => $this->resolveDeviceIdentifier($request),
             'category' => $category,
             'action' => $action,
             'level' => $level,
-            'message' => strtoupper($request->method()).' '.$request->path().' → '.$status,
+            'message' => $summary,
             'method' => $request->method(),
             'path' => '/'.$request->path(),
             'route_name' => $routeName,
@@ -108,6 +115,7 @@ class ObservabilityService
             'context' => [
                 'query' => $this->sanitize($request->query()),
             ],
+            'error' => $error,
             'duration_ms' => (int) max(0, round((microtime(true) - $startedAt) * 1000)),
         ], $request);
     }
@@ -291,6 +299,65 @@ class ObservabilityService
             'network_type' => $geo['network_type'] ?? null,
             'source' => 'ip',
             'ip' => $ip,
+        ];
+    }
+
+    /**
+     * Extrait message + erreurs de validation / API depuis la réponse HTTP.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function extractError(Response $response): ?array
+    {
+        $content = $response->getContent();
+
+        if (! is_string($content) || $content === '') {
+            return [
+                'status_code' => $response->getStatusCode(),
+                'message' => 'HTTP '.$response->getStatusCode(),
+                'type' => 'http',
+            ];
+        }
+
+        // Limite la taille lue
+        if (strlen($content) > 12000) {
+            $content = substr($content, 0, 12000);
+        }
+
+        $decoded = json_decode($content, true);
+
+        if (! is_array($decoded)) {
+            return [
+                'status_code' => $response->getStatusCode(),
+                'message' => trim(substr(strip_tags($content), 0, 500)) ?: 'HTTP '.$response->getStatusCode(),
+                'type' => 'http',
+            ];
+        }
+
+        $message = $decoded['message'] ?? $decoded['error'] ?? null;
+        if (is_array($message)) {
+            $message = json_encode($message, JSON_UNESCAPED_UNICODE) ?: 'Error';
+        }
+
+        $errors = $decoded['errors'] ?? null;
+        if (is_array($errors)) {
+            $errors = $this->sanitize($errors);
+        } else {
+            $errors = null;
+        }
+
+        $type = match (true) {
+            $errors !== null => 'validation',
+            ($decoded['success'] ?? null) === false => 'api',
+            default => 'http',
+        };
+
+        return [
+            'status_code' => $response->getStatusCode(),
+            'type' => $type,
+            'message' => is_string($message) ? $message : 'HTTP '.$response->getStatusCode(),
+            'errors' => $errors,
+            'code' => $decoded['code'] ?? null,
         ];
     }
 

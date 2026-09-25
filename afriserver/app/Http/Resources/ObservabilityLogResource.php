@@ -36,6 +36,7 @@ class ObservabilityLogResource extends JsonResource
             'data_after' => $this->data_after,
             'session' => $this->session,
             'location' => $this->location,
+            'error' => $this->error,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
