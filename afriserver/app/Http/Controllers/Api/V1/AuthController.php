@@ -8,10 +8,12 @@ use App\Http\Requests\Api\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
+use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Device;
 use App\Models\DeviceTokenFcm;
+use App\Models\OtpVerification;
 use App\Models\PasswordResetCode;
 use App\Models\Pays;
 use App\Models\Platform;
@@ -34,122 +36,250 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
+        $pays = Pays::query()->where('id', $validated['contrie_id'])->first();
+
+        if (! $pays || ! $pays->organisation_id) {
+            throw ValidationException::withMessages([
+                'contrie_id' => ['Le pays sélectionné est invalide.'],
+            ]);
+        }
+
+        if (User::query()->where('email', $validated['email'])->exists()) {
+            throw ValidationException::withMessages([
+                'email' => ['Cette adresse email est déjà utilisée.'],
+            ]);
+        }
+
+        if (User::query()->where('phone_number', $validated['phone_number'])->exists()) {
+            throw ValidationException::withMessages([
+                'phone_number' => ['Ce numéro de téléphone est déjà utilisé.'],
+            ]);
+        }
+
+        $typeUserId = TypeUser::query()->where('code', 'user')->value('id');
+
+        $payload = array_merge($validated, [
+            'password' => Hash::make($validated['password']),
+            'type_user_id' => $typeUserId,
+            'organisation_id' => $pays->organisation_id,
+        ]);
+
+        $this->issueOtp(
+            email: $validated['email'] ?? null,
+            phoneNumber: $validated['phone_number'] ?? null,
+            purpose: 'register',
+            payload: $payload
+        );
+
+        return ApiResponse::success('Un code de vérification a été envoyé. Veuillez le saisir pour finaliser votre inscription.');
+    }
+
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $login = $validated['email'];
+
+        $user = User::query()
+            ->where(function ($query) use ($login): void {
+                $query->where('email', $login)
+                    ->orWhere('phone_number', $login);
+            })
+            ->first();
+
+        if ($user && $user->locked_until && $user->locked_until->isFuture()) {
+            $minutesLeft = (int) ceil(now()->diffInMinutes($user->locked_until));
+
+            $timeMessage = $minutesLeft >= 60
+                ? (int) ceil($minutesLeft / 60) . ' heure(s)'
+                : $minutesLeft . ' minute(s)';
+
+            return ApiResponse::error(
+                "Compte temporairement verrouillé suite à plusieurs tentatives échouées. Réessayez dans {$timeMessage}, ou réinitialisez votre mot de passe.",
+                ['locked_minutes_left' => $minutesLeft],
+                423
+            );
+        }
+
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+            if ($user) {
+                $this->registerFailedAttempt($user);
+            }
+
+            throw ValidationException::withMessages([
+                'login' => ['Identifiants incorrects.'],
+            ]);
+        }
+
+        if ($user->failed_login_attempts > 0 || $user->locked_until) {
+            $user->update([
+                'failed_login_attempts' => 0,
+                'locked_until' => null,
+            ]);
+        }
+
+        if ($user->statut !== 'actif') {
+            return ApiResponse::error('Compte non actif.', null, 403);
+        }
+
+        $payload = array_merge($validated, ['user_id' => $user->id]);
+        unset($payload['password']);
+
+        $this->issueOtp(
+            email: $user->email,
+            phoneNumber: $user->phone_number,
+            purpose: 'login',
+            payload: $payload
+        );
+
+        return ApiResponse::success('Un code de vérification a été envoyé. Veuillez le saisir pour finaliser la connexion.');
+    }
+
+    public function verifyOtp(VerifyOtpRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $otp = OtpVerification::query()
+            ->when($validated['email'] ?? null, fn ($q, $email) => $q->where('email', $email))
+            ->when($validated['phone_number'] ?? null, fn ($q, $phone) => $q->where('phone_number', $phone))
+            ->where('purpose', $validated['purpose'])
+            ->latest()
+            ->first();
+
+        if (! $otp) {
+            throw ValidationException::withMessages([
+                'code' => ['Code invalide ou expiré. Veuillez recommencer.'],
+            ]);
+        }
+
+        // Vérifie si bloqué suite à trop de tentatives
+        if ($otp->locked_until && $otp->locked_until->isFuture()) {
+            $minutesLeft = (int) ceil(now()->diffInMinutes($otp->locked_until));
+
+            return ApiResponse::error(
+                "Trop de tentatives échouées. Veuillez réessayer dans {$minutesLeft} minute(s).",
+                ['locked_minutes_left' => $minutesLeft],
+                423
+            );
+        }
+
+        if ($otp->expires_at->isPast()) {
+            $otp->delete();
+
+            throw ValidationException::withMessages([
+                'code' => ['Ce code a expiré. Veuillez recommencer.'],
+            ]);
+        }
+
+        if (! Hash::check($validated['code'], $otp->code)) {
+            $otp->increment('attempts');
+
+            if ($otp->attempts >= 5) {
+                $otp->update(['locked_until' => now()->addMinutes(15)]);
+
+                return ApiResponse::error(
+                    'Trop de tentatives échouées. Veuillez réessayer dans 15 minute(s).',
+                    ['locked_minutes_left' => 15],
+                    423
+                );
+            }
+
+            $remaining = max(0, 5 - $otp->attempts);
+
+            throw ValidationException::withMessages([
+                'code' => ["Code incorrect. Il vous reste {$remaining} tentative(s)."],
+            ]);
+        }
+
+        $payload = $otp->payload;
+
         try {
-            $result = DB::transaction(function () use ($validated, $request) {
-                $typeUserId = TypeUser::query()->where('code', 'user')->value('id');
+            $result = DB::transaction(function () use ($payload, $request, $validated) {
+                if ($validated['purpose'] === 'register') {
+                    
+                    if (User::query()->where('email', $payload['email'])->exists()) {
+                        throw ValidationException::withMessages([
+                            'email' => ['Cette adresse email est déjà utilisée.'],
+                        ]);
+                    }
 
-                $contrieId = $validated['contrie_id'];
+                    if (User::query()->where('phone_number', $payload['phone_number'])->exists()) {
+                        throw ValidationException::withMessages([
+                            'phone_number' => ['Ce numéro de téléphone est déjà utilisé.'],
+                        ]);
+                    }
 
-                $pays = Pays::query()->where('id', $contrieId)->first();
-
-                if (! $pays || ! $pays->organisation_id) {
-                    throw ValidationException::withMessages([
-                        'contrie_id' => ['Le pays sélectionné est invalide.'],
+                    $user = User::query()->create([
+                        'name' => $payload['name'],
+                        'email' => $payload['email'],
+                        'first_name' => $payload['first_name'],
+                        'phone_number' => $payload['phone_number'],
+                        'password' => $payload['password'], // déjà haché
+                        'type_user_id' => $payload['type_user_id'],
+                        'statut' => 'actif',
+                        'status_valide' => 'non_valide',
+                        'organisation_id' => $payload['organisation_id'],
                     ]);
-                }
 
-                $user = User::query()->create([
-                    'name' => $validated['name'],
-                    'email' => $validated['email'],
-                    'first_name' => $validated['first_name'],
-                    'phone_number' => $validated['phone_number'],
-                    'password' => Hash::make($validated['password']),
-                    'type_user_id' => $typeUserId,
-                    'statut' => 'actif',
-                    'status_valide' => 'non_valide',
-                    'organisation_id' => $pays->organisation_id,
-                ]);
+                } else {
+                    $user = User::query()->findOrFail($payload['user_id']);
+                }
 
                 $user->load(['typeUser', 'organisation']);
 
-                $tokens = $this->registerDeviceAndTokens($user, $validated, $request);
+                $tokens = $this->registerDeviceAndTokens($user, $payload, $request);
 
                 return array_merge(['user' => UserResource::make($user)], $tokens);
             });
 
-            return ApiResponse::success('Inscription réussie.', $result, 201);
+            $otp->delete();
+
+            $message = $validated['purpose'] === 'register' ? 'Inscription réussie.' : 'Connexion réussie.';
+            $status = $validated['purpose'] === 'register' ? 201 : 200;
+
+            return ApiResponse::success($message, $result, $status);
         } catch (ValidationException $e) {
             throw $e;
         } catch (Throwable $e) {
-            Log::error('Erreur lors de l\'inscription.', [
+            Log::error('Erreur lors de la vérification OTP.', [
                 'message' => $e->getMessage(),
-                'email' => $validated['email'] ?? null,
+                'purpose' => $validated['purpose'],
             ]);
 
-            return ApiResponse::error('Une erreur est survenue lors de l\'inscription.', null, 500);
+            return ApiResponse::error('Une erreur est survenue.', null, 500);
         }
     }
 
-   public function login(LoginRequest $request): JsonResponse
-{
-    $validated = $request->validated();
-    $login = $validated['email'];
+    /**
+     * Génère, stocke et envoie un code OTP.
+     * Une seule ligne par (email/téléphone, purpose) — mise à jour à chaque nouvelle demande.
+     */
+    private function issueOtp(?string $email, ?string $phoneNumber, string $purpose, array $payload): void
+    {
+        $code = (string) random_int(100000, 999999);
+        $code =123456; // Pour tests, à retirer en production
 
-    $user = User::query()
-        ->where(function ($query) use ($login): void {
-            $query->where('email', $login)
-                ->orWhere('phone_number', $login);
-        })
-        ->first();
+        OtpVerification::query()->updateOrCreate(
+            [
+                'email' => $email,
+                'phone_number' => $phoneNumber,
+                'purpose' => $purpose,
+            ],
+            [
+                'code' => Hash::make($code),
+                'payload' => $payload,
+                'attempts' => 0,
+                'locked_until' => null,
+                'expires_at' => now()->addMinutes(10),
+            ]
+        );
 
-    // Vérifie si le compte est actuellement verrouillé
-   if ($user && $user->locked_until && $user->locked_until->isFuture()) {
-    $minutesLeft = (int) ceil(now()->diffInMinutes($user->locked_until));
-
-    return ApiResponse::error(
-        "Compte temporairement verrouillé suite à plusieurs tentatives échouées. Réessayez dans {$minutesLeft} minute(s).",
-        ['locked_minutes_left' => $minutesLeft],
-        423
-    );
-}
-
-    if (! $user || ! Hash::check($validated['password'], $user->password)) {
-        if ($user) {
-            $this->registerFailedAttempt($user);
-        }
-
-        throw ValidationException::withMessages([
-            'login' => ['Identifiants incorrects.'],
-        ]);
+        // TODO : envoyer $code par email ou SMS
+        Log::info('Code OTP généré.', ['email' => $email, 'phone_number' => $phoneNumber, 'purpose' => $purpose]);
     }
 
-    // Connexion réussie : réinitialise le compteur d'échecs
-    if ($user->failed_login_attempts > 0 || $user->locked_until) {
-        $user->update([
-            'failed_login_attempts' => 0,
-            'locked_until' => null,
-        ]);
-    }
-
-    if ($user->statut !== 'actif') {
-        return ApiResponse::error('Compte non actif.', null, 403);
-    }
-
-    try {
-        $result = DB::transaction(function () use ($user, $validated, $request) {
-            $user->load(['typeUser', 'organisation']);
-
-            $tokens = $this->registerDeviceAndTokens($user, $validated, $request);
-
-            return array_merge(['user' => UserResource::make($user)], $tokens);
-        });
-
-        return ApiResponse::success('Connexion réussie.', $result);
-    } catch (ValidationException $e) {
-        throw $e;
-    } catch (Throwable $e) {
-        Log::error('Erreur lors de la connexion.', [
-            'message' => $e->getMessage(),
-            'user_id' => $user->id,
-        ]);
-
-        return ApiResponse::error('Une erreur est survenue lors de la connexion.', null, 500);
-    }
-}
-
-/**
- * Incrémente le compteur d'échecs et verrouille le compte si le seuil est atteint.
- */
+    /**
+     * Incrémente le compteur d'échecs et verrouille le compte selon un seuil progressif.
+     */
     private function registerFailedAttempt(User $user): void
     {
         $attempts = $user->failed_login_attempts + 1;
@@ -171,11 +301,11 @@ class AuthController extends Controller
     }
 
     /**
- * Enregistre/actualise le device, la session et le token FCM,
- * puis génère un nouveau couple access/refresh token.
- *
- * @return array<string, mixed>
- */
+     * Enregistre/actualise le device, la session et le token FCM,
+     * puis génère un nouveau couple access/refresh token.
+     *
+     * @return array<string, mixed>
+     */
     private function registerDeviceAndTokens(User $user, array $validated, Request $request): array
     {
         $platform = Platform::query()
@@ -401,7 +531,105 @@ class AuthController extends Controller
             return ApiResponse::error('Une erreur est survenue lors du changement de mot de passe.', null, 500);
         }
     }
-     private function getClientIp(Request $request): string
+
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $user = User::query()
+            ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
+            ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
+            ->first();
+
+        $genericResponse = ApiResponse::success('Si ce compte existe, un code de réinitialisation a été envoyé.');
+
+        if (! $user) {
+            return $genericResponse;
+        }
+
+        $code = (string) random_int(100000, 999999);
+
+        $code = 123456; // Pour tests, à retirer en production
+        PasswordResetCode::query()->updateOrCreate(
+            [
+                'email' => $validated['email'] ?? null,
+                'phone_number' => $validated['phone_number'] ?? null,
+            ],
+            [
+                'code' => Hash::make($code),
+                'expires_at' => now()->addMinutes(15),
+            ]
+        );
+
+        // TODO : envoyer $code par email (si 'email' fourni) ou SMS (si 'phone_number' fourni)
+
+        Log::info('Code de réinitialisation généré.', [
+            'email' => $validated['email'] ?? null,
+            'phone_number' => $validated['phone_number'] ?? null,
+        ]);
+
+        return $genericResponse;
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $resetCode = PasswordResetCode::query()
+            ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
+            ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
+            ->latest()
+            ->first();
+
+        if (! $resetCode || ! Hash::check($validated['code'], $resetCode->code)) {
+            throw ValidationException::withMessages([
+                'code' => ['Code invalide.'],
+            ]);
+        }
+
+        if ($resetCode->expires_at->isPast()) {
+            $resetCode->delete();
+
+            throw ValidationException::withMessages([
+                'code' => ['Ce code a expiré. Veuillez en demander un nouveau.'],
+            ]);
+        }
+
+        $user = User::query()
+            ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
+            ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
+            ->first();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'email' => ['Compte introuvable.'],
+            ]);
+        }
+
+        try {
+            DB::transaction(function () use ($user, $validated, $resetCode) {
+                $user->update([
+                    'password' => Hash::make($validated['password']),
+                    'failed_login_attempts' => 0,
+                    'locked_until' => null,
+                ]);
+
+                $user->tokens()->delete();
+
+                $resetCode->delete();
+            });
+
+            return ApiResponse::success('Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous reconnecter.');
+        } catch (Throwable $e) {
+            Log::error('Erreur lors de la réinitialisation du mot de passe.', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return ApiResponse::error('Une erreur est survenue lors de la réinitialisation.', null, 500);
+        }
+    }
+
+    private function getClientIp(Request $request): string
     {
         $ip =
             $request->header('CF-Connecting-IP') ??
@@ -414,102 +642,4 @@ class AuthController extends Controller
 
         return $ip ?: $request->ip();
     }
-
-    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
-{
-    $validated = $request->validated();
-
-    $user = User::query()
-        ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-        ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-        ->first();
-
-    $genericResponse = ApiResponse::success('Si ce compte existe, un code de réinitialisation a été envoyé.');
-
-    if (! $user) {
-        return $genericResponse;
-    }
-
-    $code = (string) random_int(100000, 999999);
-    $code=123456;
-
-    PasswordResetCode::query()
-        ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-        ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-        ->delete();
-
-    PasswordResetCode::query()->create([
-        'email' => $validated['email'] ?? null,
-        'phone_number' => $validated['phone_number'] ?? null,
-        'code' => Hash::make($code),
-        'expires_at' => now()->addMinutes(15),
-    ]);
-
-    // TODO : envoyer $code par email (si 'email' fourni) ou SMS (si 'phone_number' fourni)
-
-    Log::info('Code de réinitialisation généré.', [
-        'email' => $validated['email'] ?? null,
-        'phone_number' => $validated['phone_number'] ?? null,
-    ]);
-
-    return $genericResponse;
-}
-
-public function resetPassword(ResetPasswordRequest $request): JsonResponse
-{
-    $validated = $request->validated();
-
-    $resetCode = PasswordResetCode::query()
-        ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-        ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-        ->latest()
-        ->first();
-
-    if (! $resetCode || ! Hash::check($validated['code'], $resetCode->code)) {
-        throw ValidationException::withMessages([
-            'code' => ['Code invalide.'],
-        ]);
-    }
-
-    if ($resetCode->expires_at->isPast()) {
-        $resetCode->delete();
-
-        throw ValidationException::withMessages([
-            'code' => ['Ce code a expiré. Veuillez en demander un nouveau.'],
-        ]);
-    }
-
-    $user = User::query()
-        ->when($validated['email'] ?? null, fn ($query, $email) => $query->where('email', $email))
-        ->when($validated['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', $phone))
-        ->first();
-
-    if (! $user) {
-        throw ValidationException::withMessages([
-            'email' => ['Compte introuvable.'],
-        ]);
-    }
-
-    try {
-        DB::transaction(function () use ($user, $validated, $resetCode) {
-            $user->update([
-                'password' => Hash::make($validated['password']),
-                'failed_login_attempts' => 0,
-                'locked_until' => null,
-            ]);
-
-            $user->tokens()->delete();
-
-            $resetCode->delete();
-        });
-
-        return ApiResponse::success('Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous reconnecter.');
-    } catch (Throwable $e) {
-        Log::error('Erreur lors de la réinitialisation du mot de passe.', [
-            'message' => $e->getMessage(),
-        ]);
-
-        return ApiResponse::error('Une erreur est survenue lors de la réinitialisation.', null, 500);
-    }
-}
 }

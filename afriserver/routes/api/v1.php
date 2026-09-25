@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->name('auth.')->group(function (): void {
     Route::post('register', [AuthController::class, 'register'])->name('register') ->middleware('throttle:register');
     Route::post('login', [AuthController::class, 'login'])->name('login') ->middleware('throttle:login');
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp'])
+    ->name('verify-otp')
+    ->middleware('throttle:10,1');
+
+    
 
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])
         ->name('forgot-password')
