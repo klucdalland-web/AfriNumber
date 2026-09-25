@@ -796,6 +796,57 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "📡 observability",
+			"description": "Historique système — requêtes, auth, devices, actions (filtrable).",
+			"item": [
+				{
+					"name": "📜 My Activity Logs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Observability logs OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+						},
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "x-api-key", "value": "{{x_api_key}}" },
+							{ "key": "X-Device-Id", "value": "{{device_id}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/observability/logs?per_page=30",
+							"host": ["{{base_url}}"],
+							"path": ["observability", "logs"],
+							"query": [
+								{ "key": "per_page", "value": "30" },
+								{ "key": "category", "value": "", "disabled": true },
+								{ "key": "action", "value": "", "disabled": true },
+								{ "key": "level", "value": "", "disabled": true },
+								{ "key": "device_id", "value": "", "disabled": true },
+								{ "key": "from", "value": "", "disabled": true },
+								{ "key": "to", "value": "", "disabled": true }
+							]
+						},
+						"description": "Historique du compte.\\n\\nChaque log expose `data_before` / `data_after` (état avant/après).\\n\\nFiltres : `category` (auth|device|request|security), `action`, `level`, `device_id`, `device_identifier`, `from`, `to`, `per_page`."
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

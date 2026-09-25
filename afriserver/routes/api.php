@@ -8,6 +8,6 @@ Route::post('/numbers/buy', [NumberController::class, 'buy']);
 
 Route::prefix('v1')
     ->name('v1.')
-    ->middleware(['x-api-key-v1', 'check.device.session'])
+    ->middleware(['x-api-key-v1', 'check.device.session', 'observability'])
     ->group(base_path('routes/api/v1.php'))
     ;

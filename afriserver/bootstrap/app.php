@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         "x-api-key-v1" => \App\Http\Middleware\XApiKeyV1Middleware::class,
         "check.device.session" => \App\Http\Middleware\CheckDeviceSession::class,
+        'observability' => \App\Http\Middleware\LogObservability::class,
     ]);
         $middleware->redirectGuestsTo(function (Request $request): ?string {
             if ($request->is('api/*')) {

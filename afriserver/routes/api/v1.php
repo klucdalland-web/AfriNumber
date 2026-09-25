@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\ObservabilityController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,4 +44,6 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
     Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
     Route::delete('/devices/others', [DeviceController::class, 'destroyOthers'])->name('devices.destroy-others');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
+
+    Route::get('/observability/logs', [ObservabilityController::class, 'index'])->name('observability.logs');
 });

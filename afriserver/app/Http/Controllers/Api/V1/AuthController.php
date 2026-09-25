@@ -23,6 +23,7 @@ use App\Models\SessionUser;
 use App\Models\TypeUser;
 use App\Models\User;
 use App\Services\GeoLocationService;
+use App\Services\ObservabilityService;
 use App\Services\PhoneNumberService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -117,9 +118,30 @@ class AuthController extends Controller
         }
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
+            $before = $user ? [
+                'failed_login_attempts' => $user->failed_login_attempts,
+                'locked_until' => $user->locked_until?->toIso8601String(),
+            ] : null;
+
             if ($user) {
                 $this->registerFailedAttempt($user);
+                $user->refresh();
             }
+
+            app(ObservabilityService::class)->action(
+                category: 'security',
+                action: 'auth.login_failed',
+                message: 'Tentative de connexion échouée',
+                context: ['login' => $login],
+                dataBefore: $before,
+                dataAfter: $user ? [
+                    'failed_login_attempts' => $user->failed_login_attempts,
+                    'locked_until' => $user->locked_until?->toIso8601String(),
+                ] : null,
+                level: 'warning',
+                user: $user,
+                request: $request,
+            );
 
             throw ValidationException::withMessages([
                 'login' => ['Identifiants incorrects.'],
@@ -254,6 +276,34 @@ class AuthController extends Controller
                 $user->load(['typeUser', 'pays.organisation']);
 
                 $tokens = $this->registerDeviceAndTokens($user, $payload, $request);
+
+                app(ObservabilityService::class)->action(
+                    category: 'auth',
+                    action: $validated['purpose'] === 'register' ? 'auth.register_completed' : 'auth.login_completed',
+                    message: $validated['purpose'] === 'register' ? 'Inscription réussie' : 'Connexion réussie',
+                    context: [
+                        'purpose' => $validated['purpose'],
+                        'device_name' => $payload['device_name'] ?? null,
+                        'platform' => $payload['platform'] ?? null,
+                    ],
+                    dataBefore: $validated['purpose'] === 'register' ? null : [
+                        'user_id' => $user->id,
+                        'statut' => $user->statut,
+                        'status_valide' => $user->status_valide,
+                    ],
+                    dataAfter: [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'phone_number' => $user->phone_number,
+                        'statut' => $user->statut,
+                        'status_valide' => $user->status_valide,
+                        'device_name' => $payload['device_name'] ?? null,
+                        'platform' => $payload['platform'] ?? null,
+                        'device_identifier' => $request->header('X-Device-Id'),
+                    ],
+                    user: $user,
+                    request: $request,
+                );
 
                 return array_merge(['user' => UserResource::make($user)], $tokens);
             });
@@ -711,12 +761,37 @@ class AuthController extends Controller
             $currentToken = $user->currentAccessToken();
             $deviceName = str_replace(['-access', '-refresh'], '', $currentToken->name);
 
+            $before = [
+                'device_name' => $deviceName,
+                'tokens_count' => $user->tokens()
+                    ->where(function ($query) use ($deviceName): void {
+                        $query->where('name', $deviceName . '-access')
+                            ->orWhere('name', $deviceName . '-refresh');
+                    })
+                    ->count(),
+            ];
+
             $user->tokens()
                 ->where(function ($query) use ($deviceName): void {
                     $query->where('name', $deviceName . '-access')
                         ->orWhere('name', $deviceName . '-refresh');
                 })
                 ->delete();
+
+            app(ObservabilityService::class)->action(
+                category: 'auth',
+                action: 'auth.logout',
+                message: 'Déconnexion réussie',
+                context: ['device_name' => $deviceName],
+                dataBefore: $before,
+                dataAfter: [
+                    'device_name' => $deviceName,
+                    'tokens_count' => 0,
+                    'revoked' => true,
+                ],
+                user: $user,
+                request: $request,
+            );
 
             return ApiResponse::success('Déconnexion réussie.');
         } catch (Throwable $e) {
@@ -768,8 +843,25 @@ class AuthController extends Controller
                     'refresh_token' => $newRefreshToken->plainTextToken,
                     'refresh_token_expires_at' => $refreshExpiresAt->toIso8601String(),
                     'token_type' => 'Bearer',
+                    'device_name' => $deviceName,
                 ];
             });
+
+            app(ObservabilityService::class)->action(
+                category: 'security',
+                action: 'auth.password_changed',
+                message: 'Mot de passe modifié',
+                dataBefore: ['password_changed' => false],
+                dataAfter: [
+                    'password_changed' => true,
+                    'tokens_rotated' => true,
+                    'device_name' => $result['device_name'] ?? null,
+                ],
+                user: $user,
+                request: $request,
+            );
+
+            unset($result['device_name']);
 
             return ApiResponse::success('Mot de passe modifié avec succès.', $result);
         } catch (Throwable $e) {
@@ -880,6 +972,12 @@ class AuthController extends Controller
         }
 
         try {
+            $before = [
+                'failed_login_attempts' => $user->failed_login_attempts,
+                'locked_until' => $user->locked_until?->toIso8601String(),
+                'tokens_count' => $user->tokens()->count(),
+            ];
+
             DB::transaction(function () use ($user, $validated, $resetCode) {
                 $user->update([
                     'password' => Hash::make($validated['password']),
@@ -891,6 +989,23 @@ class AuthController extends Controller
 
                 $resetCode->delete();
             });
+
+            $user->refresh();
+
+            app(ObservabilityService::class)->action(
+                category: 'security',
+                action: 'auth.password_reset',
+                message: 'Mot de passe réinitialisé',
+                dataBefore: $before,
+                dataAfter: [
+                    'failed_login_attempts' => $user->failed_login_attempts,
+                    'locked_until' => null,
+                    'tokens_count' => 0,
+                    'password_reset' => true,
+                ],
+                user: $user,
+                request: $request,
+            );
 
             return ApiResponse::success('Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous reconnecter.');
         } catch (Throwable $e) {
