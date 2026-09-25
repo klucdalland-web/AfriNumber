@@ -8,6 +8,15 @@ abstract class AuthRepository {
     required String password,
   });
 
+  Future<void> verifyOtp({
+    required String code,
+    String? email,
+  });
+
+  Future<void> resendOtp({
+    String? email,
+  });
+
   Future<void> logout();
 
   Future<Map<String, dynamic>?> me();
