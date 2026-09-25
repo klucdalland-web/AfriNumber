@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Device;
 use App\Models\ObservabilityLog;
+use App\Models\SessionUser;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -53,10 +54,11 @@ class ObservabilityService
         ?Request $request = null,
     ): void {
         $request ??= request();
+        $deviceIdentifier = $this->resolveDeviceIdentifier($request);
 
         $this->write([
             'user_id' => $user?->id ?? $request?->user()?->id,
-            'device_identifier' => $request?->header('X-Device-Id'),
+            'device_identifier' => $deviceIdentifier,
             'category' => $category,
             'action' => $action,
             'level' => $level,
@@ -91,7 +93,7 @@ class ObservabilityService
 
         $this->write([
             'user_id' => $request->user()?->id,
-            'device_identifier' => $request->header('X-Device-Id'),
+            'device_identifier' => $this->resolveDeviceIdentifier($request),
             'category' => $category,
             'action' => $action,
             'level' => $level,
@@ -119,11 +121,34 @@ class ObservabilityService
             $deviceIdentifier = $attributes['device_identifier'] ?? null;
             $userId = $attributes['user_id'] ?? null;
 
-            if ($deviceIdentifier && $userId && empty($attributes['device_id'])) {
-                $attributes['device_id'] = Device::query()
-                    ->where('user_id', $userId)
-                    ->where('identifier', $deviceIdentifier)
-                    ->value('id');
+            if ($deviceIdentifier && empty($attributes['device_id'])) {
+                $deviceQuery = Device::query()->where('identifier', $deviceIdentifier);
+
+                if ($userId) {
+                    $deviceQuery->where('user_id', $userId);
+                }
+
+                $attributes['device_id'] = $deviceQuery->value('id');
+            }
+
+            $session = $this->resolveSessionSnapshot(
+                deviceId: isset($attributes['device_id']) ? (int) $attributes['device_id'] : null,
+                userId: $userId ? (int) $userId : null,
+            );
+
+            if ($session !== null) {
+                $attributes['session'] = $session;
+            }
+
+            $location = $this->resolveLocation(
+                ip: isset($attributes['ip_address']) && is_string($attributes['ip_address'])
+                    ? $attributes['ip_address']
+                    : null,
+                session: $session,
+            );
+
+            if ($location !== null) {
+                $attributes['location'] = $location;
             }
 
             $attributes['created_at'] = now();
@@ -136,6 +161,137 @@ class ObservabilityService
                 'action' => $attributes['action'] ?? null,
             ]);
         }
+    }
+
+    private function resolveDeviceIdentifier(?Request $request): ?string
+    {
+        if (! $request) {
+            return null;
+        }
+
+        $fromHeader = $request->header('X-Device-Id');
+        if (is_string($fromHeader) && $fromHeader !== '') {
+            return $fromHeader;
+        }
+
+        $fromBody = $request->input('device_id');
+        if (is_string($fromBody) && $fromBody !== '') {
+            return $fromBody;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveSessionSnapshot(?int $deviceId, ?int $userId): ?array
+    {
+        if (! $deviceId) {
+            return null;
+        }
+
+        $query = SessionUser::query()
+            ->where('device_id', $deviceId)
+            ->with('device:id,identifier,name,model,os_version,actif,last_used_at');
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        $session = $query->first();
+
+        if (! $session) {
+            return null;
+        }
+
+        return [
+            'device_id' => $session->device_id,
+            'user_id' => $session->user_id,
+            'is_active' => (bool) $session->is_active,
+            'ip_address' => $session->ip_address,
+            'user_agent' => $session->user_agent,
+            'country' => $session->country,
+            'city' => $session->city,
+            'region' => $session->region,
+            'timezone' => $session->timezone,
+            'latitude' => $session->latitude !== null ? (float) $session->latitude : null,
+            'internet_provider' => $session->internet_provider,
+            'network_type' => $session->network_type,
+            'device' => $session->device ? [
+                'id' => $session->device->id,
+                'identifier' => $session->device->identifier,
+                'name' => $session->device->name,
+                'model' => $session->device->model,
+                'os_version' => $session->device->os_version,
+                'actif' => (bool) $session->device->actif,
+                'last_used_at' => $session->device->last_used_at?->toIso8601String(),
+            ] : null,
+            'created_at' => $session->created_at?->toIso8601String(),
+            'updated_at' => $session->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Lieu de l'action : priorité session geo, sinon lookup IP (cache 24h).
+     *
+     * @param  array<string, mixed>|null  $session
+     * @return array<string, mixed>|null
+     */
+    private function resolveLocation(?string $ip, ?array $session): ?array
+    {
+        if ($session && ($session['country'] ?? null || $session['city'] ?? null)) {
+            return [
+                'country' => $session['country'] ?? null,
+                'city' => $session['city'] ?? null,
+                'region' => $session['region'] ?? null,
+                'timezone' => $session['timezone'] ?? null,
+                'latitude' => $session['latitude'] ?? null,
+                'longitude' => null,
+                'internet_provider' => $session['internet_provider'] ?? null,
+                'network_type' => $session['network_type'] ?? null,
+                'source' => 'session',
+                'ip' => $session['ip_address'] ?? $ip,
+            ];
+        }
+
+        if (! $ip) {
+            return null;
+        }
+
+        $geo = app(GeoLocationService::class)->getGeoFromIp($ip);
+
+        $hasPlace = ($geo['country'] ?? null) || ($geo['city'] ?? null) || ($geo['region'] ?? null);
+
+        if (! $hasPlace) {
+            return [
+                'country' => null,
+                'city' => null,
+                'region' => null,
+                'timezone' => null,
+                'latitude' => null,
+                'longitude' => null,
+                'internet_provider' => null,
+                'network_type' => null,
+                'source' => 'ip',
+                'ip' => $ip,
+                'unavailable' => true,
+                'reason' => 'private_or_unknown_ip',
+            ];
+        }
+
+        return [
+            'country' => $geo['country'] ?? null,
+            'city' => $geo['city'] ?? null,
+            'region' => $geo['region'] ?? null,
+            'timezone' => $geo['timezone'] ?? null,
+            'latitude' => $geo['latitude'] ?? null,
+            'longitude' => $geo['longitude'] ?? null,
+            'internet_provider' => $geo['internet_provider'] ?? null,
+            'network_type' => $geo['network_type'] ?? null,
+            'source' => 'ip',
+            'ip' => $ip,
+        ];
     }
 
     /**

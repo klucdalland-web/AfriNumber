@@ -27,6 +27,8 @@ class ObservabilityLog extends Model
         'context',
         'data_before',
         'data_after',
+        'session',
+        'location',
         'duration_ms',
         'created_at',
     ];
@@ -38,6 +40,8 @@ class ObservabilityLog extends Model
             'context' => 'array',
             'data_before' => 'array',
             'data_after' => 'array',
+            'session' => 'array',
+            'location' => 'array',
             'created_at' => 'datetime',
             'status_code' => 'integer',
             'duration_ms' => 'integer',

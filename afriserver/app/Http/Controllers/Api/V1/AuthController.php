@@ -299,7 +299,7 @@ class AuthController extends Controller
                         'status_valide' => $user->status_valide,
                         'device_name' => $payload['device_name'] ?? null,
                         'platform' => $payload['platform'] ?? null,
-                        'device_identifier' => $request->header('X-Device-Id'),
+                        'device_identifier' => $payload['device_id'] ?? $request->header('X-Device-Id'),
                     ],
                     user: $user,
                     request: $request,

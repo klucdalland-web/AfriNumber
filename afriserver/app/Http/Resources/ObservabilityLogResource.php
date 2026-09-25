@@ -34,6 +34,8 @@ class ObservabilityLogResource extends JsonResource
             'context' => $this->context,
             'data_before' => $this->data_before,
             'data_after' => $this->data_after,
+            'session' => $this->session,
+            'location' => $this->location,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
