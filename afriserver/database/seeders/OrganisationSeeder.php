@@ -13,36 +13,22 @@ class OrganisationSeeder extends Seeder
      */
     public function run(): void
     {
-        $organisations = [
+        $organisation = Organisation::query()->updateOrCreate(
+            ['label' => 'AfriNumber'],
             [
-                'label' => 'UEMOA',
-                'description' => 'Union Économique et Monétaire Ouest-Africaine',
-                'codes' => ['BJ', 'BF', 'CI', 'ML', 'NE', 'SN', 'TG'],
+                'description' => 'Marchés d\'expansion AfriNumber',
+                'actif' => true,
             ],
-            [
-                'label' => 'CEMAC',
-                'description' => 'Communauté Économique et Monétaire de l\'Afrique Centrale',
-                'codes' => ['CM', 'GA'],
-            ],
-            [
-                'label' => 'Autres',
-                'description' => 'Pays hors blocs UEMOA / CEMAC',
-                'codes' => ['GH', 'GN', 'NG'],
-            ],
-        ];
+        );
 
-        foreach ($organisations as $data) {
-            $organisation = Organisation::query()->updateOrCreate(
-                ['label' => $data['label']],
-                [
-                    'description' => $data['description'],
-                    'actif' => true,
-                ],
-            );
+        Pays::query()->update(['organisation_id' => null]);
 
-            Pays::query()
-                ->whereIn('code', $data['codes'])
-                ->update(['organisation_id' => $organisation->id]);
-        }
+        Pays::query()
+            ->whereIn('code', ['MG', 'CG'])
+            ->update(['organisation_id' => $organisation->id]);
+
+        Organisation::query()
+            ->whereIn('label', ['UEMOA', 'CEMAC', 'Autres'])
+            ->update(['actif' => false]);
     }
 }
