@@ -21,6 +21,15 @@ class Device extends Model
     'actif',
     'last_used_at',
 ];
+
+    protected function casts(): array
+    {
+        return [
+            'actif' => 'boolean',
+            'last_used_at' => 'datetime',
+        ];
+    }
+
     public function sessionUser(): HasOne
     {
         return $this->hasOne(SessionUser::class);

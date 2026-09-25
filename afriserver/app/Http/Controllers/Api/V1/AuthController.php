@@ -22,6 +22,7 @@ use App\Models\Platform;
 use App\Models\SessionUser;
 use App\Models\TypeUser;
 use App\Models\User;
+use App\Services\GeoLocationService;
 use App\Services\PhoneNumberService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -605,7 +606,7 @@ class AuthController extends Controller
             ]
         );
 
-        $geoService = new \App\Services\GeoLocationService();
+        $geoService = app(GeoLocationService::class);
         $ip = $this->getClientIp($request);
         $geo = $geoService->getGeoFromIp($ip);
 

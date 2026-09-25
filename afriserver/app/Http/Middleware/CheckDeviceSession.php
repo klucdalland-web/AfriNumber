@@ -28,24 +28,24 @@ class CheckDeviceSession
         }
 
 
-        $session = Device::query()
+        $device = Device::query()
             ->where('user_id', $user->id)
             ->where('identifier', $deviceId)
+            ->where('actif', true)
             ->first();
 
-
-        if (! $session) {
+        if (! $device) {
             return response()->json([
                 'message' => 'Appareil non reconnu. Veuillez vous reconnecter.',
             ], 403);
         }
 
-        $session=SessionUser::query()
-            ->where('device_id', $session->id)
+        $session = SessionUser::query()
+            ->where('device_id', $device->id)
             ->where('user_id', $user->id)
             ->first();
 
-        if (! $session->is_active) {
+        if (! $session || ! $session->is_active) {
             return response()->json([
                 'message' => 'Votre appareil a été déconnecté. Veuillez vous reconnecter pour continuer.',
             ], 403);
@@ -54,8 +54,7 @@ class CheckDeviceSession
         // Rafraîchit les infos géo/activité, une fois par minute maximum
         if ($session->updated_at === null || $session->updated_at->diffInMinutes(now()) >= 1) {
             $ip = $this->getClientIp($request);
-            $geoService = new GeoLocationService();
-            $geo = $geoService->getGeoFromIp($ip);
+            $geo = app(GeoLocationService::class)->getGeoFromIp($ip);
 
             $session->update([
                 'ip_address' => $ip,

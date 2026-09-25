@@ -28,7 +28,8 @@
 		{ "key": "app_version", "value": "1.0.0", "type": "string" },
 		{ "key": "fcm_token", "value": "postman-fcm-token-demo", "type": "string" },
 		{ "key": "user_id", "value": "", "type": "string" },
-		{ "key": "user_name", "value": "", "type": "string" }
+		{ "key": "user_name", "value": "", "type": "string" },
+		{ "key": "device_db_id", "value": "", "type": "string" }
 	],
 	"auth": {
 		"type": "bearer",
@@ -669,6 +670,128 @@
 							"path": ["auth", "logout"]
 						},
 						"description": "Déconnexion — vide `access_token` / `refresh_token` dans la collection."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📱 devices",
+			"description": "Appareils connectés au compte — liste et déconnexion.",
+			"item": [
+				{
+					"name": "📋 List Devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Devices list OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});",
+									"",
+									"const j = pm.response.json();",
+									"const devices = (j && j.data && j.data.devices) || [];",
+									"const list = devices.data || devices;",
+									"if (Array.isArray(list) && list.length) {",
+									"    const other = list.find(d => !d.is_current) || list[0];",
+									"    if (other && other.id) pm.collectionVariables.set('device_db_id', String(other.id));",
+									"    console.log('✅ device_db_id =', pm.collectionVariables.get('device_db_id'));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+						},
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "x-api-key", "value": "{{x_api_key}}" },
+							{ "key": "X-Device-Id", "value": "{{device_id}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": ["{{base_url}}"],
+							"path": ["devices"]
+						},
+						"description": "Liste les appareils **actifs** du compte.\\n\\n`is_current` = appareil de la requête (`X-Device-Id`).\\n\\n`?include_inactive=1` pour inclure les appareils déjà déconnectés.\\n\\nSauvegarde auto `device_db_id` (premier appareil non courant si possible)."
+					},
+					"response": []
+				},
+				{
+					"name": "🔌 Disconnect Device",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Disconnect device', function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+						},
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "x-api-key", "value": "{{x_api_key}}" },
+							{ "key": "X-Device-Id", "value": "{{device_id}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/devices/{{device_db_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "{{device_db_id}}"]
+						},
+						"description": "Déconnecte un appareil (`device_db_id` = id DB, pas le X-Device-Id).\\n\\nRévoque session + tokens Sanctum + FCM de cet appareil."
+					},
+					"response": []
+				},
+				{
+					"name": "🧹 Disconnect Other Devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Disconnect others OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+						},
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "x-api-key", "value": "{{x_api_key}}" },
+							{ "key": "X-Device-Id", "value": "{{device_id}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/devices/others",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "others"]
+						},
+						"description": "Déconnecte **tous les autres** appareils, garde l'appareil courant (`X-Device-Id`)."
 					},
 					"response": []
 				}
