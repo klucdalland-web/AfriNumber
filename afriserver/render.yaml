@@ -9,8 +9,8 @@ services:
     dockerContext: .
     healthCheckPath: /
     envVars:
-      - key: PORT
-        value: "80"
+      # Do NOT set PORT here — Render injects it (usually 10000).
+      # entrypoint.sh makes nginx listen on $PORT.
       - key: APP_NAME
         value: AfriNumber
       - key: APP_ENV
@@ -35,6 +35,8 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: SESSION_DRIVER
         value: database
       - key: QUEUE_CONNECTION

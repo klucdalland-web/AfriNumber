@@ -28,25 +28,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-RUN cat <<'EOF' > /etc/nginx/http.d/default.conf
-server {
-    listen 10000;
-    server_name _;
-    root /var/www/html/public;
-    index index.php;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-}
-EOF
+# Nginx listen port is written at runtime from $PORT in entrypoint.sh
+RUN mkdir -p /etc/nginx/http.d /run/nginx
 
 RUN cat <<'EOF' > /etc/supervisord.conf
 [supervisord]
@@ -71,6 +54,7 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 EOF
 
+# Render injects PORT (default 10000). Do not hardcode 80.
 EXPOSE 10000
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
