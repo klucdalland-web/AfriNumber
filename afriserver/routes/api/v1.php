@@ -3,8 +3,20 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\ObservabilityController;
+use App\Http\Controllers\Api\V1\OrganisationController;
+use App\Http\Controllers\Api\V1\PaysController;
+use App\Http\Controllers\Api\V1\PieceIdentiteController;
+use App\Http\Controllers\Api\V1\TypePieceIdentiteController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
+
+// Référentiel organisations / pays — public (inscription)
+Route::get('/organisations', [OrganisationController::class, 'index'])->name('organisations.index');
+Route::get('/organisations/{organisation}', [OrganisationController::class, 'show'])->name('organisations.show');
+Route::get('/organisations/{organisation}/pays', [OrganisationController::class, 'pays'])->name('organisations.pays');
+
+Route::get('/pays', [PaysController::class, 'index'])->name('pays.index');
+Route::get('/pays/{pay}', [PaysController::class, 'show'])->name('pays.show');
 
 Route::prefix('auth')->name('auth.')->group(function (): void {
     Route::post('register', [AuthController::class, 'register'])->name('register')->middleware('throttle:register');
@@ -46,4 +58,17 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
     Route::get('/observability/logs', [ObservabilityController::class, 'index'])->name('observability.logs');
+
+    // Types de pièces (référentiel)
+    Route::get('/type-piece-identites', [TypePieceIdentiteController::class, 'index'])->name('type-piece-identites.index');
+    Route::get('/type-piece-identites/{typePieceIdentite}', [TypePieceIdentiteController::class, 'show'])->name('type-piece-identites.show');
+
+    // Pièces d'identité user — logique métier déléguée à Node.js
+    Route::get('/pieces', [PieceIdentiteController::class, 'index'])->name('pieces.index');
+    Route::post('/pieces', [PieceIdentiteController::class, 'store'])->name('pieces.store');
+    Route::get('/pieces/{piece}', [PieceIdentiteController::class, 'show'])->name('pieces.show');
+    Route::put('/pieces/{piece}', [PieceIdentiteController::class, 'update'])->name('pieces.update');
+    Route::delete('/pieces/{piece}', [PieceIdentiteController::class, 'destroy'])->name('pieces.destroy');
+    Route::post('/pieces/{piece}/fichiers', [PieceIdentiteController::class, 'storeFichiers'])->name('pieces.fichiers.store');
+    Route::get('/pieces/{piece}/statut', [PieceIdentiteController::class, 'statut'])->name('pieces.statut');
 });

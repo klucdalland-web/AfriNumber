@@ -21,6 +21,15 @@ class PaysResource extends JsonResource
             'label' => $this->label,
             'code' => $this->code,
             'indicatif' => $this->indicatif,
+            'actif' => $this->when(isset($this->actif), (bool) $this->actif),
+            'organisation_id' => $this->organisation_id,
+            'organisation' => $this->whenLoaded('organisation', function () {
+                return [
+                    'id' => $this->organisation?->id,
+                    'label' => $this->organisation?->label,
+                    'description' => $this->organisation?->description,
+                ];
+            }),
         ];
     }
 }

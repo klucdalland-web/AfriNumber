@@ -2,14 +2,14 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Organisation;
+use App\Models\TypePieceIdentite;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin Organisation
+ * @mixin TypePieceIdentite
  */
-class OrganisationResource extends JsonResource
+class TypePieceIdentiteResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -20,7 +20,8 @@ class OrganisationResource extends JsonResource
             'id' => $this->id,
             'label' => $this->label,
             'description' => $this->description,
-            'pays_count' => $this->when(isset($this->pays_count), $this->pays_count),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }
 }
