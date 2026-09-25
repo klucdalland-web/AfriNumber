@@ -15,14 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            TypeUserSeeder::class,
-            ContinentSeeder::class,
-            PaysSeeder::class,
-            OrganisationSeeder::class,
-            PlatformSeeder::class,
-            TypePieceIdentiteSeeder::class,
-        ]);
+        $this->call(RequiredDataSeeder::class);
 
         // User::factory(10)->create();
 

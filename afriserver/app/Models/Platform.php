@@ -26,6 +26,22 @@ class Platform extends Model
         ];
     }
 
+    /**
+     * Résout une plateforme à partir de la clé API (ex. "ios", "android", "web").
+     */
+    public static function findByKey(string $key): ?self
+    {
+        $normalized = strtolower(trim($key));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return static::query()
+            ->whereRaw('LOWER(label) = ?', [$normalized])
+            ->first();
+    }
+
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);

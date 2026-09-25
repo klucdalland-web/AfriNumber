@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\InvalidPhoneNumberException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\ChangePasswordRequest;
 use App\Http\Requests\Api\V1\Auth\ForgotPasswordRequest;
@@ -12,7 +13,6 @@ use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
-use App\Exceptions\InvalidPhoneNumberException;
 use App\Models\Device;
 use App\Models\DeviceTokenFcm;
 use App\Models\OtpVerification;
@@ -107,8 +107,8 @@ class AuthController extends Controller
             $minutesLeft = (int) ceil(now()->diffInMinutes($user->locked_until));
 
             $timeMessage = $minutesLeft >= 60
-                ? (int) ceil($minutesLeft / 60) . ' heure(s)'
-                : $minutesLeft . ' minute(s)';
+                ? (int) ceil($minutesLeft / 60).' heure(s)'
+                : $minutesLeft.' minute(s)';
 
             return ApiResponse::error(
                 "Compte temporairement verrouillé suite à plusieurs tentatives échouées. Réessayez dans {$timeMessage}, ou réinitialisez votre mot de passe.",
@@ -244,7 +244,7 @@ class AuthController extends Controller
         try {
             $result = DB::transaction(function () use ($payload, $request, $validated) {
                 if ($validated['purpose'] === 'register') {
-                    
+
                     if (User::query()->where('email', $payload['email'])->exists()) {
                         throw ValidationException::withMessages([
                             'email' => ['Cette adresse email est déjà utilisée.'],
@@ -608,9 +608,7 @@ class AuthController extends Controller
      */
     private function registerDeviceAndTokens(User $user, array $validated, Request $request): array
     {
-        $platform = Platform::query()
-            ->whereRaw('LOWER(label) = ?', [strtolower($validated['platform'])])
-            ->first();
+        $platform = Platform::findByKey($validated['platform'] ?? '');
 
         if (! $platform) {
             throw ValidationException::withMessages([
@@ -635,8 +633,8 @@ class AuthController extends Controller
 
             $otherDevice->user->tokens()
                 ->where(function ($query) use ($deviceName): void {
-                    $query->where('name', $deviceName . '-access')
-                        ->orWhere('name', $deviceName . '-refresh');
+                    $query->where('name', $deviceName.'-access')
+                        ->orWhere('name', $deviceName.'-refresh');
                 })
                 ->delete();
         }
@@ -693,10 +691,10 @@ class AuthController extends Controller
 
         $deviceName = $validated['device_name'] ?? 'api';
 
-        $accessToken = $user->createToken($deviceName . '-access', ['access-api']);
+        $accessToken = $user->createToken($deviceName.'-access', ['access-api']);
         $accessExpiresAt = Carbon::now()->addDay();
 
-        $refreshToken = $user->createToken($deviceName . '-refresh', ['issue-access-token']);
+        $refreshToken = $user->createToken($deviceName.'-refresh', ['issue-access-token']);
         $refreshExpiresAt = Carbon::now()->addDays(30);
 
         return [
@@ -727,11 +725,11 @@ class AuthController extends Controller
                 $user = $request->user();
                 $deviceName = str_replace('-refresh', '', $refreshToken->name);
 
-                $newAccessToken = $user->createToken($deviceName . '-access', ['access-api']);
+                $newAccessToken = $user->createToken($deviceName.'-access', ['access-api']);
                 $accessExpiresAt = Carbon::now()->addDay();
 
                 $refreshToken->delete();
-                $newRefreshToken = $user->createToken($deviceName . '-refresh', ['issue-access-token']);
+                $newRefreshToken = $user->createToken($deviceName.'-refresh', ['issue-access-token']);
                 $refreshExpiresAt = Carbon::now()->addDays(30);
 
                 return [
@@ -765,16 +763,16 @@ class AuthController extends Controller
                 'device_name' => $deviceName,
                 'tokens_count' => $user->tokens()
                     ->where(function ($query) use ($deviceName): void {
-                        $query->where('name', $deviceName . '-access')
-                            ->orWhere('name', $deviceName . '-refresh');
+                        $query->where('name', $deviceName.'-access')
+                            ->orWhere('name', $deviceName.'-refresh');
                     })
                     ->count(),
             ];
 
             $user->tokens()
                 ->where(function ($query) use ($deviceName): void {
-                    $query->where('name', $deviceName . '-access')
-                        ->orWhere('name', $deviceName . '-refresh');
+                    $query->where('name', $deviceName.'-access')
+                        ->orWhere('name', $deviceName.'-refresh');
                 })
                 ->delete();
 
@@ -831,10 +829,10 @@ class AuthController extends Controller
 
                 $user->tokens()->delete();
 
-                $newAccessToken = $user->createToken($deviceName . '-access', ['access-api']);
+                $newAccessToken = $user->createToken($deviceName.'-access', ['access-api']);
                 $accessExpiresAt = Carbon::now()->addDay();
 
-                $newRefreshToken = $user->createToken($deviceName . '-refresh', ['issue-access-token']);
+                $newRefreshToken = $user->createToken($deviceName.'-refresh', ['issue-access-token']);
                 $refreshExpiresAt = Carbon::now()->addDays(30);
 
                 return [
