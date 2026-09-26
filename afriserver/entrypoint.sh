@@ -26,14 +26,22 @@ EOF
 
 echo "Listening on 0.0.0.0:${PORT}"
 
+# Évite migrate avec les defaults Laravel (127.0.0.1 / laravel)
+if [ -z "${DB_HOST:-}" ] || [ -z "${DB_DATABASE:-}" ] || [ -z "${DB_USERNAME:-}" ] || [ -z "${DB_PASSWORD:-}" ]; then
+  echo "ERROR: variables DB manquantes. Sur Render, définis au minimum :"
+  echo "  DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD, DB_SSLMODE"
+  echo "Valeurs vues: DB_CONNECTION=${DB_CONNECTION:-<empty>} DB_HOST=${DB_HOST:-<empty>} DB_DATABASE=${DB_DATABASE:-<empty>} DB_USERNAME=${DB_USERNAME:-<empty>}"
+  exit 1
+fi
+
+# Rebuild le cache config à chaque boot (les secrets Render ne sont pas dans l'image)
+php artisan config:clear || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 php artisan migrate --force
-# Référentiels idempotents (updateOrCreate) — nécessaires sur Render (DB ≠ local)
-php artisan db:seed --class=ContinentSeeder --force --no-interaction
-php artisan db:seed --class=PaysSeeder --force --no-interaction
-php artisan db:seed --class=OrganisationSeeder --force --no-interaction
+# Unique entrypoint pour les référentiels de prod (voir RequiredDataSeeder)
+php artisan db:seed --class=RequiredDataSeeder --force --no-interaction
 php artisan storage:link || true
 
 exec /usr/bin/supervisord -c /etc/supervisord.conf
