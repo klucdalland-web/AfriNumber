@@ -17,9 +17,10 @@ class OrganisationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'label' => $this->label,
             'description' => $this->description,
-            
+            'pays_count' => $this->when(isset($this->pays_count), $this->pays_count),
         ];
     }
 }

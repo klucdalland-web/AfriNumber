@@ -19,7 +19,9 @@ class DatabaseSeeder extends Seeder
             TypeUserSeeder::class,
             ContinentSeeder::class,
             PaysSeeder::class,
+            OrganisationSeeder::class,
             PlatformSeeder::class,
+            TypePieceIdentiteSeeder::class,
         ]);
 
         // User::factory(10)->create();

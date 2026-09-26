@@ -10,12 +10,16 @@ class PasswordResetCode extends Model
         'email',
         'phone_number',
         'code',
+        'attempts',
+        'resend_count',
+        'locked_until',
         'expires_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'locked_until' => 'datetime',
             'expires_at' => 'datetime',
         ];
     }

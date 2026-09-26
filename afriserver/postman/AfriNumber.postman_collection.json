@@ -1,0 +1,1729 @@
+{
+	"info": {
+		"_postman_id": "afrinumber-auth-collection-001",
+		"name": "AfriNumber",
+		"description": "Collection API AfriNumber (v1)\n\nVariables auto-remplies après Register / Login / Verify OTP / Refresh / Change Password.\n\nHeaders globaux : `x-api-key`, `Accept`, `X-Device-Id` (routes authentifiées).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "x_api_key",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "access_token_expires_at",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token_expires_at",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "email",
+			"value": "demo@afrinumber.test",
+			"type": "string"
+		},
+		{
+			"key": "phone_number",
+			"value": "+2250700000000",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "Password123!",
+			"type": "string"
+		},
+		{
+			"key": "otp_code",
+			"value": "123456",
+			"type": "string"
+		},
+		{
+			"key": "otp_purpose",
+			"value": "login",
+			"type": "string"
+		},
+		{
+			"key": "contrie_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "name",
+			"value": "Doe",
+			"type": "string"
+		},
+		{
+			"key": "first_name",
+			"value": "John",
+			"type": "string"
+		},
+		{
+			"key": "platform",
+			"value": "android",
+			"type": "string"
+		},
+		{
+			"key": "device_id",
+			"value": "postman-device-001",
+			"type": "string"
+		},
+		{
+			"key": "device_name",
+			"value": "Postman",
+			"type": "string"
+		},
+		{
+			"key": "device_model",
+			"value": "Postman Runner",
+			"type": "string"
+		},
+		{
+			"key": "os_version",
+			"value": "14",
+			"type": "string"
+		},
+		{
+			"key": "app_version",
+			"value": "1.0.0",
+			"type": "string"
+		},
+		{
+			"key": "fcm_token",
+			"value": "postman-fcm-token-demo",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "device_db_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Helpers globaux collection",
+					"const json = pm.response.json();",
+					"",
+					"pm.test('Réponse JSON valide', function () {",
+					"    pm.expect(json).to.be.an('object');",
+					"});",
+					"",
+					"if (json && json.data) {",
+					"    const d = json.data;",
+					"    if (d.access_token) {",
+					"        pm.collectionVariables.set('access_token', d.access_token);",
+					"    }",
+					"    if (d.refresh_token) {",
+					"        pm.collectionVariables.set('refresh_token', d.refresh_token);",
+					"    }",
+					"    if (d.access_token_expires_at) {",
+					"        pm.collectionVariables.set('access_token_expires_at', d.access_token_expires_at);",
+					"    }",
+					"    if (d.refresh_token_expires_at) {",
+					"        pm.collectionVariables.set('refresh_token_expires_at', d.refresh_token_expires_at);",
+					"    }",
+					"    if (d.user) {",
+					"        const u = d.user.data || d.user;",
+					"        if (u.id) pm.collectionVariables.set('user_id', String(u.id));",
+					"        if (u.email) pm.collectionVariables.set('email', u.email);",
+					"        if (u.phone_number) pm.collectionVariables.set('phone_number', u.phone_number);",
+					"        if (u.name) pm.collectionVariables.set('user_name', u.name);",
+					"        if (u.first_name) pm.collectionVariables.set('first_name', u.first_name);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 auth",
+			"description": "Authentification AfriNumber — inscription, login OTP, tokens, mot de passe.",
+			"item": [
+				{
+					"name": "📝 Register",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.collectionVariables.set('otp_purpose', 'register');"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Register OK (OTP envoyé)', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.success).to.eql(true);",
+									"});",
+									"",
+									"try {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    if (body.email) pm.collectionVariables.set('email', body.email);",
+									"    if (body.phone_number) pm.collectionVariables.set('phone_number', body.phone_number);",
+									"    if (body.password) pm.collectionVariables.set('password', body.password);",
+									"    if (body.device_id) pm.collectionVariables.set('device_id', body.device_id);",
+									"    pm.collectionVariables.set('otp_purpose', 'register');",
+									"    pm.collectionVariables.set('otp_code', '123456');",
+									"    console.log('✅ Variables capturées → email, phone, password, otp_purpose=register');",
+									"} catch (e) {",
+									"    console.warn('Body non JSON, variables non mises à jour');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contrie_id\": {{contrie_id}},\n  \"name\": \"{{name}}\",\n  \"first_name\": \"{{first_name}}\",\n  \"email\": \"{{email}}\",\n  \"phone_number\": \"{{phone_number}}\",\n  \"password\": \"{{password}}\",\n  \"password_confirmation\": \"{{password}}\",\n  \"platform\": \"{{platform}}\",\n  \"device_id\": \"{{device_id}}\",\n  \"device_name\": \"{{device_name}}\",\n  \"device_model\": \"{{device_model}}\",\n  \"os_version\": \"{{os_version}}\",\n  \"app_version\": \"{{app_version}}\",\n  \"fcm_token\": \"{{fcm_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Crée un OTP `purpose=register` et stocke le payload user (pas encore créé en base).\n\nCode OTP test actuel : `123456`."
+					},
+					"response": []
+				},
+				{
+					"name": "🔑 Login",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.collectionVariables.set('otp_purpose', 'login');"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Login OK (OTP envoyé)', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.success).to.eql(true);",
+									"});",
+									"",
+									"try {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    if (body.email) pm.collectionVariables.set('email', body.email);",
+									"    if (body.password) pm.collectionVariables.set('password', body.password);",
+									"    if (body.device_id) pm.collectionVariables.set('device_id', body.device_id);",
+									"    pm.collectionVariables.set('otp_purpose', 'login');",
+									"    pm.collectionVariables.set('otp_code', '123456');",
+									"    console.log('✅ Variables capturées → email, otp_purpose=login');",
+									"} catch (e) {}",
+									"",
+									"console.log('ℹ️ Passe ensuite à ✅ Verify OTP');"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"platform\": \"{{platform}}\",\n  \"device_id\": \"{{device_id}}\",\n  \"device_name\": \"{{device_name}}\",\n  \"device_model\": \"{{device_model}}\",\n  \"os_version\": \"{{os_version}}\",\n  \"app_version\": \"{{app_version}}\",\n  \"fcm_token\": \"{{fcm_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "`email` accepte aussi un numéro de téléphone.\nGénère un OTP `purpose=login`.\n\nCode OTP test actuel : `123456`."
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Verify OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Verify OTP OK', function () {",
+									"    pm.expect([200, 201]).to.include(pm.response.code);",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.success).to.eql(true);",
+									"    pm.expect(j.data).to.have.property('access_token');",
+									"    pm.expect(j.data).to.have.property('refresh_token');",
+									"});",
+									"",
+									"const j = pm.response.json();",
+									"if (j && j.data) {",
+									"    if (j.data.access_token) pm.collectionVariables.set('access_token', j.data.access_token);",
+									"    if (j.data.refresh_token) pm.collectionVariables.set('refresh_token', j.data.refresh_token);",
+									"    if (j.data.access_token_expires_at) pm.collectionVariables.set('access_token_expires_at', j.data.access_token_expires_at);",
+									"    if (j.data.refresh_token_expires_at) pm.collectionVariables.set('refresh_token_expires_at', j.data.refresh_token_expires_at);",
+									"    console.log('✅ Tokens sauvegardés dans les variables de collection');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"purpose\": \"{{otp_purpose}}\",\n  \"code\": \"{{otp_code}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
+						},
+						"description": "`purpose` est auto-set à `register` ou `login` par les requêtes précédentes (`{{otp_purpose}}`).\n\nAlternative téléphone :\n```json\n{\n  \"phone_number\": \"{{phone_number}}\",\n  \"purpose\": \"{{otp_purpose}}\",\n  \"code\": \"{{otp_code}}\"\n}\n```\n\nSauvegarde auto : `access_token`, `refresh_token`, infos user."
+					},
+					"response": []
+				},
+				{
+					"name": "🔁 Resend OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Resend OTP', function () {",
+									"    pm.expect([200, 423, 429]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set('otp_code', '123456');",
+									"    console.log('✅ Nouveau OTP envoyé (test: 123456)');",
+									"} else if (pm.response.code === 423) {",
+									"    console.warn('🔒 OTP verrouillé — attendre locked_minutes_left');",
+									"} else if (pm.response.code === 429) {",
+									"    console.warn('⏳ Cooldown 60s — attendre retry_after_seconds');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"purpose\": \"{{otp_purpose}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/resend-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"resend-otp"
+							]
+						},
+						"description": "Renvoie un OTP en gardant le payload.\n\n**Login / register / resend partagent le même compteur d'envois.**\n\nDélais :\n- 2e envoi → **1 min** (429)\n- 3e envoi → **5 min** → email/tél **bloqués** (423)\n- puis 10, 15, 30, 60 min\n\nAussi : 5 codes erronés → lock **5 min** (423)"
+					},
+					"response": []
+				},
+				{
+					"name": "📧 Forgot Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Forgot password', function () {",
+									"    pm.expect([200, 423, 429]).to.include(pm.response.code);",
+									"});",
+									"",
+									"try {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    if (body.email) pm.collectionVariables.set('email', body.email);",
+									"    if (body.phone_number) pm.collectionVariables.set('phone_number', body.phone_number);",
+									"} catch (e) {}",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set('otp_code', '123456');",
+									"    console.log('✅ Code reset test: 123456 — voir data.next_resend_at');",
+									"} else if (pm.response.code === 423) {",
+									"    console.warn('🔒 Email/tél bloqué (envois ou codes erronés)');",
+									"} else if (pm.response.code === 429) {",
+									"    console.warn('⏳ Cooldown 1 min');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Demande un code reset (email **ou** phone).\n\nMême logique anti-spam que l'OTP :\n- 2e envoi → 1 min (429)\n- 3e → 5 min → email/tél bloqués (423)\n- puis 10, 15, 30, 60 min\n\nRéponse générique si compte inconnu. Code test : `123456`."
+					},
+					"response": []
+				},
+				{
+					"name": "🔓 Reset Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Reset password', function () {",
+									"    pm.expect([200, 422, 423]).to.include(pm.response.code);",
+									"});",
+									"",
+									"try {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    if (pm.response.code === 200 && body.password) {",
+									"        pm.collectionVariables.set('password', body.password);",
+									"        console.log('✅ Nouveau password sauvegardé');",
+									"    }",
+									"    if (body.email) pm.collectionVariables.set('email', body.email);",
+									"} catch (e) {}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{otp_code}}\",\n  \"password\": \"{{password}}\",\n  \"password_confirmation\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Nouveau password + code.\n\n- 5 codes erronés → lock **5 min** (423) sur email/tél\n- Succès → invalide toutes les sessions, code one-shot\n- Code test : `123456`"
+					},
+					"response": []
+				},
+				{
+					"name": "♻️ Refresh Token",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const refresh = pm.collectionVariables.get('refresh_token');",
+									"if (!refresh) {",
+									"    console.warn('⚠️ refresh_token vide — lance Verify OTP d\\'abord');",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Refresh token OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.success).to.eql(true);",
+									"    pm.expect(j.data.access_token).to.be.a('string');",
+									"});",
+									"",
+									"const j = pm.response.json();",
+									"if (j && j.data) {",
+									"    if (j.data.access_token) pm.collectionVariables.set('access_token', j.data.access_token);",
+									"    if (j.data.refresh_token) pm.collectionVariables.set('refresh_token', j.data.refresh_token);",
+									"    if (j.data.access_token_expires_at) pm.collectionVariables.set('access_token_expires_at', j.data.access_token_expires_at);",
+									"    if (j.data.refresh_token_expires_at) pm.collectionVariables.set('refresh_token_expires_at', j.data.refresh_token_expires_at);",
+									"    console.log('✅ Nouveaux tokens sauvegardés');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{refresh_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/refresh-token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh-token"
+							]
+						},
+						"description": "Utilise le **refresh_token** (pas l'access). Sauvegarde auto les nouveaux tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "👤 Me",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Me OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});",
+									"",
+									"const j = pm.response.json();",
+									"if (j && j.data && j.data.user) {",
+									"    const u = j.data.user.data || j.data.user;",
+									"    if (u.id) pm.collectionVariables.set('user_id', String(u.id));",
+									"    if (u.email) pm.collectionVariables.set('email', u.email);",
+									"    if (u.phone_number) pm.collectionVariables.set('phone_number', u.phone_number);",
+									"    if (u.name) pm.collectionVariables.set('user_name', u.name);",
+									"    console.log('✅ Profil user capturé');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "Profil de l'utilisateur connecté (access token)."
+					},
+					"response": []
+				},
+				{
+					"name": "👥 User (show)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('User show OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user"
+							]
+						},
+						"description": "GET `/user` — même ressource user authentifiée."
+					},
+					"response": []
+				},
+				{
+					"name": "🔒 Change Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Change password OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.success).to.eql(true);",
+									"});",
+									"",
+									"const j = pm.response.json();",
+									"if (j && j.data) {",
+									"    if (j.data.access_token) pm.collectionVariables.set('access_token', j.data.access_token);",
+									"    if (j.data.refresh_token) pm.collectionVariables.set('refresh_token', j.data.refresh_token);",
+									"}",
+									"",
+									"try {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    if (body.password) {",
+									"        pm.collectionVariables.set('password', body.password);",
+									"        console.log('✅ Nouveau password + tokens sauvegardés');",
+									"    }",
+									"} catch (e) {}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"current_password\": \"{{password}}\",\n  \"password\": \"NewPassword123!\",\n  \"password_confirmation\": \"NewPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"password"
+							]
+						},
+						"description": "Change le mot de passe et régénère les tokens (sauvegardés auto)."
+					},
+					"response": []
+				},
+				{
+					"name": "🚪 Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Logout OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});",
+									"",
+									"pm.collectionVariables.set('access_token', '');",
+									"pm.collectionVariables.set('refresh_token', '');",
+									"pm.collectionVariables.set('access_token_expires_at', '');",
+									"pm.collectionVariables.set('refresh_token_expires_at', '');",
+									"console.log('✅ Tokens nettoyés');"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Déconnexion — vide `access_token` / `refresh_token` dans la collection."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📱 devices",
+			"description": "Appareils connectés au compte — liste et déconnexion.",
+			"item": [
+				{
+					"name": "📋 List Devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Devices list OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});",
+									"",
+									"const j = pm.response.json();",
+									"const devices = (j && j.data && j.data.devices) || [];",
+									"const list = devices.data || devices;",
+									"if (Array.isArray(list) && list.length) {",
+									"    const other = list.find(d => !d.is_current) || list[0];",
+									"    if (other && other.id) pm.collectionVariables.set('device_db_id', String(other.id));",
+									"    console.log('✅ device_db_id =', pm.collectionVariables.get('device_db_id'));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"devices"
+							]
+						},
+						"description": "Liste les appareils **actifs** du compte.\\n\\n`is_current` = appareil de la requête (`X-Device-Id`).\\n\\n`?include_inactive=1` pour inclure les appareils déjà déconnectés.\\n\\nSauvegarde auto `device_db_id` (premier appareil non courant si possible)."
+					},
+					"response": []
+				},
+				{
+					"name": "🔌 Disconnect Device",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Disconnect device', function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/devices/{{device_db_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"devices",
+								"{{device_db_id}}"
+							]
+						},
+						"description": "Déconnecte un appareil (`device_db_id` = id DB, pas le X-Device-Id).\\n\\nRévoque session + tokens Sanctum + FCM de cet appareil."
+					},
+					"response": []
+				},
+				{
+					"name": "🧹 Disconnect Other Devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Disconnect others OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/devices/others",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"devices",
+								"others"
+							]
+						},
+						"description": "Déconnecte **tous les autres** appareils, garde l'appareil courant (`X-Device-Id`)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📡 observability",
+			"description": "Historique système — requêtes, auth, devices, actions (filtrable).",
+			"item": [
+				{
+					"name": "📜 My Activity Logs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Observability logs OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.eql(true);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/observability/logs?per_page=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"observability",
+								"logs"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "30"
+								},
+								{
+									"key": "category",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "action",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "level",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "device_id",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "from",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Historique du compte.\\n\\nChaque log expose `data_before` / `data_after`, `session`, `location` et `error` (messages validation / HTTP).\\n\\nFiltres : `category` (auth|device|request|security), `action`, `level`, `device_id`, `device_identifier`, `from`, `to`, `per_page`."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏛️ organisations",
+			"description": "Organisations et pays rattachés (public — pour l'inscription).",
+			"item": [
+				{
+					"name": "📋 List Organisations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/organisations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"organisations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🔍 Show Organisation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/organisations/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"organisations",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🌍 Pays de l'organisation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/organisations/1/pays",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"organisations",
+								"1",
+								"pays"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🌍 pays",
+			"description": "Pays avec organisation_id non null (public — inscription).",
+			"item": [
+				{
+					"name": "📋 List Pays (org liée)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pays",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pays"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🔍 Show Pays",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pays/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pays",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🪪 pieces",
+			"description": "Pièces d'identité user — stubs JSON (logique Node.js).",
+			"item": [
+				{
+					"name": "📋 List Types",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/type-piece-identites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"type-piece-identites"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "📜 My Pieces",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pieces",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "➕ Submit Piece",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type_piece_identite_id\": 1,\n  \"numero\": \"AB123456\",\n  \"date_delivrance\": \"2020-01-15\",\n  \"lieu_delivrance\": \"Brazzaville\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pieces",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces"
+							]
+						},
+						"description": "Stub — logique Node.js. Body : type_piece_identite_id, numero, date_delivrance, lieu_delivrance."
+					},
+					"response": []
+				},
+				{
+					"name": "🔍 Show Piece",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pieces/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✏️ Update Piece",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type_piece_identite_id\": 1,\n  \"numero\": \"AB123456\",\n  \"date_delivrance\": \"2020-01-15\",\n  \"lieu_delivrance\": \"Brazzaville\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pieces/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "📎 Upload Fichiers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fichiers[]",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/pieces/1/fichiers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces",
+								"1",
+								"fichiers"
+							]
+						},
+						"description": "Stub — conversion / storage côté Node.js."
+					},
+					"response": []
+				},
+				{
+					"name": "📊 Piece Statut",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pieces/1/statut",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces",
+								"1",
+								"statut"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🗑️ Delete Piece",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{x_api_key}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{device_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pieces/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pieces",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
