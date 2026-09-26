@@ -16,6 +16,10 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## API des pays
+
+Copiez `.env.example` vers `.env.local` et renseignez les identifiants privés de l'API. La clé et le jeton sont lus par la route serveur `/api/pays` et ne sont pas envoyés au navigateur.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

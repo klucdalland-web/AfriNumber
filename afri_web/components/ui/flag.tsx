@@ -1,7 +1,7 @@
 export function MadagascarFlag({ className = "h-4 w-6" }: { className?: string }) {
   return (
     <svg 
-      xmlns="http://w3.org" 
+      xmlns="http://www.w3.org/2000/svg" 
       viewBox="0 0 3 2" 
       className={`${className} inline-block rounded-sm shadow-sm border border-stone-200/50`}
     >
@@ -17,7 +17,7 @@ export function MadagascarFlag({ className = "h-4 w-6" }: { className?: string }
 export function CongoFlag({ className = "h-4 w-6" }: { className?: string }) {
   return (
     <svg 
-      xmlns="http://w3.org" 
+      xmlns="http://www.w3.org/2000/svg" 
       viewBox="0 0 3 2" 
       className={`${className} inline-block rounded-sm shadow-sm border border-stone-200/50`}
     >

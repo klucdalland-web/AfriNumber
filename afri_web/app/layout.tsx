@@ -19,6 +19,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+   
   return (
     <html lang="fr" className={`${inter.variable} scroll-smooth`}>
       <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
@@ -26,7 +27,7 @@ export default function RootLayout({
         <Navbar />
         
         {/* Conteneur de la Page All-in-One */}
-        <main className="flex-1 w-full">
+        <main className="w-full flex-1 pt-[4.75rem] sm:pt-20">
           {children}
         </main>
 

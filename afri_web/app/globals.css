@@ -121,10 +121,239 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    overflow-x: hidden;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply min-w-0 bg-background text-foreground font-sans;
+    overflow-x: hidden;
+  }
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  img,
+  svg,
+  video {
+    max-width: 100%;
+  }
+}
+
+@layer components {
+  .bg-gradient-page {
+    background-color: var(--background);
+    background-image: 
+      radial-gradient(ellipse 90% 55% at 50% -10%, color-mix(in oklch, var(--foreground) 4%, transparent), transparent 70%),
+      radial-gradient(ellipse 65% 45% at 95% 35%, color-mix(in oklch, var(--foreground) 3%, transparent), transparent 60%),
+      radial-gradient(ellipse 75% 55% at 5% 75%, color-mix(in oklch, var(--foreground) 3.5%, transparent), transparent 70%),
+      radial-gradient(ellipse 90% 50% at 50% 110%, color-mix(in oklch, var(--foreground) 4%, transparent), transparent 70%);
+  }
+
+  .section-container {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12;
+  }
+
+  .section-padding {
+    @apply py-20 sm:py-28 lg:py-32;
+  }
+
+  .section-header {
+    @apply mx-auto mb-14 sm:mb-18 lg:mb-20 max-w-3xl text-center;
+  }
+
+  .section-eyebrow {
+    @apply inline-flex items-center gap-2 text-xs sm:text-[13px] font-semibold uppercase tracking-[0.16em] text-[color-mix(in_oklch,var(--foreground)_55%,transparent)];
+  }
+
+  .section-title {
+    @apply mt-4 text-[2.25rem] sm:text-[2.75rem] lg:text-5xl font-semibold leading-[1.08] tracking-tight text-[var(--foreground)];
+  }
+
+  .section-description {
+    @apply mt-5 max-w-2xl mx-auto text-[15.5px] sm:text-base leading-relaxed text-[color-mix(in_oklch,var(--foreground)_60%,transparent)];
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300 ease-out will-change-transform hover:-translate-y-1.5 hover:shadow-xl;
+  }
+
+  .interactive-btn {
+    @apply transition-all duration-200 ease-out will-change-transform active:scale-[0.97] hover:scale-[1.02];
+  }
+
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), color-mix(in oklch, var(--foreground) 15%, transparent), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .glow-border:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Animations Keyframes */
+@keyframes afri-rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes afri-float-1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(0.4deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes afri-float-2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(7deg);
+  }
+  50% {
+    transform: translate3d(0, 8px, 0) rotate(6.2deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(7deg);
+  }
+}
+
+@keyframes afri-signal-flow {
+  0% {
+    stroke-dashoffset: 40;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes afri-pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes afri-ambient-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes afri-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-enter {
+    animation: afri-rise-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .motion-delay-1 {
+    animation-delay: 100ms;
+  }
+
+  .motion-delay-2 {
+    animation-delay: 200ms;
+  }
+
+  .motion-delay-3 {
+    animation-delay: 300ms;
+  }
+
+  .motion-stagger > * {
+    animation: afri-rise-in 550ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .motion-stagger > :nth-child(1) { animation-delay: 50ms; }
+  .motion-stagger > :nth-child(2) { animation-delay: 100ms; }
+  .motion-stagger > :nth-child(3) { animation-delay: 150ms; }
+  .motion-stagger > :nth-child(4) { animation-delay: 200ms; }
+  .motion-stagger > :nth-child(5) { animation-delay: 250ms; }
+  .motion-stagger > :nth-child(6) { animation-delay: 300ms; }
+
+  .animate-float-hero-front {
+    animation: afri-float-1 7s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .animate-float-hero-back {
+    animation: afri-float-2 8.5s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .animate-signal-flow {
+    animation: afri-signal-flow 1.8s linear infinite;
+  }
+
+  .animate-pulse-subtle {
+    animation: afri-pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-ambient-glow {
+    animation: afri-ambient-glow 8s ease-in-out infinite;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      var(--foreground) 0%,
+      color-mix(in oklch, var(--foreground) 60%, transparent) 50%,
+      var(--foreground) 100%
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: afri-shimmer 6s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

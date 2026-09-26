@@ -1,5 +1,5 @@
 /**
- * Carte centrale des routes — source de vérité pour les URLs.
+ * Carte centrale des routes , source de vérité pour les URLs.
  *
  * Usage :
  *   import { routes } from "@/config/routes";

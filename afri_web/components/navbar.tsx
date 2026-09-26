@@ -1,189 +1,207 @@
 "use client";
 
 import { useEffect } from "react";
-import { useUiStore } from "@/store/useUIStore";
-import { Button } from "@/components/ui/button"; // Composant shadcn/ui
-import { Menu, X, Moon, Sun } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
+import { Menu, Moon, Sun, X } from "lucide-react";
+import { useUiStore } from "@/store/useUIStore";
+import { Button } from "@/components/ui/button";
+
 const navItems = {
-  fr: [
-    { label: "Accueil", href: "#accueil" },
-    { label: "Produit", href: "#produit" },
-    { label: "Comment ça marche", href: "#comment-ca-marche" },
-    { label: "À propos", href: "#a-propos" },
-    { label: "Impact", href: "#impact" },
-    { label: "FAQ", href: "#faq" },
-  ],
-  en: [
-    { label: "Home", href: "#accueil" },
-    { label: "Product", href: "#produit" },
-    { label: "How it works", href: "#comment-ca-marche" },
-    { label: "About", href: "#a-propos" },
-    { label: "Impact", href: "#impact" },
-    { label: "FAQ", href: "#faq" },
-  ],
+    fr: [
+        { label: "Accueil", href: "/#accueil" },
+        { label: "Produit", href: "/#produit" },
+        { label: "Fonctionnalité", href: "/#fonctionnalite" },
+        { label: "Comment ça marche", href: "/#commentcamarche" },
+        { label: "À propos", href: "/#aboutus" },
+        { label: "Contact", href: "/#contactus" },
+    ],
+    en: [
+        { label: "Home", href: "/#accueil" },
+        { label: "Product", href: "/#produit" },
+        { label: "Features", href: "/#fonctionnalite" },
+        { label: "How it works", href: "/#commentcamarche" },
+        { label: "About", href: "/#aboutus" },
+        { label: "Contact", href: "/#contactus" },
+    ],
 } as const;
 
-export default function Navbar() {
-  const {
-    isMenuOpen,
-    toggleMenu,
-    closeMenu,
-    theme,
-    language,
-    setTheme,
-    setLanguage,
-  } = useUiStore();
-  const items = navItems[language];
-  const ctaLabel = language === "fr" ? "Télécharger l'App" : "Download the App";
-
-  useEffect(() => {
-    const savedTheme = window.localStorage.getItem("afrinumber-theme");
-    const savedLanguage = window.localStorage.getItem("afrinumber-language");
-    const nextTheme = savedTheme === "dark" ? "dark" : "light";
-    const nextLanguage = savedLanguage === "en" ? "en" : "fr";
-
-    setTheme(nextTheme);
-    setLanguage(nextLanguage);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    document.documentElement.lang = nextLanguage;
-  }, [setLanguage, setTheme]);
-
-  const changeTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    window.localStorage.setItem("afrinumber-theme", nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-  };
-
-  const changeLanguage = () => {
-    const nextLanguage = language === "fr" ? "en" : "fr";
-    setLanguage(nextLanguage);
-    window.localStorage.setItem("afrinumber-language", nextLanguage);
-    document.documentElement.lang = nextLanguage;
-  };
-
-  const scrollToSection = (href: string) => {
-    closeMenu();
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+function readPreference(key: string) {
+    try {
+        return window.localStorage.getItem(key);
+    } catch {
+        return null;
     }
-  };
+}
 
-  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    scrollToSection(href);
-  };
+function savePreference(key: string, value: string) {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch {
+        // Les préférences restent actives pendant la session même si le stockage est bloqué.
+    }
+}
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        
-        {/* Logo / Marque */}
-        <a href="#accueil" onClick={(e) => handleScroll(e, "#accueil")} className="flex items-center gap-2 text-3xl font-extrabold tracking-tight text-foreground">
-          <Image
-            src="/images/logo-afrika.png"
-            alt="Logo AfriNumber"
-            width={60}
-            height={60}
-            sizes="50px"
-            className="h-10 w-10 object-contain sm:h-12 sm:w-12"
-          />
-          <span>AfriNumber</span>
-        </a>
+export default function Navbar() {
+    const router = useRouter();
+    const { isMenuOpen, toggleMenu, closeMenu, theme, language, setTheme, setLanguage } = useUiStore();
+    const items = navItems[language];
 
-        {/* Liens de Navigation Desktop */}
-        <nav className="hidden items-center gap-6 text-base font-bold text-foreground md:flex">
-          {items.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              onClick={(e) => handleScroll(e, item.href)}
-              className="transition-colors hover:text-blue-600"
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+    useEffect(() => {
+        const savedTheme = readPreference("afrinumber-theme");
+        const savedLanguage = readPreference("afrinumber-language");
+        const nextTheme = savedTheme === "dark" ? "dark" : "light";
+        const nextLanguage = savedLanguage === "en" ? "en" : "fr";
+        setTheme(nextTheme);
+        setLanguage(nextLanguage);
+        document.documentElement.classList.toggle("dark", nextTheme === "dark");
+        document.documentElement.lang = nextLanguage;
+    }, [setLanguage, setTheme]);
 
-        {/* CTA Button Desktop */}
-        <div className="hidden items-center gap-2 md:flex">
-          <button
-            type="button"
-            onClick={changeLanguage}
-            className="rounded-md px-2 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted"
-            aria-label={language === "fr" ? "Passer en anglais" : "Switch to French"}
-          >
-            {language === "fr" ? "EN" : "FR"}
-          </button>
-          <button
-            type="button"
-            onClick={changeTheme}
-            className="rounded-md p-2 text-foreground transition-colors hover:bg-muted"
-            aria-label={theme === "light" ? "Activer le mode sombre" : "Activer le mode clair"}
-          >
-            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-          <Button
-            className="bg-primary font-semibold text-primary-foreground hover:bg-primary/80"
-            onClick={() => scrollToSection("#comment-ca-marche")}
-          >
-            {ctaLabel}
-          </Button>
-        </div>
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === "Escape") closeMenu();
+        };
+        window.addEventListener("keydown", closeOnEscape);
+        return () => window.removeEventListener("keydown", closeOnEscape);
+    }, [closeMenu, isMenuOpen]);
 
-        {/* Déclencheur Menu Mobile */}
-        <button
-          onClick={toggleMenu}
-          className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground md:hidden"
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+    const changeTheme = () => {
+        const nextTheme = theme === "light" ? "dark" : "light";
+        setTheme(nextTheme);
+        savePreference("afrinumber-theme", nextTheme);
+        document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    };
 
-      {/* Rideau Menu Mobile */}
-      {isMenuOpen && (
-        <div className="space-y-3 border-b border-border bg-background px-4 py-4 shadow-lg animate-in slide-in-from-top-5 duration-200 md:hidden">
-          <div className="flex items-center gap-2 border-b border-border pb-3">
+    const changeLanguage = () => {
+        const nextLanguage = language === "fr" ? "en" : "fr";
+        setLanguage(nextLanguage);
+        savePreference("afrinumber-language", nextLanguage);
+        document.documentElement.lang = nextLanguage;
+    };
+
+    const followLink = (href: string) => {
+        closeMenu();
+        if (!href.startsWith("/#")) return;
+        const id = href.slice(2);
+        if (window.location.pathname === "/") {
+            const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+            window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior, block: "start" }), 0);
+        }
+    };
+
+    const goToDownloadTarget = () => {
+        closeMenu();
+        if (window.location.pathname === "/") {
+            const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+            document.getElementById("telechargement")?.scrollIntoView({ behavior, block: "start" });
+            return;
+        }
+        router.push("/#telechargement");
+    };
+
+    const downloadLabel = language === "fr" ? "Télécharger l’App" : "Download the App";
+    const controls = (
+        <>
             <button
-              type="button"
-              onClick={changeLanguage}
-              className="rounded-md px-2 py-2 text-xs font-bold text-foreground hover:bg-muted"
-              aria-label={language === "fr" ? "Passer en anglais" : "Switch to French"}
+                type="button"
+                onClick={changeLanguage}
+                className="interactive-btn min-h-10 min-w-10 rounded-full px-3 text-xs font-bold text-foreground transition-colors duration-200 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2"
+                aria-label={language === "fr" ? "Passer en anglais" : "Switch to French"}
             >
-              {language === "fr" ? "EN" : "FR"}
+                {language === "fr" ? "EN" : "FR"}
             </button>
             <button
-              type="button"
-              onClick={changeTheme}
-              className="rounded-md p-2 text-foreground hover:bg-muted"
-              aria-label={theme === "light" ? "Activer le mode sombre" : "Activer le mode clair"}
+                type="button"
+                onClick={changeTheme}
+                className="interactive-btn group flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-all duration-300 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2"
+                aria-label={theme === "light" ? "Activer le mode sombre" : "Activer le mode clair"}
             >
-              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                {theme === "light" ? (
+                    <Moon className="h-4 w-4 transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110" />
+                ) : (
+                    <Sun className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45 group-hover:scale-110" />
+                )}
             </button>
-          </div>
-          {items.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              onClick={(e) => handleScroll(e, item.href)}
-              className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-blue-600"
-            >
-              {item.label}
-            </a>
-          ))}
-          <div className="pt-2">
-            <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => scrollToSection("#comment-ca-marche")}
-            >
-              {ctaLabel}
-            </Button>
-          </div>
-        </div>
-      )}
-    </header>
-  );
+        </>
+    );
+
+    return (
+        <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md transition-all duration-300">
+            <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:min-h-[4.5rem] sm:px-6 lg:px-8">
+                <Link
+                    href="/#accueil"
+                    onClick={() => followLink("/#accueil")}
+                    className="group flex shrink-0 items-center gap-2 text-lg font-extrabold tracking-tight text-foreground transition-transform duration-200 hover:scale-[1.02] sm:text-xl"
+                >
+                    {theme === "dark" ? (
+                        <Image src="/images/logo-afrika-white.png" alt="AfriNumber" width={44} height={44} className="h-9 w-9 object-contain transition-transform duration-300 group-hover:rotate-3 sm:h-10 sm:w-10" />
+                    ) : (
+                        <Image src="/images/logo-afrika.png" alt="AfriNumber" width={44} height={44} className="h-9 w-9 object-contain transition-transform duration-300 group-hover:rotate-3 sm:h-10 sm:w-10" />
+                    )}
+                    <span className="tracking-tight">AfriNumber</span>
+                </Link>
+
+                <nav aria-label={language === "fr" ? "Navigation principale" : "Main navigation"} className="hidden items-center gap-1 xl:flex">
+                    {items.map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => followLink(item.href)}
+                            className="relative rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2"
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
+                </nav>
+
+                <div className="hidden items-center gap-2 xl:flex">
+                    {controls}
+                    <Button
+                        className="interactive-btn ml-1 bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/85 hover:shadow-md"
+                        onClick={goToDownloadTarget}
+                    >
+                        {downloadLabel}
+                    </Button>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={toggleMenu}
+                    className="interactive-btn flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 xl:hidden"
+                    aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                    aria-expanded={isMenuOpen}
+                    aria-controls={isMenuOpen ? "mobile-navigation" : undefined}
+                >
+                    {isMenuOpen ? <X className="h-5 w-5 transition-transform duration-300 rotate-90" /> : <Menu className="h-5 w-5" />}
+                </button>
+            </div>
+
+            {isMenuOpen && (
+                <div id="mobile-navigation" className="motion-enter border-t border-border bg-background px-4 pb-6 pt-3 shadow-2xl xl:hidden">
+                    <nav aria-label={language === "fr" ? "Navigation principale" : "Main navigation"} className="motion-stagger mx-auto flex max-w-7xl flex-col gap-1.5">
+                        {items.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => followLink(item.href)}
+                                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground transition-all duration-200 hover:bg-muted hover:translate-x-1"
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                        <div className="mt-3 flex items-center justify-between border-t border-border pt-4 px-2">
+                            <span className="text-xs font-semibold text-muted-foreground">Options</span>
+                            <div className="flex items-center gap-1">{controls}</div>
+                        </div>
+                        <Button className="mt-3 w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={goToDownloadTarget}>
+                            {downloadLabel}
+                        </Button>
+                    </nav>
+                </div>
+            )}
+        </header>
+    );
 }
