@@ -1,9 +1,12 @@
 var express = require('express');
+var healthRoutes = require('./health.routes');
+var filesRoutes = require('./files.routes');
+var homeController = require('../controllers/home.controller');
+
 var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+router.get('/', homeController.welcome);
+router.use('/health', healthRoutes);
+router.use('/files', filesRoutes);
 
 module.exports = router;
