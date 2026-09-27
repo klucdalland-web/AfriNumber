@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:path_drawing/path_drawing.dart';
+import 'package:vector_math/vector_math_64.dart' as vector;
 
 class LoopPainter extends CustomPainter {
   final Color color;
@@ -24,7 +25,8 @@ class LoopPainter extends CustomPainter {
 
     final scaleX = size.width / 173;
     final scaleY = size.height / 102;
-    final matrix = Matrix4.identity()..scale(scaleX, scaleY);
+    final matrix = vector.Matrix4.identity()
+      ..scaleByVector3(vector.Vector3(scaleX, scaleY, 1.0));
 
     canvas.drawPath(_cachedPath.transform(matrix.storage), paint);
   }

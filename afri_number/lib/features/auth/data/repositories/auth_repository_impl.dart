@@ -23,13 +23,21 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> register({
     required String name,
+    required String firstName,
     required String email,
+    required String phoneNumber,
+    required int countryId,
     required String password,
+    required String passwordConfirmation,
   }) async {
     final result = await _remote.register(
       name: name,
+      firstName: firstName,
       email: email,
+      phoneNumber: phoneNumber,
+      countryId: countryId,
       password: password,
+      passwordConfirmation: passwordConfirmation,
     );
     final token = _extractToken(result);
     if (token != null) {
@@ -54,6 +62,20 @@ class AuthRepositoryImpl implements AuthRepository {
     String? email,
   }) async {
     await _remote.resendOtp(email: email);
+  }
+
+  @override
+  Future<void> forgotPassword({required String email}) async {
+    await _remote.forgotPassword(email: email);
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _remote.resetPassword(email: email, code: code, newPassword: newPassword);
   }
 
   @override

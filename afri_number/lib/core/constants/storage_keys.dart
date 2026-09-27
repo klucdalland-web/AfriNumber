@@ -5,4 +5,5 @@ class StorageKeys {
   static const String refreshToken = 'refresh_token';
   static const String user = 'user';
   static const String themeMode = 'theme_mode';
+  static const String rememberedPhone = 'remembered_phone';
 }

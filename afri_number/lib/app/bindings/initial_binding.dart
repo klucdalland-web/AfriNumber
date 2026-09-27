@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../core/network/dio_client.dart';
+import '../../core/utils/device_info_service.dart';
 import '../../core/utils/storage_service.dart';
 import '../../core/utils/theme_controller.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -13,9 +14,14 @@ class InitialBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<StorageService>(() => StorageService(), fenix: true);
+    Get.lazyPut<DeviceInfoService>(() => DeviceInfoService(), fenix: true);
     Get.lazyPut<DioClient>(() => DioClient(Get.find<StorageService>()), fenix: true);
     Get.lazyPut<AuthRemoteDataSource>(
-      () => AuthRemoteDataSource(Get.find<DioClient>(), Get.find<StorageService>()),
+      () => AuthRemoteDataSource(
+        Get.find<DioClient>(),
+        Get.find<StorageService>(),
+        Get.find<DeviceInfoService>(),
+      ),
       fenix: true,
     );
     Get.lazyPut<AuthRepository>(
@@ -23,7 +29,7 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
     Get.lazyPut<AuthController>(
-      () => AuthController(Get.find<AuthRepository>()),
+      () => AuthController(Get.find<AuthRepository>(), Get.find<StorageService>()),
       fenix: true,
     );
     Get.lazyPut<ThemeController>(

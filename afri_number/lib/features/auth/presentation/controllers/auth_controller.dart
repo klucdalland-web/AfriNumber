@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../app/routes/app_routes.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/utils/storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
-  AuthController(this._repository);
+  AuthController(this._repository, this._storage);
 
   final AuthRepository _repository;
+  final StorageService _storage;
 
   final isLoading = false.obs;
-  final formKey = GlobalKey<FormState>();
+  final rememberMe = false.obs;
 
+  final loginFormKey = GlobalKey<FormState>();
+  final registerFormKey = GlobalKey<FormState>();
+  final forgotPasswordFormKey = GlobalKey<FormState>();
+  final resetPasswordFormKey = GlobalKey<FormState>();
+
+  // Login controllers
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -19,14 +28,32 @@ class AuthController extends GetxController {
   final lastNameController = TextEditingController();
   final firstNameController = TextEditingController();
   final emailController = TextEditingController();
+  final registerPhoneController = TextEditingController();
   final registerPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+
+  final int _defaultCountryId = 1;
 
   // OTP controller
   final otpController = TextEditingController();
 
-  // Error message
+  // Forgot / reset password controllers
+  final forgotPasswordEmailController = TextEditingController();
+  final resetCodeController = TextEditingController();
+  final newPasswordController = TextEditingController();
+  final confirmNewPasswordController = TextEditingController();
+
   final errorMessage = ''.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    final remembered = _storage.rememberedPhone;
+    if (remembered != null && remembered.isNotEmpty) {
+      phoneController.text = remembered;
+      rememberMe.value = true;
+    }
+  }
 
   @override
   void onClose() {
@@ -35,97 +62,89 @@ class AuthController extends GetxController {
     lastNameController.dispose();
     firstNameController.dispose();
     emailController.dispose();
+    registerPhoneController.dispose();
     registerPasswordController.dispose();
     confirmPasswordController.dispose();
     otpController.dispose();
+    forgotPasswordEmailController.dispose();
+    resetCodeController.dispose();
+    newPasswordController.dispose();
+    confirmNewPasswordController.dispose();
     super.onClose();
   }
 
-  /// Clear error message
   void clearError() => errorMessage.value = '';
 
-  /// Login with email/phone and password
-  Future<bool> login() async {
+  void toggleRememberMe(bool value) => rememberMe.value = value;
+
+  Future<void> login() async {
+    if (!(loginFormKey.currentState?.validate() ?? false)) return;
+
     clearError();
     isLoading.value = true;
 
     try {
-      final email = phoneController.text.trim();
+      // Garantit l'envoi de la chaîne complète saisie sans espaces parasites
+      final identifier = phoneController.text.trim();
       final password = passwordController.text;
 
-      if (email.isEmpty || password.isEmpty) {
-        errorMessage.value = 'Email/téléphone et mot de passe requis';
-        isLoading.value = false;
-        return false;
-      }
+      await _repository.login(email: identifier, password: password);
 
-      await _repository.login(email: email, password: password);
-
-      // Fetch user profile after login
       await _fetchUserProfile();
 
+      if (rememberMe.value) {
+        await _storage.saveRememberedPhone(identifier);
+      } else {
+        await _storage.clearRememberedPhone();
+      }
+
       isLoading.value = false;
-      return true;
+      Get.offAllNamed(AppRoutes.authFeedbackConnexion);
     } on ApiException catch (e) {
+      isLoading.value = false;
       errorMessage.value = e.message;
+    } catch (_) {
       isLoading.value = false;
-      return false;
-    } catch (e) {
-      errorMessage.value =
-          'Erreur de connexion. Vérifiez votre connexion internet.';
-      isLoading.value = false;
-      return false;
+      errorMessage.value = 'Erreur de connexion. Veuillez réessayer.';
     }
   }
 
-  /// Register new user
-  Future<bool> register() async {
+  Future<void> register() async {
+    if (!(registerFormKey.currentState?.validate() ?? false)) return;
+
     clearError();
     isLoading.value = true;
 
     try {
-      final name =
-          '${lastNameController.text.trim()} ${firstNameController.text.trim()}';
+      final name = lastNameController.text.trim();
+      final firstName = firstNameController.text.trim();
       final email = emailController.text.trim();
+      final phoneNumber = registerPhoneController.text.trim();
       final password = registerPasswordController.text;
+      final passwordConfirmation = confirmPasswordController.text;
 
-      if (name.trim().isEmpty || email.isEmpty || password.isEmpty) {
-        errorMessage.value = 'Tous les champs sont requis';
-        isLoading.value = false;
-        return false;
-      }
-
-      if (password != confirmPasswordController.text) {
-        errorMessage.value = 'Les mots de passe ne correspondent pas';
-        isLoading.value = false;
-        return false;
-      }
-
-      if (password.length < 8) {
-        errorMessage.value =
-            'Le mot de passe doit contenir au moins 8 caractères';
-        isLoading.value = false;
-        return false;
-      }
-
-      await _repository.register(name: name, email: email, password: password);
+      await _repository.register(
+        name: name,
+        firstName: firstName,
+        email: email,
+        phoneNumber: phoneNumber,
+        countryId: _defaultCountryId,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+      );
 
       isLoading.value = false;
-      return true;
+      Get.offAllNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
+      isLoading.value = false;
       errorMessage.value = e.message;
+    } catch (_) {
       isLoading.value = false;
-      return false;
-    } catch (e) {
-      errorMessage.value =
-          'Erreur lors de l\'inscription. Veuillez réessayer.';
-      isLoading.value = false;
-      return false;
+      errorMessage.value = 'Erreur lors de l\'inscription. Veuillez réessayer.';
     }
   }
 
-  /// Verify OTP code
-  Future<bool> verifyOtp() async {
+  Future<void> verifyOtp() async {
     clearError();
     isLoading.value = true;
 
@@ -135,26 +154,23 @@ class AuthController extends GetxController {
       if (code.length != 4) {
         errorMessage.value = 'Le code doit contenir 4 chiffres';
         isLoading.value = false;
-        return false;
+        return;
       }
 
       final email = emailController.text.trim();
       await _repository.verifyOtp(code: code, email: email.isNotEmpty ? email : null);
 
       isLoading.value = false;
-      return true;
+      Get.offAllNamed(AppRoutes.authFeedbackInscription);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
       isLoading.value = false;
-      return false;
-    } catch (e) {
+    } catch (_) {
       errorMessage.value = 'Code invalide. Veuillez réessayer.';
       isLoading.value = false;
-      return false;
     }
   }
 
-  /// Resend OTP code
   Future<void> resendOtp() async {
     clearError();
     try {
@@ -162,35 +178,69 @@ class AuthController extends GetxController {
       await _repository.resendOtp(email: email.isNotEmpty ? email : null);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
-    } catch (e) {
+    } catch (_) {
       errorMessage.value = 'Erreur lors du renvoi du code';
     }
   }
 
-  /// Fetch user profile after login
+  Future<void> forgotPassword() async {
+    if (!(forgotPasswordFormKey.currentState?.validate() ?? false)) return;
+
+    clearError();
+    isLoading.value = true;
+
+    try {
+      final email = forgotPasswordEmailController.text.trim();
+      await _repository.forgotPassword(email: email);
+
+      isLoading.value = false;
+      Get.toNamed(AppRoutes.resetPassword);
+    } on ApiException catch (e) {
+      isLoading.value = false;
+      errorMessage.value = e.message;
+    } catch (_) {
+      isLoading.value = false;
+      errorMessage.value = 'Erreur lors de l\'envoi. Vérifiez votre connexion.';
+    }
+  }
+
+  Future<void> resetPassword() async {
+    if (!(resetPasswordFormKey.currentState?.validate() ?? false)) return;
+
+    clearError();
+    isLoading.value = true;
+
+    try {
+      final email = forgotPasswordEmailController.text.trim();
+      final code = resetCodeController.text.trim();
+      final newPassword = newPasswordController.text;
+
+      await _repository.resetPassword(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
+
+      isLoading.value = false;
+      Get.offAllNamed(AppRoutes.login);
+    } on ApiException catch (e) {
+      isLoading.value = false;
+      errorMessage.value = e.message;
+    } catch (_) {
+      isLoading.value = false;
+      errorMessage.value = 'Code invalide ou expiré. Veuillez réessayer.';
+    }
+  }
+
   Future<void> _fetchUserProfile() async {
     try {
       await _repository.me();
-    } catch (e) {
-      // Ignore profile fetch errors
-    }
+    } catch (_) {}
   }
 
-  /// Logout
   Future<void> logout() async {
     try {
       await _repository.logout();
-    } catch (e) {
-      // Ignore logout errors
-    }
-  }
-
-  /// Navigate based on login/register success
-  void navigateAfterAuth(bool isRegister) {
-    if (isRegister) {
-      Get.offAllNamed('/otp-verification');
-    } else {
-      Get.offAllNamed('/dashboard');
-    }
+    } catch (_) {}
   }
 }
