@@ -10,25 +10,30 @@ class ApiConstants {
   static const String baseUrl = _defaultBaseUrl;
 
   /// URL par défaut - Remplacer par votre vraie URL d'API
-  static const String _defaultBaseUrl = 'https://afriserver.onrender.com/api';
+  static const String _defaultBaseUrl = 'https://afriserver.onrender.com/api/v1';
 
   /// Pour le développement local, utilisez l'IP de votre machine sur le réseau local
   /// Exemple: 'http://192.168.1.100:3000/api' ou 'http://10.0.2.2:3000/api' (Android emulator)
   /// static const String baseUrl = 'http://192.168.1.XXX:3000/api';
 
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
 
   // Auth endpoints
   static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
-  
+
   // OTP endpoints
   static const String verifyOtp = '/auth/verify-otp';
   static const String resendOtp = '/auth/resend-otp';
-  
+
+  // À confirmer/adapter avec le backend : c'est le
+  // seul endroit à changer si les vraies routes diffèrent.
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
+
   // User endpoints
   static const String profile = '/user/profile';
   static const String updateProfile = '/user/profile';

@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
 
-/// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +
-/// en-tête). Le contenu métier (champs, validation, soumission) vit dans
-/// [RegisterForm].
-class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key});
+/// Vue de réinitialisation du mot de passe : orchestre uniquement la mise
+/// en page.
+class ResetPasswordPage extends StatelessWidget {
+  const ResetPasswordPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +20,9 @@ class RegisterPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: r.space(20)),
-              AuthHeader(moduleLabel: 'Inscription'),
+              AuthHeader(moduleLabel: 'Vérification', showBackButton: true),
               SizedBox(height: r.space(8)),
-              const RegisterForm(),
+              const ResetPasswordForm(),
               SizedBox(height: r.space(40)),
             ],
           ),

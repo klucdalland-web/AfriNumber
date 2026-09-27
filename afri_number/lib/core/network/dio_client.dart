@@ -10,14 +10,13 @@ import 'interceptors/error_interceptor.dart';
 /// Client HTTP centralisé (Dio) avec intercepteurs.
 class DioClient {
   DioClient(this._storage) {
-    // Log base URL en mode debug
     ApiConstants.logBaseUrl();
     
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        connectTimeout: ApiConstants.connectTimeout,
-        receiveTimeout: ApiConstants.receiveTimeout,
+        connectTimeout: const Duration(seconds: 90),
+        receiveTimeout: const Duration(seconds: 90),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

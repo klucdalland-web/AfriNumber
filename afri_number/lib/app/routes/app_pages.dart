@@ -3,8 +3,11 @@ import 'package:get/get.dart';
 import '../../features/auth/presentation/views/login_page.dart';
 import '../../features/auth/presentation/views/otp_verification_page.dart';
 import '../../features/auth/presentation/views/register_page.dart';
+import '../../features/auth/presentation/views/forgot_password_page.dart';
+import '../../features/auth/presentation/views/reset_password_page.dart';
+import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart';
+import '../../features/auth/presentation/views/auth_feedback_inscription_page.dart';
 import '../../features/welcome/presentation/views/welcome_page.dart';
-import '../../features/auth/presentation/widgets/success_confirmation.dart';
 import '../../features/dashboard/presentation/views/dashboard_page.dart';
 import 'app_routes.dart';
 
@@ -31,17 +34,20 @@ class AppPages {
       page: () => const OTPVerificationPage(),
     ),
     GetPage(
-      name: AppRoutes.successConfirmation,
-      page: () {
-        final args = Get.arguments as Map<String, dynamic>? ?? {};
-        final variant = args['variant'] as String? ?? 'login';
-        return SuccessConfirmationPage(
-          variant: variant == 'register'
-              ? SuccessVariant.register
-              : SuccessVariant.login,
-          onContinue: () => Get.offAllNamed(AppRoutes.dashboard),
-        );
-      },
+      name: AppRoutes.forgotPassword,
+      page: () => const ForgotPasswordPage(),
+    ),
+    GetPage(
+      name: AppRoutes.resetPassword,
+      page: () => const ResetPasswordPage(),
+    ),
+    GetPage(
+      name: AppRoutes.authFeedbackConnexion,
+      page: () => const AuthFeedbackConnexionPage(),
+    ),
+    GetPage(
+      name: AppRoutes.authFeedbackInscription,
+      page: () => const AuthFeedbackInscriptionPage(),
     ),
     GetPage(
       name: AppRoutes.dashboard,

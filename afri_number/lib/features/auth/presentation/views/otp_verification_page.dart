@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
-import '../../../../app/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/widgets.dart';
 
@@ -15,8 +14,7 @@ class OTPVerificationPage extends StatelessWidget {
     final theme = Theme.of(context);
     final authController = Get.find<AuthController>();
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+    return AppScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: r.pad(h: 24),
@@ -95,27 +93,13 @@ class OTPVerificationPage extends StatelessWidget {
                 enabled: !authController.isLoading.value,
               ),
               SizedBox(height: r.space(24)),
-              SizedBox(
-                height: r.heightOf(56),
-                width: double.infinity,
-                child: OutlinedButton(
+              Obx(
+                () => AppButton.outlined(
+                  label: 'Retour',
                   onPressed: authController.isLoading.value ? null : () => Get.back(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.onSurface,
-                    side: BorderSide(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(r.radius(28)),
-                    ),
-                    textStyle: TextStyle(
-                      fontSize: r.fontSize(16),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  child: Text('Retour'),
+                  foregroundColor: theme.colorScheme.onSurface,
+                  radius: r.radius(28),
+                  height: r.heightOf(56),
                 ),
               ),
               SizedBox(height: r.space(40)),
@@ -129,11 +113,7 @@ class OTPVerificationPage extends StatelessWidget {
   Future<void> _handleVerifyOtp(AuthController controller, String code) async {
     if (code.length == 4) {
       controller.otpController.text = code;
-      final success = await controller.verifyOtp();
-      if (success) {
-        Get.offAllNamed(AppRoutes.successConfirmation,
-            arguments: {'variant': 'register'});
-      }
+      await controller.verifyOtp();
     }
   }
 
@@ -163,23 +143,11 @@ class OTPVerificationPage extends StatelessWidget {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
           ),
         ),
-        TextButton(
+        AppButton.text(
+          label: 'Renvoyer',
           onPressed: controller.isLoading.value ? null : () => controller.resendOtp(),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            'Renvoyer',
-            style: TextStyle(
-              fontSize: r.fontSize(14),
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-              decoration: TextDecoration.underline,
-              decorationColor: theme.colorScheme.onSurface,
-            ),
-          ),
+          foregroundColor: theme.colorScheme.onSurface,
+          underline: true,
         ),
       ],
     ));
