@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'phone_number', 'statut', 'status_valide', 'pays_id', 'type_user_id', 'first_name', 'failed_login_attempts',
-    'locked_until',])]
+    'locked_until', ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -65,5 +66,10 @@ class User extends Authenticatable
     public function typeUser(): BelongsTo
     {
         return $this->belongsTo(TypeUser::class);
+    }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\ObservabilityController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PaysController;
 use App\Http\Controllers\Api\V1\PieceIdentiteController;
+use App\Http\Controllers\Api\V1\ProfileVerificationController;
 use App\Http\Controllers\Api\V1\TypePieceIdentiteController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -71,4 +72,9 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
     Route::delete('/pieces/{piece}', [PieceIdentiteController::class, 'destroy'])->name('pieces.destroy');
     Route::post('/pieces/{piece}/fichiers', [PieceIdentiteController::class, 'storeFichiers'])->name('pieces.fichiers.store');
     Route::get('/pieces/{piece}/statut', [PieceIdentiteController::class, 'statut'])->name('pieces.statut');
+
+    // Route pour le Mobile (Nécessite que l'utilisateur soit connecté à son appli)
+
+    Route::middleware('auth:sanctum')->post('/verifier/init', [ProfileVerificationController::class, 'initialiserVerification']);
+
 });
