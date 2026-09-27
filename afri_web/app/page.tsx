@@ -107,7 +107,7 @@ function Hero() {
     ? ["Acheter un numéro", "Recharger", "Mes messages", "Paramètres"]
     : ["Buy a number", "Top up", "My messages", "Settings"];
   return (
-    <section className="relative overflow-hidden pt-6 pb-16 sm:pb-24 lg:pb-28">
+    <section className="relative overflow-hidden bg-[var(--background)] pt-6 pb-16 sm:pb-24 lg:pb-28">
       {/* Halos de lumière décoratifs subtils */}
       <div 
         aria-hidden 

@@ -128,6 +128,8 @@
   body {
     @apply min-w-0 bg-background text-foreground font-sans;
     overflow-x: hidden;
+    background-image: radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--foreground) 11%, transparent) 1px, transparent 1.3px);
+    background-size: 22px 22px;
   }
   a,
   button {
@@ -149,11 +151,13 @@
 @layer components {
   .bg-gradient-page {
     background-color: var(--background);
-    background-image: 
+    background-image:
+      radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--foreground) 11%, transparent) 1px, transparent 1.3px),
       radial-gradient(ellipse 90% 55% at 50% -10%, color-mix(in oklch, var(--foreground) 4%, transparent), transparent 70%),
       radial-gradient(ellipse 65% 45% at 95% 35%, color-mix(in oklch, var(--foreground) 3%, transparent), transparent 60%),
       radial-gradient(ellipse 75% 55% at 5% 75%, color-mix(in oklch, var(--foreground) 3.5%, transparent), transparent 70%),
       radial-gradient(ellipse 90% 50% at 50% 110%, color-mix(in oklch, var(--foreground) 4%, transparent), transparent 70%);
+    background-size: 22px 22px, auto, auto, auto, auto;
   }
 
   .section-container {

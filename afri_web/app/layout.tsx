@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 
-const inter = Inter({
+const manrope = Manrope({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -21,8 +21,8 @@ export default function RootLayout({
 }) {
    
   return (
-    <html lang="fr" className={`${inter.variable} scroll-smooth`}>
-      <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
+    <html lang="fr" className={`${manrope.variable} scroll-smooth font-sans`}>
+      <body className="flex min-h-screen flex-col bg-background text-foreground antialiased font-sans">
         {/* En-tête Global avec Zustand Store */}
         <Navbar />
         
