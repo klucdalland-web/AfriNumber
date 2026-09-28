@@ -4,83 +4,100 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
-import 'decorative_line.dart';
 import 'dot_indicator.dart';
 
 class WelcomeFooter extends StatelessWidget {
   const WelcomeFooter({
     super.key,
     required this.scale,
+    this.currentIndex = 0,
+    this.pageCount = 3,
     this.onSkip,
+    this.onNext,
   });
 
   final double scale;
+  final int currentIndex;
+  final int pageCount;
   final VoidCallback? onSkip;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = context.responsive;
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                DotIndicator(active: true, scale: scale),
-                SizedBox(width: r.space(6 * scale)),
-                DotIndicator(active: false, scale: scale),
-                SizedBox(width: r.space(6 * scale)),
-                DotIndicator(active: false, scale: scale),
-              ],
-            ),
-            _SkipButton(
-              scale: scale,
-              onTap: onSkip ?? () => Get.offAllNamed(AppRoutes.login),
-            ),
-          ],
-        ),
-        SizedBox(height: r.space(16 * scale)),
-        DecorativeLine(scale: scale),
-      ],
-    );
-  }
-}
-
-class _SkipButton extends StatelessWidget {
-  const _SkipButton({
-    required this.scale,
-    required this.onTap,
-  });
-
-  final double scale;
-  final VoidCallback onTap;
+  final VoidCallback? onNext;
 
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: r.widthOf(140 * scale),
-        height: r.heightOf(56 * scale),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface,
-          borderRadius: BorderRadius.circular(r.radius(50 * scale)),
+    final isDark = theme.brightness == Brightness.dark;
+
+    final isLastPage = currentIndex == pageCount - 1;
+    final skipTextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final buttonBgColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final buttonTextColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          children: List.generate(pageCount, (index) {
+            return Padding(
+              padding: EdgeInsets.only(
+                right: index < pageCount - 1 ? r.space(6 * scale) : 0,
+              ),
+              child: DotIndicator(
+                active: index == currentIndex,
+                scale: scale,
+              ),
+            );
+          }),
         ),
-        child: Center(
-          child: Text(
-            'Passer',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: r.fontSize(18 * scale),
-              fontWeight: FontWeight.w400,
-              color: theme.colorScheme.surface,
-              height: 26 / 20,
+        Row(
+          children: [
+            if (!isLastPage) ...[
+              GestureDetector(
+                onTap: onSkip ?? () => Get.offAllNamed(AppRoutes.login),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: r.space(12 * scale),
+                    vertical: r.space(8 * scale),
+                  ),
+                  child: Text(
+                    'Passer',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: r.fontSize(14 * scale),
+                      fontWeight: FontWeight.w500,
+                      color: skipTextColor,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: r.space(8 * scale)),
+            ],
+            GestureDetector(
+              onTap: isLastPage
+                  ? (onSkip ?? () => Get.offAllNamed(AppRoutes.login))
+                  : (onNext ?? () => Get.offAllNamed(AppRoutes.login)),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.space(24 * scale),
+                  vertical: r.space(12 * scale),
+                ),
+                decoration: BoxDecoration(
+                  color: buttonBgColor,
+                  borderRadius: BorderRadius.circular(r.radius(30 * scale)),
+                ),
+                child: Text(
+                  isLastPage ? 'Commencer' : 'Suivant',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: r.fontSize(15 * scale),
+                    fontWeight: FontWeight.w600,
+                    color: buttonTextColor,
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ),
+      ],
     );
   }
 }

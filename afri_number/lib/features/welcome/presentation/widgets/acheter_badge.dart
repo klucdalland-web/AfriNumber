@@ -14,22 +14,21 @@ class AcheterBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
-    final theme = Theme.of(context);
     return Transform.rotate(
       angle: -0.12,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: r.space(20 * scale),
-          vertical: r.space(10 * scale),
+          horizontal: r.space(16 * scale),
+          vertical: r.space(8 * scale),
         ),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(r.radius(50 * scale)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(r.radius(30 * scale)),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: r.space(12 * scale),
-              offset: const Offset(0, 2),
+              offset: Offset(0, r.space(4 * scale)),
             ),
           ],
         ),
@@ -37,24 +36,20 @@ class AcheterBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Transform.rotate(
-              angle: 0.12,
+              angle: 3.14159,
               child: Icon(
-                Icons.keyboard_arrow_down,
-                size: r.iconSize(22 * scale),
-                color: theme.colorScheme.onSurface,
+                Icons.reply_rounded,
+                size: r.iconSize(18 * scale),
+                color: Colors.black,
               ),
             ),
-            SizedBox(width: r.space(8 * scale)),
-            Transform.rotate(
-              angle: 0.12,
-              child: Text(
-                'Acheter',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: r.fontSize(18 * scale),
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurface,
-                  height: 26 / 20,
-                ),
+            SizedBox(width: r.space(6 * scale)),
+            Text(
+              'Acheter',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: r.fontSize(15 * scale),
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
               ),
             ),
           ],
