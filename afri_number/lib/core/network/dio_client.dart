@@ -20,6 +20,7 @@ class DioClient {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'x-api-key':'Q4UqsMCrd6YIMWNb8JHUtlhiduidjdj',
         },
       ),
     );

@@ -2,16 +2,18 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-
 class DeviceInfoService {
   Map<String, String>? _cached;
 
-  String fcmToken = '';
+  /// Token FCM pour les notifications Firebase (valeur par défaut pour éviter l'erreur backend s'il est vide)
+  String fcmToken = 'dummy_fcm_token';
 
   Future<Map<String, String>> collect() async {
+    final effectiveFcmToken = fcmToken.isNotEmpty ? fcmToken : 'dummy_fcm_token';
+
     final cached = _cached;
     if (cached != null) {
-      return {...cached, 'fcm_token': fcmToken};
+      return {...cached, 'fcm_token': effectiveFcmToken};
     }
 
     final deviceInfoPlugin = DeviceInfoPlugin();
@@ -65,6 +67,6 @@ class DeviceInfoService {
       'os_version': osVersion,
       'app_version': packageInfo.version,
     };
-    return {..._cached!, 'fcm_token': fcmToken};
+    return {..._cached!, 'fcm_token': effectiveFcmToken};
   }
 }
