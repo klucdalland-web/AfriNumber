@@ -79,15 +79,45 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> logout() => _remote.logout();
+  Future<void> logout() async {
+    try {
+      await _remote.logout();
+    } catch (_) {
+      // Nettoie toujours les tokens même en cas d'échec réseau
+    } finally {
+      await _storage.clearTokens();
+    }
+  }
 
   @override
   Future<Map<String, dynamic>?> me() => _remote.me();
 
   String? _extractToken(Map<String, dynamic> result) {
-    return result['token'] as String? ??
-        (result['data'] is Map
-            ? (result['data'] as Map)['token'] as String?
-            : null);
+    if (result['token'] is String && (result['token'] as String).isNotEmpty) {
+      return result['token'] as String;
+    }
+    if (result['access_token'] is String && (result['access_token'] as String).isNotEmpty) {
+      return result['access_token'] as String;
+    }
+    final data = result['data'];
+    if (data is Map) {
+      if (data['token'] is String && (data['token'] as String).isNotEmpty) {
+        return data['token'] as String;
+      }
+      if (data['access_token'] is String && (data['access_token'] as String).isNotEmpty) {
+        return data['access_token'] as String;
+      }
+    }
+    final auth = result['authorisation'] ?? result['authorization'];
+    if (auth is Map) {
+      if (auth['token'] is String && (auth['token'] as String).isNotEmpty) {
+        return auth['token'] as String;
+      }
+      if (auth['access_token'] is String && (auth['access_token'] as String).isNotEmpty) {
+        return auth['access_token'] as String;
+      }
+    }
+    return null;
   }
 }
+

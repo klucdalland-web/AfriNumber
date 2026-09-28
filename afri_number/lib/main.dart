@@ -29,7 +29,7 @@ class AfriNumberApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
       initialBinding: InitialBinding(),
-      initialRoute: AppPages.initial,
+      initialRoute: AppPages.initialRoute,
       getPages: AppPages.routes,
     );
   }
