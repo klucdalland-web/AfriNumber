@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\UserResource;
 use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
- // 🚀 Pour suivre les erreurs dans les logs de Render
+// 🚀 Pour suivre les erreurs dans les logs de Render
 
 class ProfileVerificationController extends Controller
 {
@@ -140,7 +139,7 @@ class ProfileVerificationController extends Controller
                 ], 403);
             }
 
-            $profile = Profile::with(['user.typeUser', 'user.pays.organisation'])->find($profile_id);
+            $profile = Profile::with('user')->find($profile_id);
 
             if (! $profile || ! $profile->user) {
                 return response()->json([
@@ -153,9 +152,8 @@ class ProfileVerificationController extends Controller
                 'statut' => 'succes',
                 'data' => [
                     'id' => $profile->id,
-                    'status' => $profile->status,
-                    'document_url' => $profile->document_url,
-                    'user' => UserResource::make($profile->user),
+                    'name' => $profile->user->name,
+                    'first_name' => $profile->user->first_name,
                 ],
             ], 200);
         } catch (\Exception $e) {
