@@ -13,7 +13,7 @@ class AuthFeedbackConnexionPage extends StatelessWidget {
     return AuthFeedbackView(
       title: 'Connexion Réussie !',
       subtitle: 'Bienvenue à nouveau ! Vous êtes maintenant connecté à votre compte.',
-      onContinue: () => Get.offAllNamed(AppRoutes.dashboard),
+      onContinue: () => Get.offAllNamed(AppRoutes.main),
     );
   }
 }

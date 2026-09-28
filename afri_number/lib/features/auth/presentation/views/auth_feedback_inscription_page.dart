@@ -13,7 +13,7 @@ class AuthFeedbackInscriptionPage extends StatelessWidget {
     return AuthFeedbackView(
       title: 'Inscription Réussie !',
       subtitle: 'Bienvenue parmi nous ! Votre compte est prêt, vous pouvez maintenant commencer.',
-      onContinue: () => Get.offAllNamed(AppRoutes.dashboard),
+      onContinue: () => Get.offAllNamed(AppRoutes.main),
     );
   }
 }

@@ -24,10 +24,12 @@ class StorageService {
   Future<void> clearTokens() async {
     await remove(StorageKeys.accessToken);
     await remove(StorageKeys.refreshToken);
+    await remove(StorageKeys.user);
   }
 
   bool get hasToken =>
-      accessToken != null && accessToken!.isNotEmpty;
+      accessToken != null && accessToken!.trim().isNotEmpty;
+
 
   // Remember-me helpers (numéro de téléphone uniquement — jamais le mot de
   // passe, qui n'est jamais persisté côté client).
