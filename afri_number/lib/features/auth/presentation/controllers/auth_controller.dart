@@ -241,6 +241,11 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       await _repository.logout();
-    } catch (_) {}
+    } catch (_) {
+      // Même en cas d'erreur réseau, on efface les tokens localement.
+      await _storage.clearTokens();
+    }
+    Get.offAllNamed(AppRoutes.welcome);
   }
 }
+
