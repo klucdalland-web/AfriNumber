@@ -13,7 +13,9 @@ import '../../features/auth/presentation/controllers/auth_controller.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<StorageService>(() => StorageService(), fenix: true);
+    // StorageService permanent : utilisé dès le SplashScreen, doit survivre
+    // aux navigations (Get.offAllNamed efface les bindings non-permanents).
+    Get.put<StorageService>(StorageService(), permanent: true);
     Get.lazyPut<DeviceInfoService>(() => DeviceInfoService(), fenix: true);
     Get.lazyPut<DioClient>(() => DioClient(Get.find<StorageService>()), fenix: true);
     Get.lazyPut<AuthRemoteDataSource>(
@@ -32,9 +34,9 @@ class InitialBinding extends Bindings {
       () => AuthController(Get.find<AuthRepository>(), Get.find<StorageService>()),
       fenix: true,
     );
-    Get.lazyPut<ThemeController>(
-      () => ThemeController(Get.find<StorageService>()),
-      fenix: true,
+    Get.put<ThemeController>(
+      ThemeController(Get.find<StorageService>()),
+      permanent: true,
     );
   }
 }
