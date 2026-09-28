@@ -165,4 +165,91 @@ class ProfileVerificationController extends Controller
             ], 500);
         }
     }
+
+    public function traiterVerdictN8N(Request $request)
+    {
+        try {
+            // 🔐 1. Validation de la signature cryptographique SHA-256
+            $secret = env('SERVICE_SECRET_KEY');
+            $body = $request->getContent(); 
+            $signatureAttendue = hash_hmac('sha256', $body, $secret);
+            $signatureRecue = $request->header('X-Signature');
+
+            if (!$signatureRecue || !hash_equals($signatureAttendue, $signatureRecue)) {
+                return response()->json([
+                    'statut' => 'refuse',
+                    'erreur' => 'Signature invalide. Requête non autorisée.'
+                ], 403);
+            }
+
+            // 🔍 2. Validation des champs transmis dans le body par n8n
+            $request->validate([
+                'profile_id' => 'required|string|exists:profiles,id',
+                'kyc_status' => 'required|string|in:approved,rejected,manual_review',
+                'reason'     => 'nullable|string',
+                'title'      => 'nullable|string',
+                'message'    => 'nullable|string'
+            ]);
+
+            // 🗄️ 3. Mise à jour du profil en Base de Données
+            $profil = Profile::find($request->profile_id);
+            
+            // Mapping des statuts n8n vers tes statuts de base de données
+            $statutMapping = [
+                'approved'      => 'approuve',
+                'rejected'      => 'rejete',
+                'manual_review' => 'en_cours_de_verification' // Reste en traitement si vérification humaine requise
+            ];
+
+            $profil->status = $statutMapping[$request->kyc_status];
+            
+            // Optionnel : Sauvegarde le motif du refus ou de la mise en revue si ta table possède cette colonne
+            if ($request->filled('reason') && \Schema::hasColumn('profiles', 'rejection_reason')) {
+                $profil->rejection_reason = $request->reason;
+            }
+            
+            $profil->save();
+
+            // 📢 4. Traitement des Notifications (Selon le statut)
+            switch ($request->kyc_status) {
+                case 'approved':
+                    // TODO: Déclencher l'envoi du mail de succès ou notification Push
+                    Log::info("🟢 Profil {$profil->id} approuvé automatiquement par n8n.");
+                    break;
+
+                case 'rejected':
+                    // TODO: Envoyer la notification de rejet avec le motif précis ($request->message)
+                    Log::warning("🔴 Profil {$profil->id} rejeté par n8n. Motif : " . $request->reason);
+                    break;
+
+                case 'manual_review':
+                    // Si la règle "Alerter l'équipe" est déclenchée
+                    if ($request->has('url_selfie')) {
+                        Log::info("🟡 ALERTE ÉQUIPE - Profil {$profil->id} soumis à vérification humaine. Motif : " . $request->reason);
+                        // TODO: Envoyer un e-mail à l'administration ou un webhook vers ton outil interne
+                    } else {
+                        Log::info("🟡 Profil {$profil->id} placé en file d'attente de revue manuelle.");
+                    }
+                    break;
+            }
+
+            return response()->json([
+                'statut' => 'succes',
+                'message' => 'Verdict KYC traité avec succès par Laravel.'
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'statut' => 'refuse',
+                'erreur' => 'Format de données incorrect.',
+                'details' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error("❌ Erreur lors du traitement du verdict n8n : " . $e->getMessage());
+            return response()->json([
+                'statut' => 'erreur',
+                'erreur' => 'Erreur interne lors du traitement du verdict.'
+            ], 500);
+        }
+    }
 }
