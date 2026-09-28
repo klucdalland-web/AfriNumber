@@ -17,3 +17,7 @@ Route::post('/v1/express/upload-complete', [ProfileVerificationController::class
 
 // Route secrète pour n8n (HMAC sur profile_id via header X-Signature)
 Route::get('/v1/n8n/profiles/{profile_id}', [ProfileVerificationController::class, 'show']);
+
+
+// 🟢 Route appelée par les nœuds HTTP violets de n8n
+Route::post('/v1/n8n/kyc-callback', [ProfileVerificationController::class, 'traiterVerdictN8N']);
