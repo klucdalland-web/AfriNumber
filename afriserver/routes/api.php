@@ -14,3 +14,6 @@ Route::prefix('v1')
 
 // Route secrète pour Express (Pas de middleware Sanctum ici car c'est votre serveur Node qui appelle)
 Route::post('/v1/express/upload-complete', [ProfileVerificationController::class, 'notifierUploadTermine']);
+
+// Route secrète pour n8n (HMAC sur profile_id via header X-Signature)
+Route::get('/v1/n8n/profiles/{profile_id}', [ProfileVerificationController::class, 'show']);

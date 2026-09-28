@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // 🚀 Pour suivre les erreurs dans les logs de Render
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+
+ // 🚀 Pour suivre les erreurs dans les logs de Render
 
 class ProfileVerificationController extends Controller
 {
@@ -23,7 +27,7 @@ class ProfileVerificationController extends Controller
             if (! $user) {
                 return response()->json([
                     'statut' => 'refuse',
-                    'erreur' => 'Utilisateur non authentifié.'
+                    'erreur' => 'Utilisateur non authentifié.',
                 ], 401);
             }
 
@@ -55,7 +59,7 @@ class ProfileVerificationController extends Controller
 
         } catch (\Exception $e) {
             // 🚨 Journalise l'erreur en arrière-plan sur Render
-            Log::error('Erreur lors de l\'initialisation du profil UUID : ' . $e->getMessage());
+            Log::error('Erreur lors de l\'initialisation du profil UUID : '.$e->getMessage());
 
             return response()->json([
                 'statut' => 'erreur',
@@ -78,10 +82,10 @@ class ProfileVerificationController extends Controller
             $signatureRecue = $request->header('X-Signature');
 
             // Si la signature est absente ou ne correspond pas au contenu, on bloque direct !
-            if (!$signatureRecue || !hash_equals($signatureAttendue, $signatureRecue)) {
+            if (! $signatureRecue || ! hash_equals($signatureAttendue, $signatureRecue)) {
                 return response()->json([
                     'statut' => 'refuse',
-                    'erreur' => 'Requête non autorisée ou signature cryptographique invalide.'
+                    'erreur' => 'Requête non autorisée ou signature cryptographique invalide.',
                 ], 403);
             }
 
@@ -100,15 +104,16 @@ class ProfileVerificationController extends Controller
                 'message' => 'Statut mis à jour. Laravel attend désormais le verdict final de n8n.',
             ], 200);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'statut' => 'refuse',
                 'erreur' => 'Données envoyées par Express invalides ou ID introuvable.',
-                'details' => $e->errors()
+                'details' => $e->errors(),
             ], 422);
 
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la notification d\'upload Express : ' . $e->getMessage());
+            Log::error('Erreur lors de la notification d\'upload Express : '.$e->getMessage());
+
             return response()->json([
                 'statut' => 'erreur',
                 'erreur' => 'Erreur interne lors de la mise à jour du statut.',
@@ -116,4 +121,50 @@ class ProfileVerificationController extends Controller
         }
     }
 
+    /**
+     * Étape 3 : n8n récupère les infos user liées au profile_id.
+     * Sécurité : HMAC SHA-256 du profile_id (pas de body sur un GET).
+     */
+    public function show(Request $request, string $profile_id)
+    {
+        try {
+            // 🔒 Même secret que Express, mais on signe le profile_id (GET sans body)
+            $secret = env('SERVICE_SECRET_KEY');
+            $signatureAttendue = hash_hmac('sha256', $profile_id, $secret);
+            $signatureRecue = $request->header('X-Signature');
+
+            if (! $signatureRecue || ! hash_equals($signatureAttendue, $signatureRecue)) {
+                return response()->json([
+                    'statut' => 'refuse',
+                    'erreur' => 'Requête non autorisée ou signature cryptographique invalide.',
+                ], 403);
+            }
+
+            $profile = Profile::with(['user.typeUser', 'user.pays.organisation'])->find($profile_id);
+
+            if (! $profile || ! $profile->user) {
+                return response()->json([
+                    'statut' => 'refuse',
+                    'erreur' => 'Profil introuvable.',
+                ], 404);
+            }
+
+            return response()->json([
+                'statut' => 'succes',
+                'data' => [
+                    'id' => $profile->id,
+                    'status' => $profile->status,
+                    'document_url' => $profile->document_url,
+                    'user' => UserResource::make($profile->user),
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération du profil pour n8n : '.$e->getMessage());
+
+            return response()->json([
+                'statut' => 'erreur',
+                'erreur' => 'Erreur interne lors de la récupération du profil.',
+            ], 500);
+        }
+    }
 }
