@@ -10,3 +10,7 @@ export 'welcome_slogan.dart';
 export 'welcome_footer.dart';
 export 'welcome_cards.dart';
 export 'bottom_loop.dart';
+export 'welcome_payment_cards.dart';
+export 'welcome_payment_slogan.dart';
+export 'welcome_connectivity_cards.dart';
+export 'welcome_connectivity_slogan.dart';

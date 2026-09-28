@@ -16,13 +16,17 @@ class DotIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = context.responsive;
     final theme = Theme.of(context);
-    return Container(
-      width: r.widthOf(active ? 24 * scale : 8 * scale),
+    final isDark = theme.brightness == Brightness.dark;
+
+    final activeColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final inactiveColor = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: r.widthOf(active ? 20 * scale : 6 * scale),
       height: r.heightOf(6 * scale),
       decoration: BoxDecoration(
-        color: active
-            ? theme.colorScheme.onSurface
-            : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        color: active ? activeColor : inactiveColor,
         borderRadius: BorderRadius.circular(r.radius(3 * scale)),
       ),
     );
