@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-
+import '../bindings/account_tabs_binding.dart';
 import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart';
 import '../../features/auth/presentation/views/auth_feedback_inscription_page.dart';
 import '../../features/auth/presentation/views/forgot_password_page.dart';
@@ -18,6 +18,8 @@ class _MainBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<MainController>(() => MainController());
+
+    AccountTabsBinding().dependencies();
   }
 }
 

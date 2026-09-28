@@ -106,7 +106,7 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   Widget _buildPageSlide({
-    required dynamic r,
+    required Responsive r,
     required Widget cards,
     required Widget slogan,
   }) {

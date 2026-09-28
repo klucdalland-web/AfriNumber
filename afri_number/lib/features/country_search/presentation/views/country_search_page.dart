@@ -33,6 +33,7 @@ class CountrySearchPage extends StatelessWidget {
                 () => SearchBarInput(
                   scale: r.scale,
                   controller: controller.searchInputController,
+                  searchQuery: controller.searchQuery.value,
                   onChanged: controller.updateSearchQuery,
                   onClear: controller.clearSearch,
                 ),

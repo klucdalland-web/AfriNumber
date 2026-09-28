@@ -98,21 +98,9 @@ class PopularCountriesSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Circular Icon Badge
-            Container(
-              width: r.widthOf(32 * scale),
-              height: r.heightOf(32 * scale),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  country.icon,
-                  size: r.iconSize(16 * scale),
-                  color: textColor,
-                ),
-              ),
+            CountryFlagBadge(
+              code: country.id,
+              size: 32 * scale,
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

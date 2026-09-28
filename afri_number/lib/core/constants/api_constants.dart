@@ -11,7 +11,7 @@ class ApiConstants {
 
   /// URL par défaut - Remplacer par votre vraie URL d'API
   static const String _defaultBaseUrl = 'https://afriserver.onrender.com/api/v1';
-
+  static const String apiKey = 'Q4UqsMCrd6YIMWNb8JHUtlhiduidjdj';
   /// Pour le développement local, utilisez l'IP de votre machine sur le réseau local
   /// Exemple: 'http://192.168.1.100:3000/api' ou 'http://10.0.2.2:3000/api' (Android emulator)
   /// static const String baseUrl = 'http://192.168.1.XXX:3000/api';

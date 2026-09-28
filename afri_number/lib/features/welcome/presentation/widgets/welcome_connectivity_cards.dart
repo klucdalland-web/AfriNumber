@@ -191,7 +191,7 @@ class WelcomeConnectivityCards extends StatelessWidget {
           Positioned(
             left: 0,
             bottom: 0,
-            width: (screenWidth * 0.45).clamp(150.0, 190.0),
+            width: (screenWidth * 0.35).clamp(150.0, 190.0),
             child: Container(
               padding: EdgeInsets.all(r.space(9 * scale)),
               decoration: BoxDecoration(
@@ -247,15 +247,12 @@ class WelcomeConnectivityCards extends StatelessWidget {
           Positioned(
             right: 0,
             bottom: 0,
-            width: (screenWidth * 0.45).clamp(150.0, 190.0),
+            width: (screenWidth * 0.35).clamp(150.0, 190.0),
             child: Container(
               padding: EdgeInsets.all(r.space(9 * scale)),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF143823) : const Color(0xFFD1E7DD),
                 borderRadius: BorderRadius.circular(r.radius(14 * scale)),
-                border: Border.all(
-                  color: isDark ? const Color(0xFF1B4D3E) : const Color(0xFFA3CFBB),
-                ),
               ),
               child: Row(
                 children: [

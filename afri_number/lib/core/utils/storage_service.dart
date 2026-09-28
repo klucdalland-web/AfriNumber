@@ -27,6 +27,15 @@ class StorageService {
     await remove(StorageKeys.user);
   }
 
+  Future<void> saveUser(Map<String, dynamic> userData) =>
+      write(StorageKeys.user, userData);
+
+  Map<String, dynamic>? get user {
+    final raw = read(StorageKeys.user);
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return null;
+  }
+
   bool get hasToken =>
       accessToken != null && accessToken!.trim().isNotEmpty;
 

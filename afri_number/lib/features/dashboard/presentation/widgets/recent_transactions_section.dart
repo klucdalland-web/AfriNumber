@@ -51,8 +51,8 @@ class RecentTransactionsSection extends StatelessWidget {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: r.fontSize(13 * scale),
                   fontWeight: FontWeight.w600,
-                  color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
-                  decoration: TextDecoration.underline,
+                  color: isDark ? const Color(0xFFDFDDDD) : const Color(
+                      0xFF485A81),
                 ),
               ),
             ),

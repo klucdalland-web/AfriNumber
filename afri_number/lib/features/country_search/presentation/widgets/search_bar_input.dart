@@ -9,12 +9,14 @@ class SearchBarInput extends StatelessWidget {
     required this.scale,
     required this.controller,
     required this.onChanged,
+    this.searchQuery = '',
     this.onClear,
   });
 
   final double scale;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final String searchQuery;
   final VoidCallback? onClear;
 
   @override
@@ -69,7 +71,7 @@ class SearchBarInput extends StatelessWidget {
               ),
             ),
           ),
-          if (controller.text.isNotEmpty)
+          if (searchQuery.isNotEmpty)
             GestureDetector(
               onTap: onClear,
               child: Icon(

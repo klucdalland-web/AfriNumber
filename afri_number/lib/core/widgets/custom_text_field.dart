@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../responsive/responsive.dart';
 
-/// Champ de saisie générique et réutilisable dans toute l'application.
-///
-/// Gère : masquage/démasquage du mot de passe, icônes de préfixe/suffixe,
-/// validation, clavier adapté et contrôleur. Remplace tout `TextFormField`
-/// codé en dur dans les vues (voir README, section "Core UI").
+/// Champ de saisie réutilisable, adaptatif et thématique (pill shape).
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
@@ -14,6 +12,7 @@ class CustomTextField extends StatefulWidget {
     this.onSuffixIconTap,
     this.isPassword = false,
     this.isRequired = false,
+    this.showLabel = false,
     this.controller,
     this.keyboardType,
     this.textInputAction,
@@ -26,14 +25,12 @@ class CustomTextField extends StatefulWidget {
 
   final String hintText;
   final IconData? icon;
-
-  /// Icône de suffixe personnalisée. Ignorée si [isPassword] est `true`
-  /// (le bouton œil est alors géré automatiquement).
   final IconData? suffixIcon;
   final VoidCallback? onSuffixIconTap;
 
   final bool isPassword;
   final bool isRequired;
+  final bool showLabel;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -75,58 +72,49 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isFocused = _hasFocus;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
+    final hintColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: widget.hintText.replaceAll('*', '').trim(),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                if (widget.isRequired)
-                  const TextSpan(
-                    text: ' *',
-                    style: TextStyle(
-                      fontSize: 14,
+        if (widget.showLabel)
+          Padding(
+            padding: EdgeInsets.only(left: r.space(12), bottom: r.space(6)),
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: widget.hintText.replaceAll('*', '').trim(),
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: r.fontSize(13),
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFFE53E3E),
+                      color: hintColor,
                     ),
                   ),
-              ],
+                  if (widget.isRequired)
+                    TextSpan(
+                      text: ' *',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: r.fontSize(13),
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFEF4444),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isFocused ? 0.12 : 0.06),
-                blurRadius: isFocused ? 20 : 12,
-                offset: const Offset(0, 4),
-                spreadRadius: isFocused ? 0 : -2,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-                spreadRadius: 0,
-              ),
-            ],
+            borderRadius: BorderRadius.circular(r.radius(30)),
+            color: fieldBg,
           ),
           child: TextFormField(
             controller: widget.controller,
@@ -139,38 +127,43 @@ class _CustomTextFieldState extends State<CustomTextField> {
             onFieldSubmitted: widget.onSubmitted,
             validator: widget.validator,
             autofillHints: widget.autofillHints,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
+            style: GoogleFonts.zillaSlab(
+              fontSize: r.fontSize(16),
+              fontWeight: FontWeight.w600,
+              color: textColor,
             ),
             decoration: InputDecoration(
               hintText: widget.hintText.replaceAll('*', '').trim(),
-              hintStyle: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.black.withValues(alpha: 0.35),
+              hintStyle: GoogleFonts.zillaSlab(
+                fontSize: r.fontSize(16),
+                fontWeight: FontWeight.w500,
+                color: hintColor,
               ),
               prefixIcon: widget.icon != null
                   ? Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 16),
+                      padding: EdgeInsets.only(
+                        left: r.space(20),
+                        right: r.space(12),
+                      ),
                       child: Icon(
                         widget.icon,
-                        size: 22,
-                        color: isFocused ? Colors.black : Colors.black.withValues(alpha: 0.45),
+                        size: r.iconSize(22),
+                        color: textColor,
                       ),
                     )
-                  : const SizedBox(width: 56),
-              suffixIcon: _buildSuffixIcon(),
+                  : SizedBox(width: r.space(20)),
+              suffixIcon: _buildSuffixIcon(r, textColor, hintColor),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: r.space(16),
+                horizontal: r.space(20),
+              ),
               filled: true,
               fillColor: Colors.transparent,
-              errorStyle: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFFE53E3E),
+              errorStyle: GoogleFonts.ibmPlexSans(
+                fontSize: r.fontSize(12),
+                color: const Color(0xFFEF4444),
                 fontWeight: FontWeight.w500,
-                height: 0.8,
               ),
               errorBorder: InputBorder.none,
               focusedErrorBorder: InputBorder.none,
@@ -181,16 +174,16 @@ class _CustomTextFieldState extends State<CustomTextField> {
     );
   }
 
-  Widget? _buildSuffixIcon() {
+  Widget? _buildSuffixIcon(Responsive r, Color textColor, Color hintColor) {
     if (widget.isPassword) {
       return IconButton(
         onPressed: () => setState(() => _obscureText = !_obscureText),
         icon: Icon(
           _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          size: 22,
-          color: Colors.black.withValues(alpha: 0.45),
+          size: r.iconSize(20),
+          color: hintColor,
         ),
-        padding: const EdgeInsets.only(right: 20),
+        padding: EdgeInsets.only(right: r.space(16)),
       );
     }
     if (widget.suffixIcon != null) {
@@ -198,10 +191,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
         onPressed: widget.onSuffixIconTap,
         icon: Icon(
           widget.suffixIcon,
-          size: 22,
-          color: Colors.black.withValues(alpha: 0.45),
+          size: r.iconSize(20),
+          color: hintColor,
         ),
-        padding: const EdgeInsets.only(right: 20),
+        padding: EdgeInsets.only(right: r.space(16)),
       );
     }
     return null;

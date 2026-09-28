@@ -9,9 +9,10 @@ class DeviceInfoService {
   String fcmToken = '';
 
   Future<Map<String, String>> collect() async {
+    final effectiveFcmToken = fcmToken.isNotEmpty ? fcmToken : 'dummy_fcm_token';
     final cached = _cached;
     if (cached != null) {
-      return {...cached, 'fcm_token': fcmToken};
+      return {...cached, 'fcm_token': effectiveFcmToken};
     }
 
     final deviceInfoPlugin = DeviceInfoPlugin();
@@ -65,6 +66,6 @@ class DeviceInfoService {
       'os_version': osVersion,
       'app_version': packageInfo.version,
     };
-    return {..._cached!, 'fcm_token': fcmToken};
+    return {..._cached!, 'fcm_token': effectiveFcmToken};
   }
 }

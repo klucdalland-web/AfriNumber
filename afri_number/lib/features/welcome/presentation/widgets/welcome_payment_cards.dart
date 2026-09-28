@@ -225,9 +225,6 @@ class WelcomePaymentCards extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF143823) : const Color(0xFFD1E7DD),
                 borderRadius: BorderRadius.circular(r.radius(16 * scale)),
-                border: Border.all(
-                  color: isDark ? const Color(0xFF1B4D3E) : const Color(0xFFA3CFBB),
-                ),
               ),
               child: Row(
                 children: [

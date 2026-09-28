@@ -10,7 +10,7 @@ class MainBottomNavBar extends StatelessWidget {
   static const _items = [
     _NavItem(icon: Icons.home_outlined, label: 'Accueil'),
     _NavItem(icon: Icons.search, label: 'Recherche'),
-    _NavItem(icon: Icons.pie_chart_outline, label: 'Répartition'),
+    _NavItem(icon: Icons.wifi_rounded, label: 'Connectivité'),
     _NavItem(icon: Icons.access_time, label: 'Historique'),
     _NavItem(icon: Icons.person_outline, label: 'Profil'),
   ];

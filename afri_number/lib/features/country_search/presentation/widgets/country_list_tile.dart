@@ -24,7 +24,6 @@ class CountryListTile extends StatelessWidget {
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
     final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final badgeBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
     final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
     final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
@@ -52,21 +51,9 @@ class CountryListTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Circular Country Icon Badge
-            Container(
-              width: r.widthOf(36 * scale),
-              height: r.heightOf(36 * scale),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  country.icon,
-                  size: r.iconSize(18 * scale),
-                  color: textColor,
-                ),
-              ),
+            CountryFlagBadge(
+              code: country.id,
+              size: 36 * scale,
             ),
             SizedBox(width: r.space(12 * scale)),
 

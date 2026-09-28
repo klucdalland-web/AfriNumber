@@ -52,15 +52,20 @@ class _AfriNumberLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      'AfriNumber.',
-      style: TextStyle(
-        fontFamily: 'Georgia',
-        fontWeight: FontWeight.w700,
-        fontSize: 28,
-        color: Colors.black,
-        letterSpacing: -0.5,
-      ),
+    return Row(
+      children: [
+        Image.asset('assets/images/afrika.png',width: 35,),
+        const Text(
+          'AfriNumber.',
+          style: TextStyle(
+            fontFamily: 'Georgia',
+            fontWeight: FontWeight.w700,
+            fontSize: 28,
+            color: Colors.black,
+            letterSpacing: -0.5,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -33,14 +33,22 @@ class DashboardHeader extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'AfriNumber.',
-              style: GoogleFonts.zillaSlab(
-                fontSize: r.fontSize(26 * scale),
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurface,
-                letterSpacing: -0.5,
-              ),
+            Row(
+              children: [
+                Image.asset(
+                  'assets/images/afrika.png',
+                  width: 50 * scale,
+                ),
+                Text(
+                  'AfriNumber.',
+                  style: GoogleFonts.zillaSlab(
+                    fontSize: r.fontSize(26 * scale),
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: r.space(4 * scale)),
             Container(
