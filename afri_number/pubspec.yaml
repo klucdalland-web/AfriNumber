@@ -42,7 +42,10 @@ dependencies:
   pretty_dio_logger: ^1.4.0
   google_fonts: ^6.2.1
   path_drawing: ^1.0.1
+  vector_math: ^2.1.4
   firebase_core: ^4.15.0
+  device_info_plus: ^13.2.0
+  package_info_plus: ^10.2.1
 
 dev_dependencies:
   flutter_test:
