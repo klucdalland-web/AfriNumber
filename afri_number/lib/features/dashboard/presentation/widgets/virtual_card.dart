@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -96,15 +96,7 @@ class VirtualCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    isBalanceHidden ? '••••••••' : balance,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: r.fontSize(22 * scale),
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: isBalanceHidden ? 2.0 : 0.0,
-                    ),
-                  ),
+                  _buildBalanceWidget(r),
                   GestureDetector(
                     onTap: onToggleVisibility,
                     child: Container(
@@ -183,6 +175,47 @@ class VirtualCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBalanceWidget(Responsive r) {
+    if (isBalanceHidden) {
+      return Text(
+        '••••••••',
+        style: GoogleFonts.ibmPlexSans(
+          fontSize: r.fontSize(22 * scale),
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: 2.0,
+        ),
+      );
+    }
+
+    final cleanStr = balance.replaceAll(',', '');
+    final prefixMatch = RegExp(r'^([^\d\s]+)\s*([\d\.]+)').firstMatch(cleanStr);
+    if (prefixMatch != null) {
+      final prefix = prefixMatch.group(1) ?? '';
+      final amount = double.tryParse(prefixMatch.group(2) ?? '');
+      if (amount != null) {
+        return HackingNumberText(
+          targetValue: amount,
+          prefix: '$prefix ',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: r.fontSize(22 * scale),
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        );
+      }
+    }
+
+    return Text(
+      balance,
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: r.fontSize(22 * scale),
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
       ),
     );
   }

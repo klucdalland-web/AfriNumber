@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -86,14 +86,7 @@ class MoneyCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                balance,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: r.fontSize(15 * scale),
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
+              _buildBalanceText(r),
               Container(
                 width: r.widthOf(26 * scale),
                 height: r.heightOf(26 * scale),
@@ -132,6 +125,34 @@ class MoneyCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBalanceText(Responsive r) {
+    final cleanStr = balance.replaceAll(',', '');
+    final prefixMatch = RegExp(r'^([^\d\s]+)\s*([\d\.]+)').firstMatch(cleanStr);
+    if (prefixMatch != null) {
+      final prefix = prefixMatch.group(1) ?? '';
+      final amount = double.tryParse(prefixMatch.group(2) ?? '');
+      if (amount != null) {
+        return HackingNumberText(
+          targetValue: amount,
+          prefix: '$prefix ',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: r.fontSize(15 * scale),
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          ),
+        );
+      }
+    }
+    return Text(
+      balance,
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: r.fontSize(15 * scale),
+        fontWeight: FontWeight.w700,
+        color: textColor,
       ),
     );
   }

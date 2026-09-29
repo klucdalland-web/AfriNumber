@@ -35,6 +35,8 @@ class AfriNumberApp extends StatelessWidget {
       translations: AppTranslations(),
       locale: LocalizationService.currentLocale,
       fallbackLocale: AppTranslations.fallbackLocale,
+      defaultTransition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 350),
       initialBinding: InitialBinding(),
       initialRoute: AppPages.initialRoute,
       getPages: AppPages.routes,
