@@ -99,10 +99,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
               SizedBox(height: r.space(32)),
               Obx(
                 () => CustomNumericKeypad(
-                  onDigitTap: (digit) =>
-                      _otpInputKey.currentState?.addDigit(digit),
-                  onBackspaceTap: () =>
-                      _otpInputKey.currentState?.deleteLastDigit(),
+                  onDigitTap: (digit) {
+                    _otpInputKey.currentState?.addDigit(digit);
+                  },
+                  onBackspaceTap: () {
+                    _otpInputKey.currentState?.deleteLastDigit();
+                  },
                   enabled: !authController.isLoading.value,
                   foregroundColor: theme.colorScheme.onSurface,
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,

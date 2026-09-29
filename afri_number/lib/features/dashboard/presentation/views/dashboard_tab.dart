@@ -17,8 +17,12 @@ class DashboardPage extends StatelessWidget {
 
     return AppScaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+        child: RefreshIndicator(
+          onRefresh: controller.loadDashboardData,
+          child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           padding: EdgeInsets.symmetric(
             horizontal: r.space(20),
             vertical: r.space(16),
@@ -43,6 +47,40 @@ class DashboardPage extends StatelessWidget {
                   onProfileTap: () => openTab(4),
                 ),
               ),
+
+              Obx(() {
+                if (controller.isLoading.value &&
+                    controller.recentTransactions.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: r.space(16)),
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (controller.errorMessage.isNotEmpty &&
+                    controller.recentTransactions.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: r.space(12)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            controller.errorMessage.value,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'common.retry'.tr,
+                          onPressed: controller.loadDashboardData,
+                          icon: const Icon(Icons.refresh_rounded),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
 
               SizedBox(height: r.space(20)),
 
@@ -112,6 +150,7 @@ class DashboardPage extends StatelessWidget {
 
               SizedBox(height: r.space(20)),
             ],
+          ),
           ),
         ),
       ),

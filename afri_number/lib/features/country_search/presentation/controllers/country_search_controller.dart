@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../domain/models/country_item.dart';
+import '../../domain/repositories/country_repository.dart';
 
 class CountrySearchController extends GetxController {
-  final RxString searchQuery = ''.obs;
-  final RxList<CountryItem> allCountries = <CountryItem>[].obs;
+  CountrySearchController(this._repository);
+
+  final CountryRepository _repository;
+  final searchQuery = ''.obs;
+  final allCountries = <CountryItem>[].obs;
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
   final TextEditingController searchInputController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
-    _loadCountries();
+    loadCountries();
   }
 
   @override
@@ -30,97 +36,30 @@ class CountrySearchController extends GetxController {
   }
 
   List<CountryItem> get popularCountries =>
-      allCountries.where((c) => c.isPopular).toList();
+      allCountries.where((country) => country.isPopular).toList();
 
   List<CountryItem> get filteredCountries {
     final query = searchQuery.value;
-    if (query.isEmpty) {
-      return allCountries;
-    }
+    if (query.isEmpty) return allCountries;
+
     return allCountries.where((country) {
       final translatedName = 'country.${country.id.toUpperCase()}'.tr;
-      final nameMatch =
-          translatedName.toLowerCase().contains(query) ||
-          country.name.toLowerCase().contains(query);
-      final codeMatch = country.code.toLowerCase().contains(query);
-      return nameMatch || codeMatch;
+      return translatedName.toLowerCase().contains(query) ||
+          country.name.toLowerCase().contains(query) ||
+          country.code.toLowerCase().contains(query);
     }).toList();
   }
 
-  void _loadCountries() {
-    allCountries.assignAll(const [
-      CountryItem(
-        id: 'us',
-        name: 'États-Unis',
-        code: '+1',
-        availableNumbers: 1240,
-        isPopular: true,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'uk',
-        name: 'Royaume-Uni',
-        code: '+44',
-        availableNumbers: 850,
-        isPopular: true,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'fr',
-        name: 'France',
-        code: '+33',
-        availableNumbers: 2100,
-        isPopular: true,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'ca',
-        name: 'Canada',
-        code: '+1',
-        availableNumbers: 1500,
-        isPopular: true,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'de',
-        name: 'Allemagne',
-        code: '+49',
-        availableNumbers: 920,
-        isPopular: false,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'mg',
-        name: 'Madagascar',
-        code: '+261',
-        availableNumbers: 430,
-        isPopular: false,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'ci',
-        name: 'Côte d\'Ivoire',
-        code: '+225',
-        availableNumbers: 670,
-        isPopular: false,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'sn',
-        name: 'Sénégal',
-        code: '+221',
-        availableNumbers: 510,
-        isPopular: false,
-        icon: Icons.public_rounded,
-      ),
-      CountryItem(
-        id: 'cm',
-        name: 'Cameroun',
-        code: '+237',
-        availableNumbers: 390,
-        isPopular: false,
-        icon: Icons.public_rounded,
-      ),
-    ]);
+  Future<void> loadCountries() async {
+    if (isLoading.value) return;
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      allCountries.assignAll(await _repository.fetchCountries());
+    } catch (_) {
+      errorMessage.value = 'country.load_error'.tr;
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

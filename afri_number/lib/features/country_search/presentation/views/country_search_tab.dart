@@ -85,6 +85,33 @@ class CountrySearchPage extends StatelessWidget {
                       // Filtered Country List
                       Obx(() {
                         final countries = controller.filteredCountries;
+                        if (controller.isLoading.value) {
+                          return Padding(
+                            padding: EdgeInsets.all(r.space(32)),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        if (controller.errorMessage.isNotEmpty) {
+                          return Padding(
+                            padding: EdgeInsets.all(r.space(24)),
+                            child: Column(
+                              children: [
+                                Text(
+                                  controller.errorMessage.value,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: subtextColor),
+                                ),
+                                SizedBox(height: r.space(12)),
+                                TextButton(
+                                  onPressed: controller.loadCountries,
+                                  child: Text('common.retry'.tr),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
                         if (countries.isEmpty) {
                           return Padding(
                             padding: EdgeInsets.all(r.space(32)),

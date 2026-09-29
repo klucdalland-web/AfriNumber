@@ -3,13 +3,15 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/utils/storage_service.dart';
 import '../../../../core/utils/theme_controller.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../data/models/user_profile.dart';
 
 class ProfileController extends GetxController {
-  ProfileController(this._storage, this._themeController);
+  ProfileController(this._storage, this._themeController, this._authRepository);
 
   final StorageService _storage;
   final ThemeController _themeController;
+  final AuthRepository _authRepository;
 
   final profile = UserProfile.sample.obs;
   final notificationsEnabled = true.obs;
@@ -52,7 +54,7 @@ class ProfileController extends GetxController {
   }
 
   Future<void> signOut() async {
-    await _storage.clearTokens();
+    await _authRepository.logout();
     Get.offAllNamed(AppRoutes.welcome);
   }
 }

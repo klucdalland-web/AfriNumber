@@ -25,27 +25,28 @@ class SocialAuthButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _SocialButton(
-          onTap: onGooglePressed,
-          child: Text(
-            'G',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: r.fontSize(20),
-              color: theme.colorScheme.onSurface,
+        if (onGooglePressed != null)
+          _SocialButton(
+            onTap: onGooglePressed,
+            child: Text(
+              'G',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: r.fontSize(20),
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
-        ),
         if (onGooglePressed != null && onApplePressed != null)
           SizedBox(width: r.space(16)),
         if (onApplePressed != null)
           _SocialButton(
             onTap: onApplePressed,
-          child: Icon(
-            Icons.apple,
-            size: r.iconSize(24),
-            color: theme.colorScheme.onSurface,
-          ),
+            child: Icon(
+              Icons.apple,
+              size: r.iconSize(24),
+              color: theme.colorScheme.onSurface,
+            ),
           ),
       ],
     );
@@ -53,10 +54,7 @@ class SocialAuthButtons extends StatelessWidget {
 }
 
 class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.onTap,
-    required this.child,
-  });
+  const _SocialButton({required this.onTap, required this.child});
 
   final VoidCallback? onTap;
   final Widget child;

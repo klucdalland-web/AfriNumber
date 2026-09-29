@@ -1,6 +1,5 @@
-import 'dart:ui';
-
-import 'package:get/get_navigation/src/root/internacionalization.dart';
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
 
 /// Service de traductions GetX (Français / Anglais uniquement).
 class AppTranslations extends Translations {
@@ -182,6 +181,7 @@ class AppTranslations extends Translations {
       'dashboard.view_all_transactions':
       'Afficher toutes les transactions',
       'dashboard.view_all_offers': 'Afficher toutes les offres',
+      'dashboard.load_error': 'Impossible de charger le tableau de bord.',
       'dashboard.buy_offer': 'Acheter une offre',
       'dashboard.expiration_date': "Date d'expiration",
       'dashboard.recent_transactions': 'Transactions récentes',
@@ -219,6 +219,7 @@ class AppTranslations extends Translations {
       'country.popular': 'Pays populaires',
       'country.all': 'Tous les pays',
       'country.empty': 'Aucun pays trouvé',
+      'country.load_error': 'Impossible de charger les pays. Réessayez.',
       'country.selected': 'Pays sélectionné',
       'country.search_hint':
       'Rechercher un pays ou un indicatif...',
@@ -409,6 +410,7 @@ class AppTranslations extends Translations {
       'dashboard.view_all_transactions':
       'View all transactions',
       'dashboard.view_all_offers': 'View all offers',
+      'dashboard.load_error': 'Could not load the dashboard.',
       'dashboard.buy_offer': 'Buy an offer',
       'dashboard.expiration_date': 'Expiration date',
       'dashboard.recent_transactions': 'Recent transactions',
@@ -446,6 +448,7 @@ class AppTranslations extends Translations {
       'country.popular': 'Popular countries',
       'country.all': 'All countries',
       'country.empty': 'No country found',
+      'country.load_error': 'Could not load countries. Please try again.',
       'country.selected': 'Selected country',
       'country.search_hint':
       'Search for a country or dialing code...',
