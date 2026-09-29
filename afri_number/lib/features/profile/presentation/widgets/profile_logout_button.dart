@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -17,7 +18,7 @@ class ProfileLogoutButton extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Se déconnecter',
+      label: 'profile.logout'.tr,
       child: Material(
         color: AppColors.logoutBackground,
         borderRadius: radius,

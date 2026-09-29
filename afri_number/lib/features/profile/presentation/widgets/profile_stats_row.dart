@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -24,9 +25,15 @@ class ProfileStatsRow extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final dividerColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final dividerColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
 
     Widget item(String value, String label) {
       return Column(
@@ -58,18 +65,17 @@ class ProfileStatsRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Expanded(child: item(_two(activeNumbers), 'Numéros actifs')),
-          Container(
-            height: r.heightOf(24),
-            width: 1,
-            color: dividerColor,
+          Expanded(
+            child: item(_two(activeNumbers), 'profile.active_numbers'.tr),
           ),
-          Expanded(child: item(planName, 'Offre')),
-          Container(
-            height: r.heightOf(24),
-            width: 1,
-            color: dividerColor,
+          Container(height: r.heightOf(24), width: 1, color: dividerColor),
+          Expanded(
+            child: item(
+              planName == 'Offre Pro' ? 'profile.plan_pro'.tr : planName,
+              'Offre',
+            ),
           ),
+          Container(height: r.heightOf(24), width: 1, color: dividerColor),
           Expanded(child: item(_two(countriesCount), 'Pays rattachés')),
         ],
       ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../country_search/presentation/views/country_search_page.dart';
-import '../../../dashboard/presentation/views/dashboard_page.dart';
+import '../../../country_search/presentation/views/country_search_tab.dart';
+import '../../../dashboard/presentation/views/dashboard_tab.dart';
 import '../../../connectivity/presentation/views/connectivity_tab.dart';
 import '../../../history/presentation/views/history_tab.dart';
 import '../../../profile/presentation/views/profile_tab.dart';

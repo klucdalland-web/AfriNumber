@@ -11,8 +11,8 @@ class AuthFeedbackConnexionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AuthFeedbackView(
-      title: 'Connexion Réussie !',
-      subtitle: 'Bienvenue à nouveau ! Vous êtes maintenant connecté à votre compte.',
+      title: 'feedback.login_success_title'.tr,
+      subtitle: 'feedback.login_success_subtitle'.tr,
       onContinue: () => Get.offAllNamed(AppRoutes.main),
     );
   }

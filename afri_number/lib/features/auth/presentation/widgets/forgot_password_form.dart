@@ -22,7 +22,7 @@ class ForgotPasswordForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Mot de passe oublié ?',
+            'forgot.title'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium?.copyWith(
               color: theme.colorScheme.onSurface,
@@ -30,7 +30,7 @@ class ForgotPasswordForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(12)),
           Text(
-            'Indiquez votre email : nous vous envoyons un code pour réinitialiser votre mot de passe.',
+            'forgot.subtitle'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
@@ -40,7 +40,7 @@ class ForgotPasswordForm extends StatelessWidget {
           _ErrorBanner(controller: controller),
           SizedBox(height: r.space(36)),
           CustomTextField(
-            hintText: 'Email',
+            hintText: 'profile.email'.tr,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
@@ -48,10 +48,11 @@ class ForgotPasswordForm extends StatelessWidget {
             controller: controller.forgotPasswordEmailController,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'L\'email est requis';
+                return 'error.email_required'.tr;
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Email invalide';
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                  .hasMatch(value)) {
+                return 'error.email_invalid'.tr;
               }
               return null;
             },
@@ -60,7 +61,7 @@ class ForgotPasswordForm extends StatelessWidget {
           SizedBox(height: r.space(32)),
           Obx(
             () => AppButton.primary(
-              label: 'Envoyer le code',
+              label: 'forgot.send_code'.tr,
               isLoading: controller.isLoading.value,
               onPressed: controller.forgotPassword,
               backgroundColor: theme.colorScheme.onSurface,
@@ -71,7 +72,7 @@ class ForgotPasswordForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(24)),
           AppButton.text(
-            label: 'Retour à la connexion',
+            label: 'forgot.back_to_login'.tr,
             onPressed: () => Get.offAllNamed(AppRoutes.login),
             foregroundColor: theme.colorScheme.onSurface,
             underline: true,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -23,9 +24,15 @@ class WelcomeConnectivityCards extends StatelessWidget {
     final smsCardWidth = (screenWidth * 0.54).clamp(180.0, 240.0);
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cardBorder = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     return SizedBox(
       height: r.heightOf(230 * scale),
@@ -42,7 +49,9 @@ class WelcomeConnectivityCards extends StatelessWidget {
               angle: -0.15,
               child: CustomPaint(
                 painter: LoopPainter(
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF0F172A),
                 ),
               ),
             ),
@@ -76,7 +85,7 @@ class WelcomeConnectivityCards extends StatelessWidget {
                           ),
                           SizedBox(width: r.space(4 * scale)),
                           Text(
-                            'Nouveau SMS',
+                            'welcome.new_sms'.tr,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: r.fontSize(11 * scale),
                               fontWeight: FontWeight.w600,
@@ -99,11 +108,13 @@ class WelcomeConnectivityCards extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(r.space(8 * scale)),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      color: isDark
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(r.radius(10 * scale)),
                     ),
                     child: Text(
-                      '“ Hello, how are you? ”',
+                      'welcome.sms_preview'.tr,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: r.fontSize(11 * scale),
                         fontStyle: FontStyle.italic,
@@ -120,25 +131,33 @@ class WelcomeConnectivityCards extends StatelessWidget {
                         vertical: r.space(4 * scale),
                       ),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF312E81) : const Color(0xFFEEF2FF),
-                        borderRadius: BorderRadius.circular(r.radius(12 * scale)),
+                        color: isDark
+                            ? const Color(0xFF312E81)
+                            : const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(
+                          r.radius(12 * scale),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Traduire',
+                            'welcome.translate'.tr,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: r.fontSize(10 * scale),
                               fontWeight: FontWeight.w700,
-                              color: isDark ? const Color(0xFFC7D2FE) : const Color(0xFF4F46E5),
+                              color: isDark
+                                  ? const Color(0xFFC7D2FE)
+                                  : const Color(0xFF4F46E5),
                             ),
                           ),
                           SizedBox(width: r.space(2 * scale)),
                           Icon(
                             Icons.auto_awesome_rounded,
                             size: r.iconSize(11 * scale),
-                            color: isDark ? const Color(0xFFC7D2FE) : const Color(0xFF4F46E5),
+                            color: isDark
+                                ? const Color(0xFFC7D2FE)
+                                : const Color(0xFF4F46E5),
                           ),
                         ],
                       ),
@@ -159,10 +178,14 @@ class WelcomeConnectivityCards extends StatelessWidget {
                 vertical: r.space(6 * scale),
               ),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
+                color: isDark
+                    ? const Color(0xFF451A03)
+                    : const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(r.radius(20 * scale)),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A),
+                  color: isDark
+                      ? const Color(0xFF78350F)
+                      : const Color(0xFFFDE68A),
                 ),
               ),
               child: Row(
@@ -171,15 +194,19 @@ class WelcomeConnectivityCards extends StatelessWidget {
                   Icon(
                     Icons.cell_tower_rounded,
                     size: r.iconSize(14 * scale),
-                    color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706),
+                    color: isDark
+                        ? const Color(0xFFFDE68A)
+                        : const Color(0xFFD97706),
                   ),
                   SizedBox(width: r.space(4 * scale)),
                   Text(
-                    'Zéro Data',
+                    'welcome.zero_data'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(11 * scale),
                       fontWeight: FontWeight.w700,
-                      color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
+                      color: isDark
+                          ? const Color(0xFFFDE68A)
+                          : const Color(0xFF92400E),
                     ),
                   ),
                 ],
@@ -204,13 +231,17 @@ class WelcomeConnectivityCards extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(r.space(6 * scale)),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF312E81) : const Color(0xFFEEF2FF),
+                      color: isDark
+                          ? const Color(0xFF312E81)
+                          : const Color(0xFFEEF2FF),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.translate_rounded,
                       size: r.iconSize(14 * scale),
-                      color: isDark ? const Color(0xFFC7D2FE) : const Color(0xFF4F46E5),
+                      color: isDark
+                          ? const Color(0xFFC7D2FE)
+                          : const Color(0xFF4F46E5),
                     ),
                   ),
                   SizedBox(width: r.space(6 * scale)),
@@ -219,7 +250,7 @@ class WelcomeConnectivityCards extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Traduction IA',
+                          'welcome.ai_translation'.tr,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: r.fontSize(10 * scale),
                             fontWeight: FontWeight.w700,
@@ -227,7 +258,7 @@ class WelcomeConnectivityCards extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Comprenez vos SMS instantanément.',
+                          'welcome.ai_translation_desc'.tr,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.ibmPlexSans(
@@ -251,7 +282,9 @@ class WelcomeConnectivityCards extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.all(r.space(9 * scale)),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF143823) : const Color(0xFFD1E7DD),
+                color: isDark
+                    ? const Color(0xFF143823)
+                    : const Color(0xFFD1E7DD),
                 borderRadius: BorderRadius.circular(r.radius(14 * scale)),
               ),
               child: Row(
@@ -274,20 +307,24 @@ class WelcomeConnectivityCards extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Mode Zéro Data',
+                          'welcome.zero_data_title'.tr,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: r.fontSize(10 * scale),
                             fontWeight: FontWeight.w700,
-                            color: isDark ? const Color(0xFFE8F5E9) : const Color(0xFF0F5132),
+                            color: isDark
+                                ? const Color(0xFFE8F5E9)
+                                : const Color(0xFF0F5132),
                           ),
                         ),
                         Text(
-                          'Continuez même avec réseau limité.',
+                          'welcome.zero_data_desc'.tr,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: r.fontSize(8.5 * scale),
-                            color: isDark ? const Color(0xFFC8E6C9) : const Color(0xFF146C43),
+                            color: isDark
+                                ? const Color(0xFFC8E6C9)
+                                : const Color(0xFF146C43),
                           ),
                         ),
                       ],

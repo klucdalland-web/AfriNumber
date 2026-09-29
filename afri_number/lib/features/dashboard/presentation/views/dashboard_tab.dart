@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
+import '../../../main/presentation/controllers/main_controller.dart';
 import '../controllers/dashboard_controller.dart';
 import '../widgets/widgets.dart';
 
@@ -10,8 +11,9 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(DashboardController());
+    final controller = Get.find<DashboardController>();
     final r = context.responsive;
+    void openTab(int index) => Get.find<MainController>().changePage(index);
 
     return AppScaffold(
       body: SafeArea(
@@ -28,21 +30,17 @@ class DashboardPage extends StatelessWidget {
               Obx(
                 () => DashboardHeader(
                   scale: r.scale,
-                  country: controller.userCountry.value,
+                  country: controller.userCountry.value == 'Madagascar'
+                      ? 'country.MG'.tr
+                      : controller.userCountry.value,
                   onNotificationTap: () {
                     Get.snackbar(
-                      'Notifications',
-                      'Aucune nouvelle notification pour le moment.',
+                      'dashboard.notifications'.tr,
+                      'dashboard.no_notifications'.tr,
                       snackPosition: SnackPosition.BOTTOM,
                     );
                   },
-                  onProfileTap: () {
-                    Get.snackbar(
-                      'Profil',
-                      'Ouverture de votre profil utilisateur.',
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
-                  },
+                  onProfileTap: () => openTab(4),
                 ),
               ),
 
@@ -52,7 +50,10 @@ class DashboardPage extends StatelessWidget {
               Obx(
                 () => VirtualCard(
                   scale: r.scale,
-                  currencyName: controller.currencyName.value,
+                  currencyName:
+                      controller.currencyName.value == 'Dollar américain'
+                      ? 'welcome.currency_usd'.tr
+                      : controller.currencyName.value,
                   balance: controller.balanceAmount.value,
                   virtualNumber: controller.virtualNumber.value,
                   expirationDate: controller.expirationDate.value,
@@ -66,18 +67,10 @@ class DashboardPage extends StatelessWidget {
               // 3. ACTIONS RAPIDES GRID (Acheter un numéro, Recharger, SMS, Historique)
               QuickActionsGrid(
                 scale: r.scale,
-                onBuyNumberTap: () {
-                  Get.snackbar('Action', 'Acheter un numéro');
-                },
-                onRechargeTap: () {
-                  Get.snackbar('Action', 'Recharger');
-                },
-                onSmsTap: () {
-                  Get.snackbar('Action', 'SMS');
-                },
-                onHistoryTap: () {
-                  Get.snackbar('Action', 'Historique');
-                },
+                onBuyNumberTap: () => openTab(1),
+                onRechargeTap: () => openTab(2),
+                onSmsTap: () => openTab(2),
+                onHistoryTap: () => openTab(3),
               ),
 
               SizedBox(height: r.space(24)),
@@ -87,9 +80,7 @@ class DashboardPage extends StatelessWidget {
                 () => RecentTransactionsSection(
                   scale: r.scale,
                   transactions: controller.recentTransactions.toList(),
-                  onViewAllTap: () {
-                    Get.snackbar('Historique', 'Affichage de toutes les transactions');
-                  },
+                  onViewAllTap: () => openTab(3),
                 ),
               ),
 
@@ -100,11 +91,21 @@ class DashboardPage extends StatelessWidget {
                 () => RecommendedOffersSection(
                   scale: r.scale,
                   offers: controller.recommendedOffers.toList(),
-                  onViewAllTap: () {
-                    Get.snackbar('Offres', 'Affichage de toutes les offres');
-                  },
+                  onViewAllTap: () => openTab(1),
                   onOfferTap: (offer) {
-                    Get.snackbar('Offre', 'Acheter offre ${offer.country}');
+                    final countryKey = switch (offer.country) {
+                      'États-Unis' => 'country.US',
+                      'Royaume-Uni' => 'country.UK',
+                      'France' => 'country.FR',
+                      _ => null,
+                    };
+                    final countryName = countryKey == null
+                        ? offer.country
+                        : countryKey.tr;
+                    Get.snackbar(
+                      'dashboard.recommended_offers'.tr,
+                      '${'dashboard.buy_offer'.tr} $countryName',
+                    );
                   },
                 ),
               ),

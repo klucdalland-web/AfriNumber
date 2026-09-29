@@ -11,7 +11,7 @@ class MainPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // putIfAbsent : crée le controller s'il n'existe pas encore,
     // sinon réutilise l'instance existante (évite le double-register).
-    final controller = Get.put(MainController(), permanent: false);
+    final controller = Get.find<MainController>();
 
     return Scaffold(
       body: Obx(

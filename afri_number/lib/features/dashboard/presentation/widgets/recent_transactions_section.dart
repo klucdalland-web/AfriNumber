@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/models/transaction_item.dart';
@@ -23,10 +24,18 @@ class RecentTransactionsSection extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final dividerColor = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final cardBorder = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final dividerColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFF1F5F9);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +46,7 @@ class RecentTransactionsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              'Transactions récentes',
+              'dashboard.recent_transactions'.tr,
               style: GoogleFonts.zillaSlab(
                 fontSize: r.fontSize(20 * scale),
                 fontWeight: FontWeight.w700,
@@ -47,12 +56,13 @@ class RecentTransactionsSection extends StatelessWidget {
             GestureDetector(
               onTap: onViewAllTap,
               child: Text(
-                'Voir tout →',
+                'dashboard.view_all_transactions'.tr,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: r.fontSize(13 * scale),
                   fontWeight: FontWeight.w600,
-                  color: isDark ? const Color(0xFFDFDDDD) : const Color(
-                      0xFF485A81),
+                  color: isDark
+                      ? const Color(0xFFDFDDDD)
+                      : const Color(0xFF485A81),
                 ),
               ),
             ),
@@ -112,7 +122,12 @@ class RecentTransactionsSection extends StatelessWidget {
                               ),
                               SizedBox(height: r.space(2 * scale)),
                               Text(
-                                tx.subtitle,
+                                tx.subtitle
+                                    .replaceAll(
+                                      "Aujourd'hui",
+                                      'common.today'.tr,
+                                    )
+                                    .replaceAll('Hier', 'common.yesterday'.tr),
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: r.fontSize(11 * scale),
                                   fontWeight: FontWeight.w400,
@@ -152,11 +167,7 @@ class RecentTransactionsSection extends StatelessWidget {
                     ),
                   ),
                   if (!isLast)
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: dividerColor,
-                    ),
+                    Divider(height: 1, thickness: 1, color: dividerColor),
                 ],
               );
             }),

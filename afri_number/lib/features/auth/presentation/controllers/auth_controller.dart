@@ -78,6 +78,7 @@ class AuthController extends GetxController {
   void toggleRememberMe(bool value) => rememberMe.value = value;
 
   Future<void> login() async {
+    if (isLoading.value) return;
     if (!(loginFormKey.currentState?.validate() ?? false)) return;
 
     clearError();
@@ -105,11 +106,12 @@ class AuthController extends GetxController {
       errorMessage.value = e.message;
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'Erreur de connexion. Veuillez réessayer.';
+      errorMessage.value = 'error.login_failed'.tr;
     }
   }
 
   Future<void> register() async {
+    if (isLoading.value) return;
     if (!(registerFormKey.currentState?.validate() ?? false)) return;
 
     clearError();
@@ -140,11 +142,12 @@ class AuthController extends GetxController {
       errorMessage.value = e.message;
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'Erreur lors de l\'inscription. Veuillez réessayer.';
+      errorMessage.value = 'error.register_failed'.tr;
     }
   }
 
   Future<void> verifyOtp() async {
+    if (isLoading.value) return;
     clearError();
     isLoading.value = true;
 
@@ -152,13 +155,18 @@ class AuthController extends GetxController {
       final code = otpController.text.trim();
 
       if (code.length != 4) {
-        errorMessage.value = 'Le code doit contenir 4 chiffres';
+        errorMessage.value = 'error.code_length'.tr;
         isLoading.value = false;
         return;
       }
 
       final email = emailController.text.trim();
-      await _repository.verifyOtp(code: code, email: email.isNotEmpty ? email : null);
+      await _repository.verifyOtp(
+        code: code,
+        email: email.isNotEmpty ? email : null,
+      );
+
+      await _fetchUserProfile();
 
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.authFeedbackInscription);
@@ -166,24 +174,29 @@ class AuthController extends GetxController {
       errorMessage.value = e.message;
       isLoading.value = false;
     } catch (_) {
-      errorMessage.value = 'Code invalide. Veuillez réessayer.';
+      errorMessage.value = 'error.code_invalid'.tr;
       isLoading.value = false;
     }
   }
 
   Future<void> resendOtp() async {
+    if (isLoading.value) return;
     clearError();
+    isLoading.value = true;
     try {
       final email = emailController.text.trim();
       await _repository.resendOtp(email: email.isNotEmpty ? email : null);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
     } catch (_) {
-      errorMessage.value = 'Erreur lors du renvoi du code';
+      errorMessage.value = 'error.code_resend_failed'.tr;
+    } finally {
+      isLoading.value = false;
     }
   }
 
   Future<void> forgotPassword() async {
+    if (isLoading.value) return;
     if (!(forgotPasswordFormKey.currentState?.validate() ?? false)) return;
 
     clearError();
@@ -200,11 +213,12 @@ class AuthController extends GetxController {
       errorMessage.value = e.message;
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'Erreur lors de l\'envoi. Vérifiez votre connexion.';
+      errorMessage.value = 'error.email_send_failed'.tr;
     }
   }
 
   Future<void> resetPassword() async {
+    if (isLoading.value) return;
     if (!(resetPasswordFormKey.currentState?.validate() ?? false)) return;
 
     clearError();
@@ -228,13 +242,20 @@ class AuthController extends GetxController {
       errorMessage.value = e.message;
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'Code invalide ou expiré. Veuillez réessayer.';
+      errorMessage.value = 'error.code_expired'.tr;
     }
   }
 
   Future<void> _fetchUserProfile() async {
     try {
-      await _repository.me();
+      final response = await _repository.me();
+      if (response == null) return;
+
+      final nestedUser = response['data'];
+      final user = nestedUser is Map
+          ? Map<String, dynamic>.from(nestedUser)
+          : response;
+      await _storage.saveUser(user);
     } catch (_) {}
   }
 
@@ -248,4 +269,3 @@ class AuthController extends GetxController {
     Get.offAllNamed(AppRoutes.welcome);
   }
 }
-

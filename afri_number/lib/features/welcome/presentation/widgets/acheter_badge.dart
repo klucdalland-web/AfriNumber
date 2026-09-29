@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
 class AcheterBadge extends StatelessWidget {
-  const AcheterBadge({
-    super.key,
-    required this.scale,
-  });
+  const AcheterBadge({super.key, required this.scale});
 
   final double scale;
 
@@ -45,7 +43,7 @@ class AcheterBadge extends StatelessWidget {
             ),
             SizedBox(width: r.space(6 * scale)),
             Text(
-              'Acheter',
+              'welcome.buy'.tr,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: r.fontSize(15 * scale),
                 fontWeight: FontWeight.w600,

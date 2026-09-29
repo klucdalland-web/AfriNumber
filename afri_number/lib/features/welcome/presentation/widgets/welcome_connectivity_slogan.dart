@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
 class WelcomeConnectivitySlogan extends StatelessWidget {
-  const WelcomeConnectivitySlogan({
-    super.key,
-    required this.scale,
-  });
+  const WelcomeConnectivitySlogan({super.key, required this.scale});
 
   final double scale;
 
@@ -17,13 +15,16 @@ class WelcomeConnectivitySlogan extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final subtitleColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final headlineLines = 'welcome.slogan_conn'.tr.split('\n');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Restez',
+          headlineLines[0],
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(28 * scale),
             fontWeight: FontWeight.w300,
@@ -32,7 +33,7 @@ class WelcomeConnectivitySlogan extends StatelessWidget {
           ),
         ),
         Text(
-          'connecté.',
+          headlineLines[1],
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(36 * scale),
             fontWeight: FontWeight.w700,
@@ -41,7 +42,7 @@ class WelcomeConnectivitySlogan extends StatelessWidget {
           ),
         ),
         Text(
-          'Même au-delà du réseau.',
+          headlineLines[2],
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(26 * scale),
             fontWeight: FontWeight.w300,
@@ -51,7 +52,7 @@ class WelcomeConnectivitySlogan extends StatelessWidget {
         ),
         SizedBox(height: r.space(12 * scale)),
         Text(
-          'Gérez vos SMS et vos communications avec des outils pensés pour une connectivité parfois limitée.',
+          'welcome.slogan_conn_sub'.tr,
           style: GoogleFonts.ibmPlexSans(
             fontSize: r.fontSize(14 * scale),
             fontWeight: FontWeight.w400,

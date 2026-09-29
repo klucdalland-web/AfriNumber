@@ -6,6 +6,8 @@ import 'package:get_storage/get_storage.dart';
 import 'app/bindings/initial_binding.dart';
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
+import 'core/localization/app_translations.dart';
+import 'core/localization/localization_service.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -28,6 +30,9 @@ class AfriNumberApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
+      translations: AppTranslations(),
+      locale: LocalizationService.currentLocale,
+      fallbackLocale: AppTranslations.fallbackLocale,
       initialBinding: InitialBinding(),
       initialRoute: AppPages.initialRoute,
       getPages: AppPages.routes,

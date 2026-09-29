@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -38,13 +39,13 @@ class ZeroDataCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mode Zéro Data',
+                      'welcome.zero_data_title'.tr,
                       style: AppTextStyles.sectionTitle(r.fontSize(20))
                           .copyWith(color: Colors.white),
                     ),
                     SizedBox(height: r.space(4)),
                     Text(
-                      'Recevez vos SMS même sans connexion internet',
+                      'welcome.zero_data_desc'.tr,
                       style: AppTextStyles.body(
                         r.fontSize(14),
                         color: Colors.white,
@@ -75,7 +76,7 @@ class ZeroDataCard extends StatelessWidget {
               ),
               SizedBox(width: r.space(8)),
               Text(
-                enabled ? 'Actif' : 'Inactif',
+                enabled ? 'common.active'.tr : 'common.inactive'.tr,
                 style: AppTextStyles.body(
                   r.fontSize(14),
                   weight: FontWeight.w600,

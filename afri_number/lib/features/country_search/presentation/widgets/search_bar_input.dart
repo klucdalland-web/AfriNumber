@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -26,8 +27,12 @@ class SearchBarInput extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final hintColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final hintColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -59,7 +64,7 @@ class SearchBarInput extends StatelessWidget {
                 color: textColor,
               ),
               decoration: InputDecoration(
-                hintText: 'Rechercher un pays ou un indicatif...',
+                hintText: 'country.search_hint'.tr,
                 hintStyle: GoogleFonts.ibmPlexSans(
                   fontSize: r.fontSize(14 * scale),
                   fontWeight: FontWeight.w400,
@@ -67,7 +72,9 @@ class SearchBarInput extends StatelessWidget {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: r.space(10 * scale)),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: r.space(10 * scale),
+                ),
               ),
             ),
           ),

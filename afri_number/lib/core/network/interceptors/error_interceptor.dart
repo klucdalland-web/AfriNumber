@@ -49,9 +49,15 @@ class ErrorInterceptor extends Interceptor {
     String message = 'Erreur serveur';
     Map<String, dynamic>? errors;
 
-    if (data is Map<String, dynamic>) {
-      message = (data['message'] as String?) ?? message;
-      errors = data['errors'] as Map<String, dynamic>?;
+    if (data is Map) {
+      final rawMessage = data['message'];
+      if (rawMessage is String && rawMessage.trim().isNotEmpty) {
+        message = rawMessage;
+      }
+      final rawErrors = data['errors'];
+      if (rawErrors is Map) {
+        errors = Map<String, dynamic>.from(rawErrors);
+      }
     }
 
     return ApiException(

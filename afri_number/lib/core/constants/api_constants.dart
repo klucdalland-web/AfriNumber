@@ -16,8 +16,8 @@ class ApiConstants {
   /// Exemple: 'http://192.168.1.100:3000/api' ou 'http://10.0.2.2:3000/api' (Android emulator)
   /// static const String baseUrl = 'http://192.168.1.XXX:3000/api';
 
-  static const Duration connectTimeout = Duration(seconds: 60);
-  static const Duration receiveTimeout = Duration(seconds: 60);
+  static const Duration connectTimeout = Duration(seconds: 20);
+  static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Auth endpoints
   static const String login = '/auth/login';

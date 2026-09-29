@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
-import 'social_auth_buttons.dart';
 
 class LoginForm extends StatelessWidget {
   const LoginForm({super.key});
@@ -20,7 +19,7 @@ class LoginForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'De Retour !',
+            'login.title'.tr ,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium?.copyWith(
               color: theme.colorScheme.onSurface,
@@ -28,7 +27,7 @@ class LoginForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(8)),
           Text(
-            'Heureux de vous revoir ! Connectez-vous pour continuer là où vous vous êtes arrêté.',
+            'login.subtitle'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
@@ -40,31 +39,31 @@ class LoginForm extends StatelessWidget {
           const Spacer(),
 
           CustomTextField(
-            hintText: 'Téléphone ou Email',
+            hintText: 'login.phone_or_email'.tr,
             icon: Icons.call_outlined,
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.next,
             controller: controller.phoneController,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Ce champ est requis';
+                return 'error.field_required'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(14)),
           CustomTextField(
-            hintText: 'Mot de passe',
+            hintText: 'login.password'.tr,
             icon: Icons.lock_outline,
             isPassword: true,
             textInputAction: TextInputAction.done,
             controller: controller.passwordController,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Le mot de passe est requis';
+                return 'error.password_required'.tr;
               }
               if (value.length < 6) {
-                return 'Minimum 6 caractères';
+                return 'error.password_too_short'.tr;
               }
               return null;
             },
@@ -75,11 +74,9 @@ class LoginForm extends StatelessWidget {
 
           const Spacer(),
 
-          const SocialAuthButtons(),
-          SizedBox(height: r.space(16)),
           Obx(
             () => AppButton.primary(
-              label: 'Connexion',
+              label: 'login.submit'.tr,
               isLoading: controller.isLoading.value,
               onPressed: controller.login,
               backgroundColor: theme.colorScheme.onSurface,
@@ -184,7 +181,7 @@ class _OptionsRow extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'Se souvenir de moi',
+                    'login.remember_me'.tr,
                     style: TextStyle(
                       fontSize: r.fontSize(14),
                       fontWeight: FontWeight.w500,
@@ -202,7 +199,7 @@ class _OptionsRow extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerRight,
             child: AppButton.text(
-              label: 'Mot de passe oublié',
+              label: 'login.forgot_password'.tr,
               onPressed: () => Get.toNamed(AppRoutes.forgotPassword),
               foregroundColor: theme.colorScheme.onSurface,
               underline: true,
@@ -223,7 +220,7 @@ class _Footer extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'Vous n\'avez pas encore de compte ?',
+          'login.no_account'.tr,
           style: TextStyle(
             fontSize: r.fontSize(14),
             fontWeight: FontWeight.w400,
@@ -232,7 +229,7 @@ class _Footer extends StatelessWidget {
         ),
         SizedBox(height: r.space(4)),
         AppButton.text(
-          label: 'S\'inscrire gratuitement.',
+          label: 'login.signup_free'.tr,
           onPressed: () => Get.toNamed(AppRoutes.register),
           foregroundColor: theme.colorScheme.onSurface,
           underline: true,

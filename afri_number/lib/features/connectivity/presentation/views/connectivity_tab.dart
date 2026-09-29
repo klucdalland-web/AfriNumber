@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/connectivity_controller.dart';
-import '../../data/repositories/mock_connectivity_repository.dart';
 import '../widgets/plan_tile.dart';
 import '../widgets/service_tile.dart';
 import '../widgets/zero_data_card.dart';
@@ -14,17 +13,13 @@ class ConnectivityTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.isRegistered<ConnectivityController>()
-        ? Get.find<ConnectivityController>()
-        : Get.put(ConnectivityController(MockConnectivityRepository()));
+    final controller = Get.find<ConnectivityController>();
 
     final r = context.responsive;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final bgColor = theme.scaffoldBackgroundColor;
+    final textColor = theme.colorScheme.onSurface;
+    final subtextColor = theme.colorScheme.onSurfaceVariant;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -47,7 +42,7 @@ class ConnectivityTab extends StatelessWidget {
                 children: [
                   // Header
                   Text(
-                    'Connectivité',
+                    'nav.connectivity'.tr,
                     style: GoogleFonts.zillaSlab(
                       fontSize: r.fontSize(24),
                       fontWeight: FontWeight.w700,
@@ -56,7 +51,7 @@ class ConnectivityTab extends StatelessWidget {
                   ),
                   SizedBox(height: r.space(4)),
                   Text(
-                    'Gérez vos services de connectivité et restez joignable partout.',
+                    'connectivity.subtitle'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(13),
                       fontWeight: FontWeight.w400,
@@ -71,7 +66,7 @@ class ConnectivityTab extends StatelessWidget {
                       padding: EdgeInsets.only(top: r.space(60)),
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                     )
@@ -92,12 +87,10 @@ class ConnectivityTab extends StatelessWidget {
                             ElevatedButton(
                               onPressed: controller.load,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isDark
-                                    ? const Color(0xFF2563EB)
-                                    : const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
                               ),
-                              child: const Text('Réessayer'),
+                              child: Text('common.retry'.tr),
                             ),
                           ],
                         ),
@@ -114,7 +107,7 @@ class ConnectivityTab extends StatelessWidget {
 
                     // Mes services actifs
                     Text(
-                      'Mes services actifs',
+                      'connectivity.my_services'.tr,
                       style: GoogleFonts.zillaSlab(
                         fontSize: r.fontSize(18),
                         fontWeight: FontWeight.w700,
@@ -131,7 +124,7 @@ class ConnectivityTab extends StatelessWidget {
 
                     // Forfaits disponibles
                     Text(
-                      'Forfaits disponibles',
+                      'connectivity.available_plans'.tr,
                       style: GoogleFonts.zillaSlab(
                         fontSize: r.fontSize(18),
                         fontWeight: FontWeight.w700,
@@ -144,7 +137,7 @@ class ConnectivityTab extends StatelessWidget {
                         plan: plan,
                         onTap: () {
                           Get.snackbar(
-                            'Forfait sélectionné',
+                            'connectivity.plan_selected'.tr,
                             '${plan.name} - ${plan.price} Ar',
                             snackPosition: SnackPosition.BOTTOM,
                           );

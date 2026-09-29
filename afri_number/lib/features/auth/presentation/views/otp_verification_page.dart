@@ -5,8 +5,15 @@ import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/widgets.dart';
 
-class OTPVerificationPage extends StatelessWidget {
+class OTPVerificationPage extends StatefulWidget {
   const OTPVerificationPage({super.key});
+
+  @override
+  State<OTPVerificationPage> createState() => _OTPVerificationPageState();
+}
+
+class _OTPVerificationPageState extends State<OTPVerificationPage> {
+  final _otpInputKey = GlobalKey<OTPInputState>();
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +29,10 @@ class OTPVerificationPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: r.space(20)),
-              AuthHeader(
-                moduleLabel: 'Vérification',
-                showBackButton: true,
-              ),
+              AuthHeader(moduleLabel: 'otp.title'.tr, showBackButton: true),
               SizedBox(height: r.space(8)),
               Text(
-                'Code de vérification',
+                'otp.title'.tr,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   color: theme.colorScheme.onSurface,
@@ -36,47 +40,53 @@ class OTPVerificationPage extends StatelessWidget {
               ),
               SizedBox(height: r.space(12)),
               Text(
-                'Entrez le code à 4 chiffres envoyé à votre numéro pour continuer.',
+                'otp.subtitle'.tr,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                   height: 1.5,
                 ),
               ),
-              
+
               // Error message
-              Obx(() => authController.errorMessage.isNotEmpty
-                  ? Container(
-                      margin: EdgeInsets.only(top: r.space(16), bottom: r.space(8)),
-                      padding: EdgeInsets.all(r.space(12)),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(r.radius(12)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: theme.colorScheme.onErrorContainer,
-                            size: r.iconSize(20),
-                          ),
-                          SizedBox(width: r.space(8)),
-                          Expanded(
-                            child: Text(
-                              authController.errorMessage.value,
-                              style: TextStyle(
-                                color: theme.colorScheme.onErrorContainer,
-                                fontSize: r.fontSize(14),
+              Obx(
+                () => authController.errorMessage.isNotEmpty
+                    ? Container(
+                        margin: EdgeInsets.only(
+                          top: r.space(16),
+                          bottom: r.space(8),
+                        ),
+                        padding: EdgeInsets.all(r.space(12)),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(r.radius(12)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: theme.colorScheme.onErrorContainer,
+                              size: r.iconSize(20),
+                            ),
+                            SizedBox(width: r.space(8)),
+                            Expanded(
+                              child: Text(
+                                authController.errorMessage.value,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onErrorContainer,
+                                  fontSize: r.fontSize(14),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox.shrink()),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
 
               SizedBox(height: r.space(40)),
               OTPInput(
+                key: _otpInputKey,
                 length: 4,
                 onCompleted: (code) => _handleVerifyOtp(authController, code),
                 onChanged: (code) {
@@ -87,16 +97,25 @@ class OTPVerificationPage extends StatelessWidget {
               SizedBox(height: r.space(24)),
               _buildResendSection(r, theme, authController),
               SizedBox(height: r.space(32)),
-              CustomNumericKeypad(
-                onDigitTap: (digit) => _onDigitTap(authController, digit),
-                onBackspaceTap: () => _onBackspaceTap(authController),
-                enabled: !authController.isLoading.value,
+              Obx(
+                () => CustomNumericKeypad(
+                  onDigitTap: (digit) =>
+                      _otpInputKey.currentState?.addDigit(digit),
+                  onBackspaceTap: () =>
+                      _otpInputKey.currentState?.deleteLastDigit(),
+                  enabled: !authController.isLoading.value,
+                  foregroundColor: theme.colorScheme.onSurface,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  disabledColor: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               SizedBox(height: r.space(24)),
               Obx(
                 () => AppButton.outlined(
-                  label: 'Retour',
-                  onPressed: authController.isLoading.value ? null : () => Get.back(),
+                  label: 'otp.back'.tr,
+                  onPressed: authController.isLoading.value
+                      ? null
+                      : () => Get.back(),
                   foregroundColor: theme.colorScheme.onSurface,
                   radius: r.radius(28),
                   height: r.heightOf(56),
@@ -117,39 +136,33 @@ class OTPVerificationPage extends StatelessWidget {
     }
   }
 
-  void _onDigitTap(AuthController controller, int digit) {
-    final text = controller.otpController.text;
-    if (text.length < 4) {
-      controller.otpController.text = text + digit.toString();
-    }
-  }
-
-  void _onBackspaceTap(AuthController controller) {
-    final text = controller.otpController.text;
-    if (text.isNotEmpty) {
-      controller.otpController.text = text.substring(0, text.length - 1);
-    }
-  }
-
-  Widget _buildResendSection(Responsive r, ThemeData theme, AuthController controller) {
-    return Obx(() => Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Vous n\'avez pas reçu le code ? ',
-          style: TextStyle(
-            fontSize: r.fontSize(14),
-            fontWeight: FontWeight.w400,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+  Widget _buildResendSection(
+    Responsive r,
+    ThemeData theme,
+    AuthController controller,
+  ) {
+    return Obx(
+      () => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${'otp.no_code_received'.tr} ',
+            style: TextStyle(
+              fontSize: r.fontSize(14),
+              fontWeight: FontWeight.w400,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
           ),
-        ),
-        AppButton.text(
-          label: 'Renvoyer',
-          onPressed: controller.isLoading.value ? null : () => controller.resendOtp(),
-          foregroundColor: theme.colorScheme.onSurface,
-          underline: true,
-        ),
-      ],
-    ));
+          AppButton.text(
+            label: 'otp.resend'.tr,
+            onPressed: controller.isLoading.value
+                ? null
+                : () => controller.resendOtp(),
+            foregroundColor: theme.colorScheme.onSurface,
+            underline: true,
+          ),
+        ],
+      ),
+    );
   }
 }

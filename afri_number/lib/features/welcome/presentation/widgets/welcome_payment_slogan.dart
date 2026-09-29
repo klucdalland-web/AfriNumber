@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
 class WelcomePaymentSlogan extends StatelessWidget {
-  const WelcomePaymentSlogan({
-    super.key,
-    required this.scale,
-  });
+  const WelcomePaymentSlogan({super.key, required this.scale});
 
   final double scale;
 
@@ -17,13 +15,16 @@ class WelcomePaymentSlogan extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final subtitleColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final headlineLines = 'welcome.slogan_payment'.tr.split('\n');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Votre paiement',
+          headlineLines[0],
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(28 * scale),
             fontWeight: FontWeight.w300,
@@ -32,7 +33,7 @@ class WelcomePaymentSlogan extends StatelessWidget {
           ),
         ),
         Text(
-          'Local',
+          headlineLines[1],
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(36 * scale),
             fontWeight: FontWeight.w700,
@@ -41,7 +42,7 @@ class WelcomePaymentSlogan extends StatelessWidget {
           ),
         ),
         Text(
-          'devient mondial.',
+          headlineLines[2],
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(28 * scale),
             fontWeight: FontWeight.w300,
@@ -51,7 +52,7 @@ class WelcomePaymentSlogan extends StatelessWidget {
         ),
         SizedBox(height: r.space(12 * scale)),
         Text(
-          'Achetez vos services internationaux avec vos moyens de paiement locaux.',
+          'welcome.slogan_payment_sub'.tr,
           style: GoogleFonts.ibmPlexSans(
             fontSize: r.fontSize(14 * scale),
             fontWeight: FontWeight.w400,

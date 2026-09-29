@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import 'loop_painter.dart';
@@ -23,10 +24,18 @@ class WelcomePaymentCards extends StatelessWidget {
     final cardWidth = (screenWidth * 0.58).clamp(200.0, 260.0);
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final cardBadgeBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cardBorder = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final cardBadgeBg = isDark
+        ? const Color(0xFF0F172A)
+        : const Color(0xFFF1F5F9);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     return SizedBox(
       height: r.heightOf(230 * scale),
@@ -43,7 +52,9 @@ class WelcomePaymentCards extends StatelessWidget {
               angle: -0.1,
               child: CustomPaint(
                 painter: LoopPainter(
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF0F172A),
                 ),
               ),
             ),
@@ -85,7 +96,7 @@ class WelcomePaymentCards extends StatelessWidget {
                         ),
                         SizedBox(width: r.space(4 * scale)),
                         Text(
-                          'Madagascar',
+                          'country.MG'.tr,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: r.fontSize(11 * scale),
                             fontWeight: FontWeight.w600,
@@ -97,7 +108,7 @@ class WelcomePaymentCards extends StatelessWidget {
                   ),
                   SizedBox(height: r.space(8 * scale)),
                   Text(
-                    'Montant',
+                    'welcome.amount'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(10 * scale),
                       fontWeight: FontWeight.w500,
@@ -122,15 +133,21 @@ class WelcomePaymentCards extends StatelessWidget {
                           vertical: r.space(3 * scale),
                         ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1E7DD),
-                          borderRadius: BorderRadius.circular(r.radius(10 * scale)),
+                          color: isDark
+                              ? const Color(0xFF064E3B)
+                              : const Color(0xFFD1E7DD),
+                          borderRadius: BorderRadius.circular(
+                            r.radius(10 * scale),
+                          ),
                         ),
                         child: Text(
-                          'Local',
+                          'welcome.local'.tr,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: r.fontSize(9 * scale),
                             fontWeight: FontWeight.w700,
-                            color: isDark ? const Color(0xFFA7F3D0) : const Color(0xFF0F5132),
+                            color: isDark
+                                ? const Color(0xFFA7F3D0)
+                                : const Color(0xFF0F5132),
                           ),
                         ),
                       ),
@@ -187,25 +204,31 @@ class WelcomePaymentCards extends StatelessWidget {
                 vertical: r.space(7 * scale),
               ),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+                color: isDark
+                    ? const Color(0xFFF8FAFC)
+                    : const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(r.radius(25 * scale)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Payer',
+                    'welcome.pay'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(12 * scale),
                       fontWeight: FontWeight.w600,
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      color: isDark
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFFF8FAFC),
                     ),
                   ),
                   SizedBox(width: r.space(4 * scale)),
                   Icon(
                     Icons.arrow_forward_rounded,
                     size: r.iconSize(14 * scale),
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                    color: isDark
+                        ? const Color(0xFF0F172A)
+                        : const Color(0xFFF8FAFC),
                   ),
                 ],
               ),
@@ -223,7 +246,9 @@ class WelcomePaymentCards extends StatelessWidget {
                 vertical: r.space(10 * scale),
               ),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF143823) : const Color(0xFFD1E7DD),
+                color: isDark
+                    ? const Color(0xFF143823)
+                    : const Color(0xFFD1E7DD),
                 borderRadius: BorderRadius.circular(r.radius(16 * scale)),
               ),
               child: Row(
@@ -243,11 +268,13 @@ class WelcomePaymentCards extends StatelessWidget {
                   SizedBox(width: r.space(10 * scale)),
                   Expanded(
                     child: Text(
-                      'Pas besoin de carte bancaire internationale pour utiliser AfriNumber.',
+                      'welcome.no_bank_card'.tr,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: r.fontSize(11 * scale),
                         fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFE8F5E9) : const Color(0xFF0F5132),
+                        color: isDark
+                            ? const Color(0xFFE8F5E9)
+                            : const Color(0xFF0F5132),
                         height: 1.25,
                       ),
                     ),

@@ -38,7 +38,10 @@ class CountrySearchController extends GetxController {
       return allCountries;
     }
     return allCountries.where((country) {
-      final nameMatch = country.name.toLowerCase().contains(query);
+      final translatedName = 'country.${country.id.toUpperCase()}'.tr;
+      final nameMatch =
+          translatedName.toLowerCase().contains(query) ||
+          country.name.toLowerCase().contains(query);
       final codeMatch = country.code.toLowerCase().contains(query);
       return nameMatch || codeMatch;
     }).toList();

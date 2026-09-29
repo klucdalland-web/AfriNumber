@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
@@ -19,9 +20,7 @@ class LoginPage extends StatelessWidget {
             return SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
@@ -31,7 +30,7 @@ class LoginPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        AuthHeader(moduleLabel: 'Connexion'),
+                        AuthHeader(moduleLabel: 'auth.module_login'.tr),
                         SizedBox(height: r.space(12)),
                         const Expanded(child: LoginForm()),
                       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -33,9 +34,7 @@ class VirtualCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF181A1F),
         borderRadius: BorderRadius.circular(r.radius(24 * scale)),
-        border: Border.all(
-          color: const Color(0xFF2C3038),
-        ),
+        border: Border.all(color: const Color(0xFF2C3038)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +73,7 @@ class VirtualCard extends StatelessWidget {
 
           // 2. MIDDLE ROW: Balance & Eye Toggle
           Text(
-            'Votre Balance',
+            'welcome.balance'.tr,
             style: GoogleFonts.ibmPlexSans(
               fontSize: r.fontSize(11 * scale),
               fontWeight: FontWeight.w400,
@@ -127,7 +126,7 @@ class VirtualCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Numéro virtuel',
+                    'welcome.virtual_number'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(10 * scale),
                       fontWeight: FontWeight.w400,
@@ -149,7 +148,7 @@ class VirtualCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Date d\'expiration',
+                    'dashboard.expiration_date'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(10 * scale),
                       fontWeight: FontWeight.w400,

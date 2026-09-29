@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/localization/language_selector_sheet.dart';
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/country_flag.dart';
@@ -15,36 +17,37 @@ import '../widgets/profile_stats_row.dart';
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
-  Future<void> _confirmSignOut(BuildContext context, ProfileController controller) async {
+  Future<void> _confirmSignOut(
+    BuildContext context,
+    ProfileController controller,
+  ) async {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         title: Text(
-          'Se déconnecter ?',
+          'profile.logout_title'.tr,
           style: GoogleFonts.zillaSlab(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: theme.colorScheme.onSurface,
           ),
         ),
         content: Text(
-          'Vous devrez vous reconnecter pour accéder à vos numéros virtuels.',
+          'profile.logout_body'.tr,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 14,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
-              'Annuler',
+              'common.cancel'.tr,
               style: GoogleFonts.ibmPlexSans(
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -52,7 +55,7 @@ class ProfileTab extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(
-              'Se déconnecter',
+              'profile.logout'.tr,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFFEF4444),
                 fontWeight: FontWeight.w700,
@@ -67,14 +70,13 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ProfileController());
+    final controller = Get.find<ProfileController>();
+    final localeController = Get.find<LocaleController>();
     final r = context.responsive;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final bgColor = theme.scaffoldBackgroundColor;
+    final textColor = theme.colorScheme.onSurface;
+    final subtextColor = theme.colorScheme.onSurfaceVariant;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -147,21 +149,27 @@ class ProfileTab extends StatelessWidget {
                       children: [
                         ProfileRow(
                           icon: Icons.call_outlined,
-                          label: 'Numéro de téléphone',
+                          label: 'profile.phone'.tr,
                           value: profile.phoneNumber,
                           trailing: ProfileRow.chevron(context),
                         ),
                         ProfileRow(
                           icon: Icons.alternate_email_rounded,
-                          label: 'Email',
+                          label: 'profile.email'.tr,
                           value: profile.email,
                           trailing: ProfileRow.chevron(context),
                         ),
                         ProfileRow(
-                          leading: CountryFlag(code: profile.countryCode, size: 24),
-                          label: 'Pays de résidence',
-                          value: profile.countryName,
+                          leading: CountryFlag(
+                            code: localeController.isFrench ? 'FR' : 'GB',
+                            size: 24,
+                          ),
+                          label: 'profile.language'.tr,
+                          value: localeController.isFrench
+                              ? 'Français'
+                              : 'English',
                           trailing: ProfileRow.chevron(context),
+                          onTap: () => showLanguageSelector(context),
                         ),
                       ],
                     ),
@@ -170,7 +178,7 @@ class ProfileTab extends StatelessWidget {
 
                     // Section Title: Paramètres du compte
                     Text(
-                      'Paramètres du compte',
+                      'profile.settings_title'.tr,
                       style: GoogleFonts.zillaSlab(
                         fontSize: r.fontSize(18),
                         fontWeight: FontWeight.w700,
@@ -185,8 +193,10 @@ class ProfileTab extends StatelessWidget {
                       children: [
                         ProfileRow(
                           icon: Icons.notifications_none_rounded,
-                          label: 'Notifications',
-                          value: notifications ? 'Activé' : 'Désactivé',
+                          label: 'profile.notifications'.tr,
+                          value: notifications
+                              ? 'common.on'.tr
+                              : 'common.off'.tr,
                           trailing: OutlineToggleIcon(on: notifications),
                           onTap: ctrl.toggleNotifications,
                         ),
@@ -194,14 +204,16 @@ class ProfileTab extends StatelessWidget {
                           icon: isDarkMode
                               ? Icons.dark_mode_outlined
                               : Icons.light_mode_outlined,
-                          label: 'Thème de l\'application',
-                          value: isDarkMode ? 'Mode Sombre' : 'Mode Clair',
+                          label: 'profile.theme'.tr,
+                          value: isDarkMode
+                              ? 'common.theme_dark'.tr
+                              : 'common.theme_light'.tr,
                           trailing: OutlineToggleIcon(on: isDarkMode),
                           onTap: ctrl.toggleTheme,
                         ),
                         ProfileRow(
                           leading: const CountryFlag(code: 'FR', size: 24),
-                          label: 'Langue',
+                          label: 'profile.language'.tr,
                           value: ctrl.language.value,
                           trailing: ProfileRow.chevron(context),
                         ),

@@ -15,6 +15,10 @@ class SocialAuthButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (onGooglePressed == null && onApplePressed == null) {
+      return const SizedBox.shrink();
+    }
+
     final r = context.responsive;
     final theme = Theme.of(context);
 
@@ -22,7 +26,7 @@ class SocialAuthButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _SocialButton(
-          onTap: onGooglePressed ?? () {},
+          onTap: onGooglePressed,
           child: Text(
             'G',
             style: TextStyle(
@@ -32,15 +36,17 @@ class SocialAuthButtons extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(width: r.space(16)),
-        _SocialButton(
-          onTap: onApplePressed ?? () {},
+        if (onGooglePressed != null && onApplePressed != null)
+          SizedBox(width: r.space(16)),
+        if (onApplePressed != null)
+          _SocialButton(
+            onTap: onApplePressed,
           child: Icon(
             Icons.apple,
             size: r.iconSize(24),
             color: theme.colorScheme.onSurface,
           ),
-        ),
+          ),
       ],
     );
   }
@@ -52,15 +58,16 @@ class _SocialButton extends StatelessWidget {
     required this.child,
   });
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
     final theme = Theme.of(context);
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      customBorder: const CircleBorder(),
       child: Container(
         width: r.iconSize(56),
         height: r.iconSize(56),

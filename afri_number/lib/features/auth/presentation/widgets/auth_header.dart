@@ -14,6 +14,7 @@ class AuthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -25,8 +26,8 @@ class AuthHeader extends StatelessWidget {
               onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
               icon: const Icon(Icons.arrow_back_ios_new, size: 22),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: colors.surfaceContainerHighest,
+                foregroundColor: colors.onSurface,
                 elevation: 2,
                 shadowColor: Colors.black.withValues(alpha: 0.1),
                 shape: const CircleBorder(),
@@ -34,12 +35,12 @@ class AuthHeader extends StatelessWidget {
               ),
             ),
           ),
-        const _AfriNumberLogo(),
+        _AfriNumberLogo(color: colors.onSurface),
         const SizedBox(height: 8),
-        const _LoopCurve(),
+        _LoopCurve(color: colors.onSurface),
         Transform.translate(
           offset: const Offset(0, -12),
-          child: _ModuleBadge(label: moduleLabel),
+          child: _ModuleBadge(label: moduleLabel, colors: colors),
         ),
         const SizedBox(height: 20),
       ],
@@ -48,20 +49,22 @@ class AuthHeader extends StatelessWidget {
 }
 
 class _AfriNumberLogo extends StatelessWidget {
-  const _AfriNumberLogo();
+  const _AfriNumberLogo({required this.color});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Image.asset('assets/images/afrika.png',width: 35,),
-        const Text(
+        Text(
           'AfriNumber.',
           style: TextStyle(
             fontFamily: 'Georgia',
             fontWeight: FontWeight.w700,
             fontSize: 28,
-            color: Colors.black,
+            color: color,
             letterSpacing: -0.5,
           ),
         ),
@@ -71,7 +74,9 @@ class _AfriNumberLogo extends StatelessWidget {
 }
 
 class _LoopCurve extends StatelessWidget {
-  const _LoopCurve();
+  const _LoopCurve({required this.color});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -79,17 +84,21 @@ class _LoopCurve extends StatelessWidget {
       width: 120,
       height: 60,
       child: CustomPaint(
-        painter: _LoopCurvePainter(),
+        painter: _LoopCurvePainter(color),
       ),
     );
   }
 }
 
 class _LoopCurvePainter extends CustomPainter {
+  _LoopCurvePainter(this.color);
+
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black
+      ..color = color
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -115,13 +124,15 @@ class _LoopCurvePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LoopCurvePainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _ModuleBadge extends StatelessWidget {
-  const _ModuleBadge({required this.label});
+  const _ModuleBadge({required this.label, required this.colors});
 
   final String label;
+  final ColorScheme colors;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +141,7 @@ class _ModuleBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -150,22 +161,22 @@ class _ModuleBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'ab',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
-                color: Colors.black,
+                color: colors.onSurface,
                 letterSpacing: 0.5,
               ),
             ),
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: Colors.black,
+                color: colors.onSurface,
               ),
             ),
           ],

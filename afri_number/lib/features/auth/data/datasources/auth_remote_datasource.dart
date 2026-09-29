@@ -113,7 +113,7 @@ class AuthRemoteDataSource {
   Future<Map<String, dynamic>?> me() async {
     final response = await _client.get(ApiConstants.me);
     final data = response.data;
-    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
     return null;
   }
 }

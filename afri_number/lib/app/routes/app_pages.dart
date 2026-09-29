@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../bindings/account_tabs_binding.dart';
+
 import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart';
 import '../../features/auth/presentation/views/auth_feedback_inscription_page.dart';
 import '../../features/auth/presentation/views/forgot_password_page.dart';
@@ -7,21 +7,12 @@ import '../../features/auth/presentation/views/login_page.dart';
 import '../../features/auth/presentation/views/otp_verification_page.dart';
 import '../../features/auth/presentation/views/register_page.dart';
 import '../../features/auth/presentation/views/reset_password_page.dart';
-import '../../features/main/presentation/controllers/main_controller.dart';
+import '../../features/main/presentation/bindings/main_binding.dart';
 import '../../features/main/presentation/views/main_page.dart';
 import '../../features/splash/presentation/views/splash_page.dart';
+import '../../features/splash/presentation/bindings/splash_binding.dart';
 import '../../features/welcome/presentation/views/welcome_page.dart';
 import 'app_routes.dart';
-
-/// Binding local à la route /main — injecte MainController proprement.
-class _MainBinding extends Bindings {
-  @override
-  void dependencies() {
-    Get.lazyPut<MainController>(() => MainController());
-
-    AccountTabsBinding().dependencies();
-  }
-}
 
 class AppPages {
   AppPages._();
@@ -35,6 +26,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.splash,
       page: () => const SplashPage(),
+      binding: SplashBinding(),
     ),
 
     // ── Onboarding ──────────────────────────────────────────────────────────
@@ -77,7 +69,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.main,
       page: () => const MainPage(),
-      binding: _MainBinding(),
+      binding: MainBinding(),
     ),
   ];
 }

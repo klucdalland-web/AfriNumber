@@ -21,7 +21,7 @@ class ResetPasswordForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Nouveau mot de passe',
+            'reset.title'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium?.copyWith(
               color: theme.colorScheme.onSurface,
@@ -29,7 +29,7 @@ class ResetPasswordForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(12)),
           Text(
-            'Entrez le code reçu par email et choisissez votre nouveau mot de passe.',
+            'reset.subtitle'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
@@ -39,21 +39,21 @@ class ResetPasswordForm extends StatelessWidget {
           _ErrorBanner(controller: controller),
           SizedBox(height: r.space(36)),
           CustomTextField(
-            hintText: 'Code reçu par email',
+            hintText: 'reset.code_hint'.tr,
             icon: Icons.pin_outlined,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.next,
             controller: controller.resetCodeController,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Le code est requis';
+                return 'error.code_required'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(20)),
           CustomTextField(
-            hintText: 'Nouveau mot de passe',
+            hintText: 'reset.new_password'.tr,
             icon: Icons.lock_outline,
             isPassword: true,
             textInputAction: TextInputAction.next,
@@ -61,17 +61,17 @@ class ResetPasswordForm extends StatelessWidget {
             controller: controller.newPasswordController,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Le mot de passe est requis';
+                return 'error.password_required'.tr;
               }
               if (value.length < 8) {
-                return 'Minimum 8 caractères';
+                return 'error.register_password_too_short'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(20)),
           CustomTextField(
-            hintText: 'Confirmer le mot de passe',
+            hintText: 'reset.confirm_password'.tr,
             icon: Icons.lock_outline,
             isPassword: true,
             textInputAction: TextInputAction.done,
@@ -79,10 +79,10 @@ class ResetPasswordForm extends StatelessWidget {
             controller: controller.confirmNewPasswordController,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Confirmez le mot de passe';
+                return 'error.confirm_required'.tr;
               }
               if (value != controller.newPasswordController.text) {
-                return 'Les mots de passe ne correspondent pas';
+                return 'error.password_mismatch'.tr;
               }
               return null;
             },
@@ -91,7 +91,7 @@ class ResetPasswordForm extends StatelessWidget {
           SizedBox(height: r.space(32)),
           Obx(
             () => AppButton.primary(
-              label: 'Réinitialiser',
+              label: 'reset.submit'.tr,
               isLoading: controller.isLoading.value,
               onPressed: controller.resetPassword,
               backgroundColor: theme.colorScheme.onSurface,

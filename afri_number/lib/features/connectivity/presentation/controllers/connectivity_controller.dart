@@ -30,7 +30,7 @@ class ConnectivityController extends GetxController {
       services.assignAll(overview.services);
       plans.assignAll(overview.plans);
     } catch (_) {
-      errorMessage.value = 'Impossible de charger vos services. Réessayez.';
+      errorMessage.value = 'error.services_load'.tr;
     } finally {
       isLoading.value = false;
     }
@@ -44,7 +44,7 @@ class ConnectivityController extends GetxController {
       await _repository.setZeroData(enabled);
     } catch (_) {
       zeroDataEnabled.value = previous;
-      errorMessage.value = 'Modification impossible pour le moment.';
+      errorMessage.value = 'error.service_update'.tr;
     }
   }
 }

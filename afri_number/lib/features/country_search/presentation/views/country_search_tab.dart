@@ -11,12 +11,10 @@ class CountrySearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(CountrySearchController());
+    final controller = Get.find<CountrySearchController>();
     final r = context.responsive;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final subtextColor = theme.colorScheme.onSurfaceVariant;
 
     return AppScaffold(
       body: SafeArea(
@@ -61,8 +59,8 @@ class CountrySearchPage extends StatelessWidget {
                               countries: controller.popularCountries,
                               onCountryTap: (country) {
                                 Get.snackbar(
-                                  'Pays sélectionné',
-                                  '${country.name} (${country.code})',
+                                  'country.selected'.tr,
+                                  '${'country.${country.id.toUpperCase()}'.tr} (${country.code})',
                                   snackPosition: SnackPosition.BOTTOM,
                                 );
                               },
@@ -74,7 +72,7 @@ class CountrySearchPage extends StatelessWidget {
 
                       // Tous les pays Section Title
                       Text(
-                        'Tous les pays',
+                        'country.all'.tr,
                         style: GoogleFonts.zillaSlab(
                           fontSize: r.fontSize(20 * r.scale),
                           fontWeight: FontWeight.w700,
@@ -100,7 +98,7 @@ class CountrySearchPage extends StatelessWidget {
                                   ),
                                   SizedBox(height: r.space(12)),
                                   Text(
-                                    'Aucun pays trouvé',
+                                    'country.empty'.tr,
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: r.fontSize(16),
                                       fontWeight: FontWeight.w600,
@@ -126,8 +124,8 @@ class CountrySearchPage extends StatelessWidget {
                               country: country,
                               onTap: () {
                                 Get.snackbar(
-                                  'Pays sélectionné',
-                                  '${country.name} (${country.code})',
+                                  'country.selected'.tr,
+                                  '${'country.${country.id.toUpperCase()}'.tr} (${country.code})',
                                   snackPosition: SnackPosition.BOTTOM,
                                 );
                               },

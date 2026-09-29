@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:get/get.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/models/country_item.dart';
 
@@ -23,16 +23,22 @@ class PopularCountriesSection extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final cardBorder = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
     final badgeBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Pays populaires',
+          'country.popular'.tr,
           style: GoogleFonts.zillaSlab(
             fontSize: r.fontSize(20 * scale),
             fontWeight: FontWeight.w700,
@@ -45,7 +51,8 @@ class PopularCountriesSection extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: countries.length,
-            separatorBuilder: (context, index) => SizedBox(width: r.space(12 * scale)),
+            separatorBuilder: (context, index) =>
+                SizedBox(width: r.space(12 * scale)),
             itemBuilder: (context, index) {
               final country = countries[index];
               return _buildPopularCard(
@@ -98,15 +105,12 @@ class PopularCountriesSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            CountryFlagBadge(
-              code: country.id,
-              size: 32 * scale,
-            ),
+            CountryFlagBadge(code: country.id, size: 32 * scale),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  country.name,
+                  'country.${country.id.toUpperCase()}'.tr,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: r.fontSize(12 * scale),
                     fontWeight: FontWeight.w700,

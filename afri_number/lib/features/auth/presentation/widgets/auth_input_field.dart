@@ -100,7 +100,7 @@ class _AuthInputFieldState extends State<AuthInputField> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
-            color: Colors.white,
+            color: colorScheme.surface,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isFocused ? 0.12 : 0.06),
@@ -127,17 +127,17 @@ class _AuthInputFieldState extends State<AuthInputField> {
             onFieldSubmitted: widget.onSubmitted,
             validator: widget.validator,
             autofillHints: widget.autofillHints,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.black,
+              color: colorScheme.onSurface,
             ),
             decoration: InputDecoration(
               hintText: widget.hintText.replaceAll('*', '').trim(),
               hintStyle: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
-                color: Colors.black.withValues(alpha: 0.35),
+                color: colorScheme.onSurface.withValues(alpha: 0.45),
               ),
               prefixIcon: widget.icon != null
                   ? Padding(
@@ -145,7 +145,7 @@ class _AuthInputFieldState extends State<AuthInputField> {
                       child: Icon(
                         widget.icon,
                         size: 22,
-                        color: isFocused ? Colors.black : Colors.black.withValues(alpha: 0.45),
+                        color: isFocused ? colorScheme.primary : colorScheme.onSurfaceVariant,
                       ),
                     )
                   : const SizedBox(width: 56),
@@ -155,7 +155,7 @@ class _AuthInputFieldState extends State<AuthInputField> {
                       icon: Icon(
                         _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                         size: 22,
-                        color: Colors.black.withValues(alpha: 0.45),
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       padding: const EdgeInsets.only(right: 20),
                     )

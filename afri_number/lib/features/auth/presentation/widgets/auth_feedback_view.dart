@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import 'auth_header.dart';
@@ -13,13 +14,13 @@ class AuthFeedbackView extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onContinue,
-    this.buttonLabel = 'Poursuivre',
+    this.buttonLabel,
   });
 
   final String title;
   final String subtitle;
   final VoidCallback onContinue;
-  final String buttonLabel;
+  final String? buttonLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,7 @@ class AuthFeedbackView extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         SizedBox(height: r.space(20)),
-                        AuthHeader(moduleLabel: 'Validation'),
+                        AuthHeader(moduleLabel: title),
                         const Spacer(),
                         Container(
                           width: double.infinity,
@@ -51,7 +52,9 @@ class AuthFeedbackView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(r.radius(28)),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.shadowColor.withValues(alpha: 0.06),
+                                color: theme.shadowColor.withValues(
+                                  alpha: 0.06,
+                                ),
                                 blurRadius: r.space(24),
                                 offset: const Offset(0, 8),
                                 spreadRadius: -4,
@@ -89,13 +92,15 @@ class AuthFeedbackView extends StatelessWidget {
                                 subtitle,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyLarge?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   height: 1.5,
                                 ),
                               ),
                               SizedBox(height: r.space(32)),
                               AppButton.primary(
-                                label: buttonLabel,
+                                label: buttonLabel ?? 'feedback.continue'.tr,
                                 onPressed: onContinue,
                                 backgroundColor: theme.colorScheme.onSurface,
                                 foregroundColor: theme.colorScheme.surface,

@@ -43,7 +43,12 @@ class HistoryController extends GetxController {
 
     final groups = <HistoryGroup>[];
     for (final entry in visible) {
-      final label = Formatters.dayLabel(entry.date);
+      final formattedLabel = Formatters.dayLabel(entry.date);
+      final label = switch (formattedLabel) {
+        "Aujourd'hui" => 'common.today'.tr,
+        'Hier' => 'common.yesterday'.tr,
+        _ => formattedLabel,
+      };
       if (groups.isNotEmpty && groups.last.label == label) {
         groups.last.entries.add(entry);
       } else {

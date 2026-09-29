@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../core/localization/locale_controller.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/utils/device_info_service.dart';
 import '../../core/utils/storage_service.dart';
@@ -29,6 +30,10 @@ class InitialBinding extends Bindings {
     Get.lazyPut<AuthRepository>(
       () => AuthRepositoryImpl(Get.find<AuthRemoteDataSource>(), Get.find<StorageService>()),
       fenix: true,
+    );
+    Get.put<LocaleController>(
+      LocaleController(Get.find<StorageService>()),
+      permanent: true,
     );
     Get.lazyPut<AuthController>(
       () => AuthController(Get.find<AuthRepository>(), Get.find<StorageService>()),

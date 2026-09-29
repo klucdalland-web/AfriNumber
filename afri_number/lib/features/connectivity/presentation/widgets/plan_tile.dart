@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/utils/formatters.dart';
@@ -18,10 +19,30 @@ class PlanTile extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final priceColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+    final cardBorder = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final priceColor = isDark
+        ? const Color(0xFF60A5FA)
+        : const Color(0xFF2563EB);
+    final planNameKey = switch (plan.id) {
+      'plan-1' => 'connectivity.plan_1',
+      'plan-5' => 'connectivity.plan_5',
+      'plan-20' => 'connectivity.plan_20',
+      _ => null,
+    };
+    final planDescriptionKey = switch (plan.id) {
+      'plan-1' => 'connectivity.plan_1_desc',
+      'plan-5' => 'connectivity.plan_5_desc',
+      'plan-20' => 'connectivity.plan_20_desc',
+      _ => null,
+    };
 
     return GestureDetector(
       onTap: onTap,
@@ -47,7 +68,7 @@ class PlanTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    plan.name,
+                    planNameKey == null ? plan.name : planNameKey.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(15),
                       fontWeight: FontWeight.w700,
@@ -56,7 +77,9 @@ class PlanTile extends StatelessWidget {
                   ),
                   SizedBox(height: r.space(4)),
                   Text(
-                    plan.description,
+                    planDescriptionKey == null
+                        ? plan.description
+                        : planDescriptionKey.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(12),
                       fontWeight: FontWeight.w400,

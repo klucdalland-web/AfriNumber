@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -26,9 +27,15 @@ class QuickActionsGrid extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cardBorder = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final subtextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +50,7 @@ class QuickActionsGrid extends StatelessWidget {
         ),
         SizedBox(height: r.space(4 * scale)),
         Text(
-          'Gérez vos numéros virtuels et vos transactions en un clic.',
+          'dashboard.quick_actions_subtitle'.tr,
           style: GoogleFonts.ibmPlexSans(
             fontSize: r.fontSize(12 * scale),
             fontWeight: FontWeight.w400,
@@ -62,7 +69,7 @@ class QuickActionsGrid extends StatelessWidget {
             _buildActionCard(
               r: r,
               scale: scale,
-              label: 'Acheter un numéro',
+              label: 'dashboard.buy_number'.tr,
               icon: Icons.phone_in_talk_rounded,
               bgColor: cardBg,
               borderColor: cardBorder,
@@ -72,7 +79,7 @@ class QuickActionsGrid extends StatelessWidget {
             _buildActionCard(
               r: r,
               scale: scale,
-              label: 'Recharger',
+              label: 'dashboard.recharge'.tr,
               icon: Icons.account_balance_wallet_rounded,
               bgColor: cardBg,
               borderColor: cardBorder,
@@ -82,7 +89,7 @@ class QuickActionsGrid extends StatelessWidget {
             _buildActionCard(
               r: r,
               scale: scale,
-              label: 'SMS',
+              label: 'dashboard.sms'.tr,
               icon: Icons.chat_bubble_outline_rounded,
               bgColor: cardBg,
               borderColor: cardBorder,
@@ -92,7 +99,7 @@ class QuickActionsGrid extends StatelessWidget {
             _buildActionCard(
               r: r,
               scale: scale,
-              label: 'Historique',
+              label: 'nav.history'.tr,
               icon: Icons.history_rounded,
               bgColor: cardBg,
               borderColor: cardBorder,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
@@ -20,7 +21,7 @@ class ResetPasswordPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: r.space(20)),
-              AuthHeader(moduleLabel: 'Vérification', showBackButton: true),
+              AuthHeader(moduleLabel: 'reset.title'.tr, showBackButton: true),
               SizedBox(height: r.space(8)),
               const ResetPasswordForm(),
               SizedBox(height: r.space(40)),

@@ -7,12 +7,12 @@ import '../controllers/main_controller.dart';
 class MainBottomNavBar extends StatelessWidget {
   const MainBottomNavBar({super.key});
 
-  static const _items = [
-    _NavItem(icon: Icons.home_outlined, label: 'Accueil'),
-    _NavItem(icon: Icons.search, label: 'Recherche'),
-    _NavItem(icon: Icons.wifi_rounded, label: 'Connectivité'),
-    _NavItem(icon: Icons.access_time, label: 'Historique'),
-    _NavItem(icon: Icons.person_outline, label: 'Profil'),
+  static final _items = [
+    _NavItem(icon: Icons.home_outlined, label: 'nav.home'.tr),
+    _NavItem(icon: Icons.search, label: 'nav.search'.tr),
+    _NavItem(icon: Icons.wifi_rounded, label: 'nav.connectivity'.tr),
+    _NavItem(icon: Icons.access_time, label: 'nav.history'.tr),
+    _NavItem(icon: Icons.person_outline, label: 'nav.profile'.tr),
   ];
 
   // Tailles inchangées

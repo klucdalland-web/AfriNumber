@@ -6,14 +6,10 @@ import '../../../../core/utils/theme_controller.dart';
 import '../../data/models/user_profile.dart';
 
 class ProfileController extends GetxController {
-  final StorageService _storage = Get.find<StorageService>();
+  ProfileController(this._storage, this._themeController);
 
-  ThemeController get _themeController {
-    if (Get.isRegistered<ThemeController>()) {
-      return Get.find<ThemeController>();
-    }
-    return Get.put(ThemeController(Get.find<StorageService>()), permanent: true);
-  }
+  final StorageService _storage;
+  final ThemeController _themeController;
 
   final profile = UserProfile.sample.obs;
   final notificationsEnabled = true.obs;

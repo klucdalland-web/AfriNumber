@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
@@ -21,7 +22,7 @@ class RegisterPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: r.space(20)),
-              AuthHeader(moduleLabel: 'Inscription'),
+              AuthHeader(moduleLabel: 'auth.module_register'.tr),
               SizedBox(height: r.space(8)),
               const RegisterForm(),
               SizedBox(height: r.space(40)),

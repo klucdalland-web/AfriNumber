@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -57,11 +58,7 @@ class MoneyCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  flagIcon,
-                  size: r.iconSize(13 * scale),
-                  color: textColor,
-                ),
+                Icon(flagIcon, size: r.iconSize(13 * scale), color: textColor),
                 SizedBox(width: r.space(4 * scale)),
                 Text(
                   label,
@@ -78,7 +75,7 @@ class MoneyCard extends StatelessWidget {
 
           // Balance Label
           Text(
-            'Votre Balance',
+            'welcome.balance'.tr,
             style: GoogleFonts.ibmPlexSans(
               fontSize: r.fontSize(10 * scale),
               fontWeight: FontWeight.w500,
@@ -118,7 +115,7 @@ class MoneyCard extends StatelessWidget {
 
           // Virtual Number Label
           Text(
-            'Numéro virtuel',
+            'welcome.virtual_number'.tr,
             style: GoogleFonts.ibmPlexSans(
               fontSize: r.fontSize(9 * scale),
               fontWeight: FontWeight.w500,

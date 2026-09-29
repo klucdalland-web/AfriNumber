@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/history_filter.dart';
@@ -25,11 +26,17 @@ class HistoryFilterBar extends StatelessWidget {
         children: [
           for (final filter in HistoryFilter.values) ...[
             _FilterChip(
-              label: filter.label,
+              label: switch (filter) {
+                HistoryFilter.all => 'history.filter_all'.tr,
+                HistoryFilter.transactions => 'history.filter_transactions'.tr,
+                HistoryFilter.calls => 'history.filter_calls'.tr,
+                HistoryFilter.sms => 'SMS',
+              },
               selected: filter == selected,
               onTap: () => onSelected(filter),
             ),
-            if (filter != HistoryFilter.values.last) SizedBox(width: r.space(8)),
+            if (filter != HistoryFilter.values.last)
+              SizedBox(width: r.space(8)),
           ],
         ],
       ),
@@ -55,9 +62,15 @@ class _FilterChip extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final activeBg = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final activeText = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final inactiveBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final inactiveText = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final activeText = isDark
+        ? const Color(0xFF0F172A)
+        : const Color(0xFFF8FAFC);
+    final inactiveBg = isDark
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF1F5F9);
+    final inactiveText = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     return GestureDetector(
       onTap: onTap,

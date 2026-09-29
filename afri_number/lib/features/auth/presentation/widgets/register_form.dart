@@ -23,7 +23,7 @@ class RegisterForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Créer un compte',
+            'register.title'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium?.copyWith(
               color: theme.colorScheme.onSurface,
@@ -31,7 +31,7 @@ class RegisterForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(12)),
           Text(
-            'Rejoignez-nous en quelques clics !',
+            'register.subtitle'.tr,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
@@ -41,7 +41,7 @@ class RegisterForm extends StatelessWidget {
           _ErrorBanner(controller: controller),
           SizedBox(height: r.space(36)),
           CustomTextField(
-            hintText: 'Nom *',
+            hintText: 'register.last_name'.tr,
             icon: Icons.person_outline,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.familyName],
@@ -49,14 +49,14 @@ class RegisterForm extends StatelessWidget {
             isRequired: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Le nom est requis';
+                return 'error.name_required'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(20)),
           CustomTextField(
-            hintText: 'Prénom(s)',
+            hintText: 'register.first_name'.tr,
             icon: Icons.person_outline,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.givenName],
@@ -64,7 +64,7 @@ class RegisterForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(20)),
           CustomTextField(
-            hintText: 'Email *',
+            hintText: 'register.email'.tr,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
@@ -73,10 +73,10 @@ class RegisterForm extends StatelessWidget {
             isRequired: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'L\'email est requis';
+                return 'error.email_required'.tr;
               }
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Email invalide';
+                return 'error.email_invalid'.tr;
               }
               return null;
             },
@@ -86,7 +86,7 @@ class RegisterForm extends StatelessWidget {
           // phone_number) mais absent de la maquette Figma pour l'écran
           // SignUp.
           CustomTextField(
-            hintText: 'Téléphone *',
+            hintText: 'register.phone'.tr,
             icon: Icons.call_outlined,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
@@ -95,14 +95,14 @@ class RegisterForm extends StatelessWidget {
             isRequired: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Le téléphone est requis';
+                return 'error.phone_required'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(20)),
           CustomTextField(
-            hintText: 'Mot de passe *',
+            hintText: 'register.password'.tr,
             icon: Icons.lock_outline,
             isPassword: true,
             textInputAction: TextInputAction.next,
@@ -111,17 +111,17 @@ class RegisterForm extends StatelessWidget {
             isRequired: true,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Le mot de passe est requis';
+                return 'error.password_required'.tr;
               }
               if (value.length < 8) {
-                return 'Minimum 8 caractères';
+                return 'error.register_password_too_short'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(20)),
           CustomTextField(
-            hintText: 'Confirmer *',
+            hintText: 'register.confirm_password'.tr,
             icon: Icons.lock_outline,
             isPassword: true,
             textInputAction: TextInputAction.done,
@@ -130,10 +130,10 @@ class RegisterForm extends StatelessWidget {
             isRequired: true,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Confirmez le mot de passe';
+                return 'error.confirm_required'.tr;
               }
               if (value != controller.registerPasswordController.text) {
-                return 'Les mots de passe ne correspondent pas';
+                return 'error.password_mismatch'.tr;
               }
               return null;
             },
@@ -141,7 +141,7 @@ class RegisterForm extends StatelessWidget {
           ),
           SizedBox(height: r.space(28)),
           AppButton.text(
-            label: 'Déjà inscrit ? Se Connecter',
+            label: 'register.already_registered'.tr,
             onPressed: () => Get.toNamed(AppRoutes.login),
             foregroundColor: theme.colorScheme.onSurface,
             underline: true,
@@ -149,7 +149,7 @@ class RegisterForm extends StatelessWidget {
           SizedBox(height: r.space(16)),
           Obx(
             () => AppButton.primary(
-              label: 'Continuer',
+              label: 'register.submit'.tr,
               isLoading: controller.isLoading.value,
               onPressed: controller.register,
               backgroundColor: theme.colorScheme.onSurface,
@@ -217,9 +217,8 @@ class _LegalText extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Text(
-      'En continuant, vous acceptez nos '
-      'Conditions d\'utilisation et notre Politique de confidentialité.',
-      textAlign: TextAlign.center,
+    'register.legal'.tr,
+    textAlign: TextAlign.center,
       style: TextStyle(
         fontSize: r.fontSize(12),
         fontWeight: FontWeight.w400,

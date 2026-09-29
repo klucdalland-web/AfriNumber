@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import 'loop_painter.dart';
 
 class WelcomeSlogan extends StatelessWidget {
-  const WelcomeSlogan({
-    super.key,
-    required this.scale,
-  });
+  const WelcomeSlogan({super.key, required this.scale});
 
   final double scale;
 
@@ -18,7 +16,10 @@ class WelcomeSlogan extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final subtitleColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final headlineLines = 'welcome.slogan_number'.tr.split('\n');
 
     return Stack(
       clipBehavior: Clip.none,
@@ -27,7 +28,7 @@ class WelcomeSlogan extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Votre numéro',
+              headlineLines[0],
               style: GoogleFonts.zillaSlab(
                 fontSize: r.fontSize(28 * scale),
                 fontWeight: FontWeight.w300,
@@ -36,7 +37,7 @@ class WelcomeSlogan extends StatelessWidget {
               ),
             ),
             Text(
-              'Internationale',
+              headlineLines[1],
               style: GoogleFonts.zillaSlab(
                 fontSize: r.fontSize(36 * scale),
                 fontWeight: FontWeight.w700,
@@ -45,7 +46,7 @@ class WelcomeSlogan extends StatelessWidget {
               ),
             ),
             Text(
-              'commence ici.',
+              headlineLines[2],
               style: GoogleFonts.zillaSlab(
                 fontSize: r.fontSize(28 * scale),
                 fontWeight: FontWeight.w300,
@@ -55,7 +56,7 @@ class WelcomeSlogan extends StatelessWidget {
             ),
             SizedBox(height: r.space(12 * scale)),
             Text(
-              "Votre avenir n'a plus de frontières,\navec AfriNumber",
+              'welcome.slogan_number_sub'.tr,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: r.fontSize(14 * scale),
                 fontWeight: FontWeight.w400,
@@ -76,7 +77,9 @@ class WelcomeSlogan extends StatelessWidget {
             angle: 0.15,
             child: CustomPaint(
               painter: LoopPainter(
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF0F172A),
               ),
             ),
           ),

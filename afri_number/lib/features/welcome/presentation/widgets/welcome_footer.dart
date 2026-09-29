@@ -29,9 +29,15 @@ class WelcomeFooter extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final isLastPage = currentIndex == pageCount - 1;
-    final skipTextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final buttonBgColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final buttonTextColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final skipTextColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+    final buttonBgColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
+    final buttonTextColor = isDark
+        ? const Color(0xFF0F172A)
+        : const Color(0xFFF8FAFC);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -43,10 +49,7 @@ class WelcomeFooter extends StatelessWidget {
               padding: EdgeInsets.only(
                 right: index < pageCount - 1 ? r.space(6 * scale) : 0,
               ),
-              child: DotIndicator(
-                active: index == currentIndex,
-                scale: scale,
-              ),
+              child: DotIndicator(active: index == currentIndex, scale: scale),
             );
           }),
         ),
@@ -61,7 +64,7 @@ class WelcomeFooter extends StatelessWidget {
                     vertical: r.space(8 * scale),
                   ),
                   child: Text(
-                    'Passer',
+                    'welcome.skip'.tr,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(14 * scale),
                       fontWeight: FontWeight.w500,
@@ -86,7 +89,7 @@ class WelcomeFooter extends StatelessWidget {
                   borderRadius: BorderRadius.circular(r.radius(30 * scale)),
                 ),
                 child: Text(
-                  isLastPage ? 'Commencer' : 'Suivant',
+                  isLastPage ? 'welcome.start'.tr : 'welcome.next'.tr,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: r.fontSize(15 * scale),
                     fontWeight: FontWeight.w600,

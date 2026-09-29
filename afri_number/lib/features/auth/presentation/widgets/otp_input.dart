@@ -16,10 +16,10 @@ class OTPInput extends StatefulWidget {
   final bool autoFocus;
 
   @override
-  State<OTPInput> createState() => _OTPInputState();
+  OTPInputState createState() => OTPInputState();
 }
 
-class _OTPInputState extends State<OTPInput> {
+class OTPInputState extends State<OTPInput> {
   late List<TextEditingController> _controllers;
   late List<FocusNode> _focusNodes;
   late FocusNode _hiddenFocusNode;
@@ -51,6 +51,10 @@ class _OTPInputState extends State<OTPInput> {
   }
 
   String get _currentCode => _controllers.map((c) => c.text).join();
+
+  void addDigit(int digit) => _handleNumericInput(digit);
+
+  void deleteLastDigit() => _handleBackspace();
 
   void _onKeyEvent(KeyEvent event) {
     if (event is KeyDownEvent) {
@@ -160,6 +164,7 @@ class _OTPInputState extends State<OTPInput> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Focus(
       focusNode: _hiddenFocusNode,
       onKeyEvent: (node, event) {
@@ -182,18 +187,18 @@ class _OTPInputState extends State<OTPInput> {
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
-                    color: Colors.white,
+                    color: colors.surfaceContainerHighest,
                     border: Border.all(
                       color: isFocused
-                          ? Colors.black
+                          ? colors.primary
                           : hasValue
-                              ? Colors.black.withValues(alpha: 0.3)
-                              : Colors.black.withValues(alpha: 0.12),
+                              ? colors.outline
+                              : colors.outlineVariant,
                       width: isFocused ? 2.5 : 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isFocused ? 0.1 : 0.05),
+                      color: colors.shadow.withValues(alpha: isFocused ? 0.1 : 0.05),
                         blurRadius: isFocused ? 16 : 8,
                         offset: const Offset(0, 4),
                         spreadRadius: isFocused ? 0 : -2,
@@ -204,17 +209,17 @@ class _OTPInputState extends State<OTPInput> {
                 Center(
                   child: Text(
                     _controllers[index].text,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Georgia',
                       fontWeight: FontWeight.w700,
                       fontSize: 28,
-                      color: Colors.black,
+                      color: colors.onSurface,
                     ),
                   ),
                 ),
                 if (isFocused && !hasValue)
-                  const Center(
-                    child: _BlinkingCursor(),
+                  Center(
+                    child: _BlinkingCursor(color: colors.primary),
                   ),
               ],
             ),
@@ -226,7 +231,9 @@ class _OTPInputState extends State<OTPInput> {
 }
 
 class _BlinkingCursor extends StatefulWidget {
-  const _BlinkingCursor();
+  const _BlinkingCursor({required this.color});
+
+  final Color color;
 
   @override
   State<_BlinkingCursor> createState() => _BlinkingCursorState();
@@ -264,7 +271,7 @@ class _BlinkingCursorState extends State<_BlinkingCursor>
             width: 2.5,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: widget.color,
               borderRadius: BorderRadius.circular(1.25),
             ),
           ),

@@ -11,8 +11,8 @@ class AuthFeedbackInscriptionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AuthFeedbackView(
-      title: 'Inscription Réussie !',
-      subtitle: 'Bienvenue parmi nous ! Votre compte est prêt, vous pouvez maintenant commencer.',
+      title: 'feedback.register_success_title'.tr,
+      subtitle: 'feedback.register_success_subtitle'.tr,
       onContinue: () => Get.offAllNamed(AppRoutes.main),
     );
   }

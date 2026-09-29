@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import 'auth_header.dart';
@@ -37,7 +38,11 @@ class SuccessConfirmationPage extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         SizedBox(height: r.space(20)),
-                        AuthHeader(moduleLabel: isLogin ? 'Validation' : 'Validation'),
+                        AuthHeader(
+                          moduleLabel: isLogin
+                              ? 'auth.module_login'.tr
+                              : 'auth.module_register'.tr,
+                        ),
                         const Spacer(),
                         Container(
                           width: double.infinity,
@@ -47,7 +52,9 @@ class SuccessConfirmationPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(r.radius(28)),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.shadowColor.withValues(alpha: 0.06),
+                                color: theme.shadowColor.withValues(
+                                  alpha: 0.06,
+                                ),
                                 blurRadius: r.space(24),
                                 offset: const Offset(0, 8),
                                 spreadRadius: -4,
@@ -72,7 +79,9 @@ class SuccessConfirmationPage extends StatelessWidget {
                               ),
                               SizedBox(height: r.space(24)),
                               Text(
-                                isLogin ? 'Connexion Réussie !' : 'Inscription Réussie !',
+                                isLogin
+                                    ? 'feedback.login_success_title'.tr
+                                    : 'feedback.register_success_title'.tr,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: theme.colorScheme.onSurface,
@@ -83,11 +92,13 @@ class SuccessConfirmationPage extends StatelessWidget {
                               SizedBox(height: r.space(12)),
                               Text(
                                 isLogin
-                                    ? 'Bienvenue à nouveau ! Vous êtes maintenant connecté à votre compte.'
-                                    : 'Bienvenue parmi nous ! Votre compte est prêt, vous pouvez maintenant commencer.',
+                                    ? 'feedback.login_success_subtitle'.tr
+                                    : 'feedback.register_success_subtitle'.tr,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyLarge?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   height: 1.5,
                                 ),
                               ),
@@ -98,12 +109,15 @@ class SuccessConfirmationPage extends StatelessWidget {
                                 child: ElevatedButton(
                                   onPressed: onContinue,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.onSurface,
+                                    backgroundColor:
+                                        theme.colorScheme.onSurface,
                                     foregroundColor: theme.colorScheme.surface,
                                     elevation: 0,
                                     shadowColor: Colors.transparent,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(r.radius(28)),
+                                      borderRadius: BorderRadius.circular(
+                                        r.radius(28),
+                                      ),
                                     ),
                                     textStyle: TextStyle(
                                       fontSize: r.fontSize(16),
@@ -111,7 +125,7 @@ class SuccessConfirmationPage extends StatelessWidget {
                                       letterSpacing: 0.2,
                                     ),
                                   ),
-                                  child: Text('Poursuivre'),
+                                  child: Text('feedback.continue'.tr),
                                 ),
                               ),
                             ],

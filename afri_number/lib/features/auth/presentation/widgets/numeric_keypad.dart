@@ -6,11 +6,17 @@ class CustomNumericKeypad extends StatelessWidget {
     required this.onDigitTap,
     required this.onBackspaceTap,
     this.enabled = true,
+    required this.foregroundColor,
+    required this.backgroundColor,
+    required this.disabledColor,
   });
 
   final ValueChanged<int> onDigitTap;
   final VoidCallback onBackspaceTap;
   final bool enabled;
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color disabledColor;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +40,9 @@ class CustomNumericKeypad extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: _KeypadButton(
                     label: key,
+                    foregroundColor: foregroundColor,
+                    backgroundColor: backgroundColor,
+                    disabledColor: disabledColor,
                     onTap: key == '⌫'
                         ? onBackspaceTap
                         : key.isEmpty
@@ -58,12 +67,18 @@ class _KeypadButton extends StatelessWidget {
     required this.onTap,
     this.isBackspace = false,
     this.enabled = true,
+    required this.foregroundColor,
+    required this.backgroundColor,
+    required this.disabledColor,
   });
 
   final String label;
   final VoidCallback? onTap;
   final bool isBackspace;
   final bool enabled;
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color disabledColor;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +88,7 @@ class _KeypadButton extends StatelessWidget {
         duration: const Duration(milliseconds: 100),
         height: 64,
         decoration: BoxDecoration(
-          color: enabled ? Colors.white : Colors.grey.shade100,
+          color: enabled ? backgroundColor : backgroundColor.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(18),
           boxShadow: enabled
               ? [
@@ -91,7 +106,7 @@ class _KeypadButton extends StatelessWidget {
               ? Icon(
                   Icons.backspace_outlined,
                   size: 26,
-                  color: enabled ? Colors.black : Colors.grey.shade400,
+                  color: enabled ? foregroundColor : disabledColor,
                 )
               : Text(
                   label,
@@ -99,7 +114,7 @@ class _KeypadButton extends StatelessWidget {
                     fontFamily: 'Georgia',
                     fontWeight: FontWeight.w700,
                     fontSize: 26,
-                    color: enabled ? Colors.black : Colors.grey.shade400,
+                    color: enabled ? foregroundColor : disabledColor,
                     letterSpacing: -0.3,
                   ),
                 ),
