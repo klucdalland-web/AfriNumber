@@ -80,6 +80,8 @@ flutter:
   assets:
     - assets/images/afrika.png
     - assets/images/afrika-dark.png
+    - assets/images/world-clear.png
+    - assets/images/world-dark.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

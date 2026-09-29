@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../app/routes/app_routes.dart';
+import '../../../../core/constants/country_constants.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/utils/storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -14,6 +15,8 @@ class AuthController extends GetxController {
 
   final isLoading = false.obs;
   final rememberMe = false.obs;
+
+  final selectedCountry = kCountries.first.obs;
 
   final loginFormKey = GlobalKey<FormState>();
   final registerFormKey = GlobalKey<FormState>();
@@ -31,8 +34,6 @@ class AuthController extends GetxController {
   final registerPhoneController = TextEditingController();
   final registerPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-
-  final int _defaultCountryId = 1;
 
   // OTP controller
   final otpController = TextEditingController();
@@ -77,6 +78,29 @@ class AuthController extends GetxController {
 
   void toggleRememberMe(bool value) => rememberMe.value = value;
 
+  /// Factorise et normalise le numéro de téléphone au format international.
+  /// (ex: "0341234567" avec +261 -> "+261341234567").
+  String getNormalizedPhone(String rawInput) {
+    var text = rawInput.trim().replaceAll(' ', '').replaceAll('-', '');
+    if (text.isEmpty) return '';
+
+    if (text.startsWith('+')) {
+      for (final country in kCountries) {
+        if (text.startsWith(country.dialCode)) {
+          selectedCountry.value = country;
+          return text;
+        }
+      }
+      return text;
+    }
+
+    if (text.startsWith('0')) {
+      text = text.substring(1);
+    }
+
+    return '${selectedCountry.value.dialCode}$text';
+  }
+
   Future<void> login() async {
     if (isLoading.value) return;
     if (!(loginFormKey.currentState?.validate() ?? false)) return;
@@ -85,7 +109,6 @@ class AuthController extends GetxController {
     isLoading.value = true;
 
     try {
-      // Garantit l'envoi de la chaîne complète saisie sans espaces parasites
       final identifier = phoneController.text.trim();
       final password = passwordController.text;
 
@@ -121,7 +144,9 @@ class AuthController extends GetxController {
       final name = lastNameController.text.trim();
       final firstName = firstNameController.text.trim();
       final email = emailController.text.trim();
-      final phoneNumber = registerPhoneController.text.trim();
+      final rawPhone = registerPhoneController.text.trim();
+      final phoneNumber = getNormalizedPhone(rawPhone);
+      registerPhoneController.text = phoneNumber;
       final password = registerPasswordController.text;
       final passwordConfirmation = confirmPasswordController.text;
 
@@ -130,7 +155,7 @@ class AuthController extends GetxController {
         firstName: firstName,
         email: email,
         phoneNumber: phoneNumber,
-        countryId: _defaultCountryId,
+        countryId: selectedCountry.value.id,
         password: password,
         passwordConfirmation: passwordConfirmation,
       );
@@ -263,7 +288,6 @@ class AuthController extends GetxController {
     try {
       await _repository.logout();
     } catch (_) {
-      // Même en cas d'erreur réseau, on efface les tokens localement.
       await _storage.clearTokens();
     }
     Get.offAllNamed(AppRoutes.welcome);

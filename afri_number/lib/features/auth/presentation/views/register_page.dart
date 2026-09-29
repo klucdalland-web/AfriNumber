@@ -17,15 +17,14 @@ class RegisterPage extends StatelessWidget {
     return AppScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: r.pad(h: 24),
+          padding: r.pad(h: 24, v: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: r.space(20)),
               AuthHeader(moduleLabel: 'auth.module_register'.tr),
-              SizedBox(height: r.space(8)),
+              SizedBox(height: r.space(12)),
               const RegisterForm(),
-              SizedBox(height: r.space(40)),
+              SizedBox(height: r.space(24)),
             ],
           ),
         ),
