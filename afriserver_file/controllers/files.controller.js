@@ -3,6 +3,7 @@ var apiResponse = require('../utils/apiResponse');
 var uploadMiddleware = require('../middlewares/upload');
 var FILE_FIELDS = uploadMiddleware.FILE_FIELDS;
 var storageService = require('../services/storage.service');
+var imageService = require('../services/image.service');
 const { notifierFinTraitement } = require('../services/notification.service');
 
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,10 +36,13 @@ async function upload(req, res, next) {
             );
         }
 
-        // 1. Envoi direct vers Storj (depuis la mémoire)
+        // 1. Compression puis envoi direct vers Storj (depuis la mémoire)
         var documents = await Promise.all(received.map(async function(item) {
+            var image = await imageService.compresserImage(item.file.buffer);
+            console.log('[Upload] ' + item.champ + ' : ' + item.file.size + ' -> ' + image.buffer.length + ' octets');
+
             var remotePath = await storageService.envoyerDocument(
-                idprofile, item.champ, item.file.buffer, item.file.mimetype
+                idprofile, item.champ, image.buffer, image.mimetype
             );
             return { champ: item.champ, path: remotePath };
         }));
