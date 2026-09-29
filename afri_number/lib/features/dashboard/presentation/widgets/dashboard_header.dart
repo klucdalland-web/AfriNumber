@@ -36,7 +36,7 @@ class DashboardHeader extends StatelessWidget {
             Row(
               children: [
                 Image.asset(
-                  'assets/images/afrika.png',
+                  isDark ? 'assets/images/afrika-dark.png' : 'assets/images/afrika.png',
                   width: 50 * scale,
                 ),
                 Text(
@@ -63,11 +63,7 @@ class DashboardHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.location_on_rounded,
-                    size: r.iconSize(12 * scale),
-                    color: const Color(0xFF10B981),
-                  ),
+                  CountryFlagBadge(code: 'mg', size: 18 * scale),
                   SizedBox(width: r.space(4 * scale)),
                   Text(
                     country,

@@ -179,8 +179,8 @@ class AppTranslations extends Translations {
       'dashboard.recharge': 'Recharger',
       'dashboard.sms': 'SMS',
       'dashboard.view_all_transactions':
-      'Afficher toutes les transactions',
-      'dashboard.view_all_offers': 'Afficher toutes les offres',
+      'Voir plus',
+      'dashboard.view_all_offers': 'Voir plus',
       'dashboard.load_error': 'Impossible de charger le tableau de bord.',
       'dashboard.buy_offer': 'Acheter une offre',
       'dashboard.expiration_date': "Date d'expiration",
@@ -408,8 +408,8 @@ class AppTranslations extends Translations {
       'dashboard.recharge': 'Top up',
       'dashboard.sms': 'SMS',
       'dashboard.view_all_transactions':
-      'View all transactions',
-      'dashboard.view_all_offers': 'View all offers',
+      'See more',
+      'dashboard.view_all_offers': 'See more',
       'dashboard.load_error': 'Could not load the dashboard.',
       'dashboard.buy_offer': 'Buy an offer',
       'dashboard.expiration_date': 'Expiration date',

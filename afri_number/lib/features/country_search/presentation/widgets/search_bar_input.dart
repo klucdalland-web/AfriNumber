@@ -26,65 +26,64 @@ class SearchBarInput extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final hintColor = isDark
-        ? const Color(0xFF94A3B8)
-        : const Color(0xFF64748B);
-    final textColor = isDark
-        ? const Color(0xFFF8FAFC)
-        : const Color(0xFF0F172A);
+    // Couleurs alignées sur la maquette Figma (mode clair)
+    final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF5F4F0);
+    final hintColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563);
+    final iconColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: r.space(16 * scale),
-        vertical: r.space(4 * scale),
-      ),
+      height: r.space(56 * scale),
+      padding: EdgeInsets.symmetric(horizontal: r.space(20 * scale)),
       decoration: BoxDecoration(
         color: fieldBg,
-        borderRadius: BorderRadius.circular(r.radius(30 * scale)),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        borderRadius: BorderRadius.circular(r.radius(100 * scale)), // pilule
+        // Pas de bordure dans la maquette
       ),
       child: Row(
         children: [
           Icon(
-            Icons.search_rounded,
-            size: r.iconSize(20 * scale),
-            color: hintColor,
+            Icons.search, // loupe barrée comme sur Figma
+            size: r.iconSize(24 * scale),
+            color: iconColor,
           ),
-          SizedBox(width: r.space(10 * scale)),
+          SizedBox(width: r.space(12 * scale)),
           Expanded(
             child: TextField(
               controller: controller,
               onChanged: onChanged,
+              cursorColor: iconColor,
               style: GoogleFonts.ibmPlexSans(
-                fontSize: r.fontSize(14 * scale),
+                fontSize: r.fontSize(16 * scale),
                 fontWeight: FontWeight.w400,
                 color: textColor,
               ),
               decoration: InputDecoration(
                 hintText: 'country.search_hint'.tr,
                 hintStyle: GoogleFonts.ibmPlexSans(
-                  fontSize: r.fontSize(14 * scale),
+                  fontSize: r.fontSize(16 * scale),
                   fontWeight: FontWeight.w400,
                   color: hintColor,
                 ),
-                border: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: r.space(10 * scale),
-                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
               ),
             ),
           ),
           if (searchQuery.isNotEmpty)
             GestureDetector(
               onTap: onClear,
-              child: Icon(
-                Icons.close_rounded,
-                size: r.iconSize(18 * scale),
-                color: hintColor,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: EdgeInsets.only(left: r.space(8 * scale)),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: r.iconSize(20 * scale),
+                  color: iconColor,
+                ),
               ),
             ),
         ],

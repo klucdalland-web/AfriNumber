@@ -141,8 +141,8 @@ class QuickActionsGrid extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: r.widthOf(28 * scale),
-                  height: r.heightOf(28 * scale),
+                  width: r.widthOf(35 * scale),
+                  height: r.heightOf(35 * scale),
                   decoration: const BoxDecoration(
                     color: Color(0xFFD1E7DD),
                     shape: BoxShape.circle,
@@ -150,15 +150,15 @@ class QuickActionsGrid extends StatelessWidget {
                   child: Center(
                     child: Icon(
                       icon,
-                      size: r.iconSize(14 * scale),
+                      size: r.iconSize(30* scale),
                       color: const Color(0xFF0F5132),
                     ),
                   ),
                 ),
-                SizedBox(width: r.space(4 * scale)),
+                SizedBox(width: r.space(10 * scale)),
                 Container(
-                  width: r.widthOf(16 * scale),
-                  height: r.heightOf(16 * scale),
+                  width: r.widthOf(25 * scale),
+                  height: r.heightOf(25 * scale),
                   decoration: const BoxDecoration(
                     color: Colors.black,
                     shape: BoxShape.circle,
@@ -166,7 +166,7 @@ class QuickActionsGrid extends StatelessWidget {
                   child: Center(
                     child: Icon(
                       Icons.add,
-                      size: r.iconSize(10 * scale),
+                      size: r.iconSize(15 * scale),
                       color: Colors.white,
                     ),
                   ),

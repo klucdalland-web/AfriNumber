@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class SplashPage extends StatelessWidget {
+import '../controllers/splash_controller.dart';
+
+class SplashPage extends GetView<SplashController> {
   const SplashPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Forcer l'instanciation du controller au chargement de la page
+    controller;
+
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -14,6 +21,11 @@ class SplashPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset(
+              isDark ? 'assets/images/afrika-dark.png' : 'assets/images/afrika.png',
+              width: 100,
+            ),
+            const SizedBox(height: 12),
             Text(
               'AfriNumber.',
               style: GoogleFonts.zillaSlab(

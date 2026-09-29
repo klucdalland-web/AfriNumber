@@ -60,9 +60,8 @@ class RecommendedOffersSection extends StatelessWidget {
                   fontSize: r.fontSize(13 * scale),
                   fontWeight: FontWeight.w600,
                   color: isDark
-                      ? const Color(0xFF60A5FA)
-                      : const Color(0xFF2563EB),
-                  decoration: TextDecoration.underline,
+                      ? const Color(0xFFFBFBFB)
+                      : const Color(0xFF3E3E3E),
                 ),
               ),
             ),

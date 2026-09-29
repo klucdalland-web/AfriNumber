@@ -2,14 +2,15 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-
 class DeviceInfoService {
   Map<String, String>? _cached;
 
-  String fcmToken = '';
+  /// Token FCM par défaut (non vide) pour éviter le rejet backend si les push ne sont pas encore configurés.
+  String fcmToken = 'dummy_fcm_token';
 
   Future<Map<String, String>> collect() async {
     final effectiveFcmToken = fcmToken.isNotEmpty ? fcmToken : 'dummy_fcm_token';
+
     final cached = _cached;
     if (cached != null) {
       return {...cached, 'fcm_token': effectiveFcmToken};

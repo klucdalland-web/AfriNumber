@@ -3,7 +3,11 @@ import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
+import '../widgets/widgets.dart';
 
+/// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +
+/// en-tête). Le contenu métier (champs, validation, soumission) vit dans
+/// [RegisterForm].
 /// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +
 /// en-tête). Le contenu métier (champs, validation, soumission) vit dans
 /// [RegisterForm].
@@ -14,18 +18,19 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = context.responsive;
 
+    final r = context.responsive;
+
     return AppScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: r.pad(h: 24),
+          padding: r.pad(h: 24, v: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: r.space(20)),
               AuthHeader(moduleLabel: 'auth.module_register'.tr),
-              SizedBox(height: r.space(8)),
+              SizedBox(height: r.space(12)),
               const RegisterForm(),
-              SizedBox(height: r.space(40)),
+              SizedBox(height: r.space(24)),
             ],
           ),
         ),
