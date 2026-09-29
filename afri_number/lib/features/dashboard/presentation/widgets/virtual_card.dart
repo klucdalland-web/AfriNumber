@@ -27,8 +27,6 @@ class VirtualCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
-    final theme = Theme.of(context);
-
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(r.space(15 * scale)),
