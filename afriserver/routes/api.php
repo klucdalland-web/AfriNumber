@@ -12,7 +12,7 @@ Route::prefix('v1')
     ->middleware(['x-api-key-v1', 'check.device.session', 'observability'])
     ->group(base_path('routes/api/v1.php'));
 
-// Route secrète pour Express (Pas de middleware Sanctum ici car c'est votre serveur Node qui appelle)
+// Route secrète pour Express (Pas de middleware Sanctum ici car c'est le serveur Node qui appelle)
 Route::post('/v1/express/upload-complete', [ProfileVerificationController::class, 'notifierUploadTermine']);
 
 // Route secrète pour n8n (HMAC sur profile_id via header X-Signature)

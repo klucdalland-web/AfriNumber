@@ -1,14 +1,19 @@
 /**
  * Stub repository — I/O disque / DB à brancher plus tard.
  */
-function saveUpload(meta) {
-  return {
-    id: null,
-    nom_fichier: meta.nom_fichier || null,
-    chemin_fichier: null,
-    type_fichier: meta.type_fichier || null,
-    taille_fichier: meta.taille_fichier || null,
-  };
+function saveUploads(payload) {
+  var list = payload.fichiers || [];
+
+  return list.map(function (meta) {
+    return {
+      id: null,
+      champ: meta.champ || null,
+      nom_fichier: meta.nom_fichier || null,
+      chemin_fichier: meta.chemin_fichier || null,
+      type_fichier: meta.type_fichier || null,
+      taille_fichier: meta.taille_fichier || null,
+    };
+  });
 }
 
 function findById(id) {
@@ -22,6 +27,6 @@ function findById(id) {
 }
 
 module.exports = {
-  saveUpload: saveUpload,
+  saveUploads: saveUploads,
   findById: findById,
 };
