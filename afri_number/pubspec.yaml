@@ -40,7 +40,12 @@ dependencies:
   dio: ^5.9.0
   get_storage: ^2.1.1
   pretty_dio_logger: ^1.4.0
+  google_fonts: ^6.2.1
+  path_drawing: ^1.0.1
+  vector_math: ^2.1.4
   firebase_core: ^4.15.0
+  device_info_plus: ^13.2.0
+  package_info_plus: ^10.2.1
 
 dev_dependencies:
   flutter_test:
@@ -52,7 +57,14 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
+flutter_launcher_icons:
+  image_path: "assets/images/afrika.png"
+  android: true
+  ios: true
+  adaptive_icon_background_color: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/afrika.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -65,9 +77,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/afrika.png
+    - assets/images/afrika-dark.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

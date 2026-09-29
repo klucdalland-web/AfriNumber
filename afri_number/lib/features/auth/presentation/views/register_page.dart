@@ -1,40 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../widgets/widgets.dart';
 
+/// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +
+/// en-tête). Le contenu métier (champs, validation, soumission) vit dans
+/// [RegisterForm].
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return AppScaffold(
-      title: 'Inscription',
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const AppText.headline('Page Inscription'),
-            const SizedBox(height: 8),
-            const AppText.body('Formulaire à brancher sur l’API'),
-            const SizedBox(height: 48),
-            AppButton.primary(
-              label: 'Suivant — Dashboard',
-              onPressed: () => Get.offAllNamed(AppRoutes.dashboard),
-            ),
-            const SizedBox(height: 12),
-            AppButton.outlined(
-              label: 'Déjà un compte ? Se connecter',
-              onPressed: () => Get.toNamed(AppRoutes.login),
-            ),
-            const SizedBox(height: 12),
-            AppButton.text(
-              label: 'Retour accueil',
-              onPressed: () => Get.offAllNamed(AppRoutes.welcome),
-            ),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: r.pad(h: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: r.space(20)),
+              AuthHeader(moduleLabel: 'auth.module_register'.tr),
+              SizedBox(height: r.space(8)),
+              const RegisterForm(),
+              SizedBox(height: r.space(40)),
+            ],
+          ),
         ),
       ),
     );

@@ -25,8 +25,9 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
       _storage.clearTokens();
-      if (Get.currentRoute != AppRoutes.login) {
-        Get.offAllNamed(AppRoutes.login);
+      if (Get.currentRoute != AppRoutes.login &&
+          Get.currentRoute != AppRoutes.welcome) {
+        Get.offAllNamed(AppRoutes.welcome);
       }
     }
     handler.next(err);

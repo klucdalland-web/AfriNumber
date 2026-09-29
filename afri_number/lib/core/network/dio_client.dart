@@ -18,6 +18,7 @@ class DioClient {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'x-api-key': ApiConstants.apiKey,
         },
       ),
     );
@@ -27,11 +28,12 @@ class DioClient {
       ErrorInterceptor(),
       if (kDebugMode)
         PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
+          // Never print credentials or personal data in development logs.
+          requestHeader: false,
+          requestBody: false,
           responseHeader: false,
-          responseBody: true,
-          error: true,
+          responseBody: false,
+          error: false,
           compact: true,
         ),
     ]);
