@@ -2,32 +2,16 @@ var filesService = require('../services/files.service');
 var apiResponse = require('../utils/apiResponse');
 var uploadMiddleware = require('../middlewares/upload');
 var FILE_FIELDS = uploadMiddleware.FILE_FIELDS;
+var storageService = require('../services/storage.service');
 const { notifierFinTraitement } = require('../services/notification.service');
 
-function mapFile(fieldName, file) {
-    if (!file) {
-        return null;
-    }
-
-    return {
-        champ: fieldName,
-        nom_fichier: file.originalname,
-        chemin_fichier: file.path,
-        type_fichier: file.mimetype,
-        taille_fichier: file.size,
-    };
-}
+var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function upload(req, res, next) {
     try {
         var idprofile = req.body.idprofile;
-        if (!idprofile) {
-            return apiResponse.error(
-                res,
-                'Le champ idprofile est requis (lettres, chiffres, _ ou - uniquement).',
-                null,
-                400
-            );
+        if (!idprofile || !UUID_RE.test(idprofile)) {
+            return apiResponse.error(res, 'idprofile invalide (UUID attendu).', null, 400);
         }
 
         var files = req.files || {};
@@ -37,7 +21,7 @@ async function upload(req, res, next) {
         FILE_FIELDS.forEach(function(field) {
             var list = files[field.name];
             if (list && list[0]) {
-                received.push(mapFile(field.name, list[0]));
+                received.push({ champ: field.name, file: list[0] });
             } else {
                 missing.push(field.name);
             }
@@ -51,28 +35,27 @@ async function upload(req, res, next) {
             );
         }
 
-        var payload = {
-            idprofile: idprofile,
-            dossier: req.uploadDir || null,
-            fichiers: received,
-        };
-
-        const statusResult = await notifierFinTraitement(idprofile);
-
-        if (!statusResult) {
-            return apiResponse.error(
-                res,
-                'Probleme au niveau du serveur Veuillez reessayer plus tard.',
-                null,
-                500
+        // 1. Envoi direct vers Storj (depuis la mémoire)
+        var documents = await Promise.all(received.map(async function(item) {
+            var remotePath = await storageService.envoyerDocument(
+                idprofile, item.champ, item.file.buffer, item.file.mimetype
             );
+            return { champ: item.champ, path: remotePath };
+        }));
+
+        // 2. Ensuite seulement, on prévient Laravel
+        var result = await notifierFinTraitement(idprofile, documents);
+
+        if (!result.ok) {
+            if (result.status === 422 || result.status === 404) {
+                return apiResponse.error(res, 'Profil introuvable ou invalide.', null, 400);
+            }
+            return apiResponse.error(res, 'Problème au niveau du serveur. Veuillez réessayer plus tard.', null, 500);
         }
 
-        var data = filesService.upload(payload);
         return apiResponse.success(
             res,
-            'Fichiers reçus. traitement en cours.',
-            data,
+            'Fichiers reçus. Traitement en cours.', { idprofile: idprofile, champs: documents.map(function(d) { return d.champ; }) },
             201
         );
     } catch (err) {

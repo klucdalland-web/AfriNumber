@@ -2,12 +2,13 @@ var crypto = require('crypto');
 var axios = require('axios');
 var config = require('../config');
 
-async function notifierFinTraitement(idprofile, fichiersTraites) {
+async function notifierFinTraitement(idprofile) {
     var urlLaravel = `${config.laravelBaseUrl}/express/upload-complete`;
+
+    if (!config.serviceSecretKey) throw new Error('SERVICE_SECRET_KEY manquant');
 
     // Le body est sérialisé une seule fois : c'est cette chaîne qui est signée ET envoyée
     var data = JSON.stringify({ profile_id: idprofile });
-    if (!config.serviceSecretKey) throw new Error('SERVICE_SECRET_KEY manquant');
 
     var signature = crypto
         .createHmac('sha256', config.serviceSecretKey)
@@ -31,11 +32,12 @@ async function notifierFinTraitement(idprofile, fichiersTraites) {
     try {
         var response = await axios.request(axiosConfig);
         console.log('[Express -> Laravel] ✅ Réponse reçue :', JSON.stringify(response.data));
-        return true;
+        return { ok: true, status: response.status };
     } catch (error) {
-        var status = error.response ? error.response.status : error.code;
-        console.error('[Express -> Laravel] ❌ Erreur lors de la notification :', error);
-        return false;
+        var status = error.response ? error.response.status : null;
+        var detail = error.response ? error.response.data : error.code;
+        console.error('[Express -> Laravel] ❌ Erreur lors de la notification :', status, JSON.stringify(detail));
+        return { ok: false, status: status };
     } finally {
         console.log(`[Express -> Laravel] Notification terminée pour le profil : ${idprofile}`);
     }
