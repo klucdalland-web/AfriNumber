@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../responsive/responsive.dart';
 
 /// Champ de saisie réutilisable, adaptatif et thématique (pill shape).
@@ -47,7 +48,6 @@ class CustomTextField extends StatefulWidget {
 class _CustomTextFieldState extends State<CustomTextField> {
   late bool _obscureText;
   late FocusNode _focusNode;
-  bool _hasFocus = false;
 
   @override
   void initState() {
@@ -65,9 +65,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   }
 
   void _onFocusChange() {
-    setState(() {
-      _hasFocus = _focusNode.hasFocus;
-    });
+    setState(() {});
   }
 
   @override
@@ -77,8 +75,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final isDark = theme.brightness == Brightness.dark;
 
     final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final hintColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
-    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final hintColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF475569);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -179,7 +181,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
       return IconButton(
         onPressed: () => setState(() => _obscureText = !_obscureText),
         icon: Icon(
-          _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          _obscureText
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
           size: r.iconSize(20),
           color: hintColor,
         ),
@@ -189,11 +193,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     if (widget.suffixIcon != null) {
       return IconButton(
         onPressed: widget.onSuffixIconTap,
-        icon: Icon(
-          widget.suffixIcon,
-          size: r.iconSize(20),
-          color: hintColor,
-        ),
+        icon: Icon(widget.suffixIcon, size: r.iconSize(20), color: hintColor),
         padding: EdgeInsets.only(right: r.space(16)),
       );
     }
