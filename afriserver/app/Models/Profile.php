@@ -19,8 +19,11 @@ class Profile extends Model
         'user_id',
         'status',
         'document_url',
+        'documents',
     ];
-
+    protected $casts = [
+        'documents' => 'array',
+    ];
     // 🔒 Indique que la clé primaire est une chaîne de caractères non incrémentale
     protected $keyType = 'string';
     public $incrementing = false;

@@ -46,6 +46,7 @@ class ProfileVerificationController extends Controller
                 [
                     'status' => 'en_attente_d_upload',
                     'document_url' => null,
+                    'documents' => null,
                 ]
             );
 

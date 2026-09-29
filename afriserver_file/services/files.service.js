@@ -1,10 +1,12 @@
 var filesRepository = require('../repositories/files.repository');
 
 function upload(payload) {
-  var fichier = filesRepository.saveUpload(payload || {});
+  var fichiers = filesRepository.saveUploads(payload || {});
 
   return {
-    fichier: fichier,
+    idprofile: payload.idprofile || null,
+    dossier: payload.dossier || null,
+    fichiers: fichiers,
     message: 'Conversion à implémenter.',
   };
 }
