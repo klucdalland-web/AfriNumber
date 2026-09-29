@@ -1,0 +1,484 @@
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
+
+/// Service de traductions GetX (Français / Anglais uniquement).
+class AppTranslations extends Translations {
+  static const fallbackLocale = Locale('fr', 'FR');
+
+  static const supportedLocales = [
+    Locale('fr', 'FR'),
+    Locale('en', 'US'),
+  ];
+
+  static const supportedLanguageCodes = ['fr', 'en'];
+
+  /// Normalise n'importe quel code vers une locale supportée.
+  /// Retourne le français par défaut si le code n'est pas reconnu.
+  static Locale localeFor(String code) =>
+      code.toLowerCase() == 'en'
+          ? const Locale('en', 'US')
+          : const Locale('fr', 'FR');
+
+  @override
+  Map<String, Map<String, String>> get keys => {
+    'fr_FR': {
+// ── Générique ──
+      'common.cancel': 'Annuler',
+      'common.on': 'Activé',
+      'common.off': 'Désactivé',
+      'common.theme_dark': 'Mode sombre',
+      'common.theme_light': 'Mode clair',
+      'common.loading': 'Chargement…',
+      'common.retry': 'Réessayer',
+      'common.active': 'Actif',
+      'common.inactive': 'Inactif',
+      'common.action': 'Action',
+      'common.today': "Aujourd'hui",
+      'common.yesterday': 'Hier',
+      'common.minutes': 'min',
+
+      // ── Navigation ──
+      'nav.home': 'Accueil',
+      'nav.search': 'Recherche',
+      'nav.connectivity': 'Connectivité',
+      'nav.history': 'Historique',
+      'nav.profile': 'Profil',
+      'nav.dashboard': 'Tableau de bord',
+
+      // ── Authentification ──
+      'auth.module_login': 'Connexion',
+      'auth.module_register': 'Inscription',
+      'login.title': 'De retour !',
+      'login.subtitle':
+      'Heureux de vous revoir ! Connectez-vous pour continuer là où vous vous êtes arrêté.',
+      'login.phone_or_email': 'Téléphone ou e-mail',
+      'login.password': 'Mot de passe',
+      'login.remember_me': 'Se souvenir de moi',
+      'login.forgot_password': 'Mot de passe oublié ?',
+      'login.submit': 'Se connecter',
+      'login.no_account': "Vous n'avez pas encore de compte ?",
+      'login.signup_free': "S'inscrire gratuitement",
+      'register.title': 'Créer un compte',
+      'register.subtitle': 'Rejoignez-nous en quelques clics !',
+      'register.last_name': 'Nom *',
+      'register.first_name': 'Prénom(s)',
+      'register.email': 'E-mail *',
+      'register.phone': 'Téléphone *',
+      'register.password': 'Mot de passe *',
+      'register.confirm_password': 'Confirmer *',
+      'register.submit': 'Continuer',
+      'register.already_registered': 'Déjà inscrit ? Se connecter',
+      'register.legal':
+      "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.",
+      'forgot.send_code': 'Envoyer le code',
+      'forgot.back_to_login': 'Retour à la connexion',
+      'reset.code_hint': 'Code reçu par e-mail',
+      'reset.new_password': 'Nouveau mot de passe',
+      'reset.confirm_password': 'Confirmer le mot de passe',
+      'reset.submit': 'Réinitialiser',
+      'otp.back': 'Retour',
+      'otp.resend': 'Renvoyer',
+      'feedback.login_success_title': 'Connexion réussie !',
+      'feedback.login_success_subtitle':
+      'Bienvenue à nouveau ! Vous êtes maintenant connecté à votre compte.',
+      'feedback.register_success_title': 'Inscription réussie !',
+      'feedback.register_success_subtitle':
+      'Bienvenue parmi nous ! Votre compte est prêt, vous pouvez maintenant commencer.',
+      'feedback.continue': 'Poursuivre',
+
+      // ── Validation ──
+      'error.field_required': 'Ce champ est requis',
+      'error.password_required': 'Le mot de passe est requis',
+      'error.password_too_short': 'Minimum 6 caractères',
+      'error.register_password_too_short': 'Minimum 8 caractères',
+      'error.name_required': 'Le nom est requis',
+      'error.email_required': "L'e-mail est requis",
+      'error.email_invalid': 'E-mail invalide',
+      'error.phone_required': 'Le téléphone est requis',
+      'error.confirm_required': 'Confirmez le mot de passe',
+      'error.password_mismatch':
+      'Les mots de passe ne correspondent pas',
+
+      // ── Erreurs applicatives ──
+      'error.login_failed':
+      'Erreur de connexion. Veuillez réessayer.',
+      'error.register_failed':
+      "Erreur lors de l'inscription. Veuillez réessayer.",
+      'error.code_length': 'Le code doit contenir 4 chiffres',
+      'error.code_invalid': 'Code invalide. Veuillez réessayer.',
+      'error.code_resend_failed':
+      'Erreur lors du renvoi du code',
+      'error.email_send_failed':
+      "Erreur lors de l'envoi. Vérifiez votre connexion.",
+      'error.code_expired':
+      'Code invalide ou expiré. Veuillez réessayer.',
+      'error.code_required': 'Le code est requis',
+      'error.services_load':
+      'Impossible de charger vos services. Réessayez.',
+      'error.service_update':
+      'Modification impossible pour le moment.',
+
+      // ── OTP / Mot de passe oublié ──
+      'otp.title': 'Code de vérification',
+      'otp.subtitle':
+      'Entrez le code à 4 chiffres envoyé à votre numéro pour continuer.',
+      'otp.no_code_received': "Vous n'avez pas reçu le code ?",
+      'forgot.title': 'Mot de passe oublié ?',
+      'forgot.subtitle':
+      'Indiquez votre e-mail : nous vous envoyons un code pour réinitialiser votre mot de passe.',
+      'reset.title': 'Nouveau mot de passe',
+      'reset.subtitle':
+      'Entrez le code reçu par e-mail et choisissez votre nouveau mot de passe.',
+
+      // ── Welcome / Onboarding ──
+      'welcome.skip': 'Passer',
+      'welcome.next': 'Suivant',
+      'welcome.start': 'Commencer',
+      'welcome.currency_usd': 'Dollar américain',
+      'welcome.currency_gbp': 'Livre sterling',
+      'welcome.buy': 'Acheter',
+      'welcome.pay': 'Payer',
+      'welcome.amount': 'Montant',
+      'welcome.balance': 'Votre solde',
+      'welcome.virtual_number': 'Numéro virtuel',
+      'welcome.local': 'Local',
+      'welcome.new_sms': 'Nouveau SMS',
+      'welcome.sms_preview': '« Hello, how are you? »',
+      'welcome.translate': 'Traduire',
+      'welcome.zero_data': 'Zéro Data',
+      'welcome.ai_translation': 'Traduction IA',
+      'welcome.ai_translation_desc':
+      'Comprenez vos SMS instantanément.',
+      'welcome.zero_data_title': 'Mode Zéro Data',
+      'welcome.zero_data_desc':
+      'Continuez même avec un réseau limité.',
+      'welcome.no_bank_card':
+      "Pas besoin de carte bancaire internationale pour utiliser AfriNumber.",
+      'welcome.slogan_number':
+      'Votre numéro\ninternational\ncommence ici.',
+      'welcome.slogan_number_sub':
+      "Votre avenir n'a plus de frontières,\navec AfriNumber",
+      'welcome.slogan_payment':
+      'Votre paiement\nlocal\ndevient mondial.',
+      'welcome.slogan_payment_sub':
+      'Achetez vos services internationaux avec vos moyens de paiement locaux.',
+      'welcome.slogan_conn':
+      'Restez\nconnecté.\nMême au-delà du réseau.',
+      'welcome.slogan_conn_sub':
+      'Gérez vos SMS et vos communications avec des outils pensés pour une connectivité parfois limitée.',
+
+      // ── Dashboard ──
+      'dashboard.notifications': 'Notifications',
+      'dashboard.no_notifications':
+      'Aucune nouvelle notification pour le moment.',
+      'dashboard.profile_opened':
+      'Ouverture de votre profil utilisateur.',
+      'dashboard.quick_actions_subtitle':
+      'Gérez vos numéros virtuels et vos transactions en un clic.',
+      'dashboard.buy_number': 'Acheter un numéro',
+      'dashboard.recharge': 'Recharger',
+      'dashboard.sms': 'SMS',
+      'dashboard.view_all_transactions':
+      'Afficher toutes les transactions',
+      'dashboard.view_all_offers': 'Afficher toutes les offres',
+      'dashboard.load_error': 'Impossible de charger le tableau de bord.',
+      'dashboard.buy_offer': 'Acheter une offre',
+      'dashboard.expiration_date': "Date d'expiration",
+      'dashboard.recent_transactions': 'Transactions récentes',
+      'dashboard.recommended_offers': 'Offres recommandées',
+      'dashboard.starting_price': 'À partir de {price} / mois',
+      'dashboard.greeting': 'Bonjour',
+
+      // ── Historique ──
+      'history.subtitle':
+      "Consultez l'historique de vos transactions, SMS et recharges.",
+      'history.empty': 'Aucune activité pour ce filtre.',
+      'history.filter_all': 'Tous',
+      'history.filter_transactions': 'Transactions',
+      'history.filter_calls': 'Appels',
+
+      // ── Connectivité ──
+      'connectivity.subtitle':
+      'Gérez vos services de connectivité et restez joignable partout.',
+      'connectivity.my_services': 'Mes services actifs',
+      'connectivity.available_plans': 'Forfaits disponibles',
+      'connectivity.plan_selected': 'Forfait sélectionné',
+      'connectivity.service_esim': 'eSIM virtuelle',
+      'connectivity.service_call_forwarding': "Renvoi d'appel",
+      'connectivity.service_sms_notification': 'Notification SMS',
+      'connectivity.plan_1': '1 Go / mois',
+      'connectivity.plan_1_desc':
+      'Idéal pour les communications quotidiennes',
+      'connectivity.plan_5': '5 Go / mois',
+      'connectivity.plan_5_desc':
+      'Pour les entrepreneurs actifs',
+      'connectivity.plan_20': '20 Go / mois',
+      'connectivity.plan_20_desc': 'Pour les usages intensifs',
+
+      // ── Recherche pays ──
+      'country.popular': 'Pays populaires',
+      'country.all': 'Tous les pays',
+      'country.empty': 'Aucun pays trouvé',
+      'country.load_error': 'Impossible de charger les pays. Réessayez.',
+      'country.selected': 'Pays sélectionné',
+      'country.search_hint':
+      'Rechercher un pays ou un indicatif...',
+      'country.US': 'États-Unis',
+      'country.UK': 'Royaume-Uni',
+      'country.FR': 'France',
+      'country.CA': 'Canada',
+      'country.DE': 'Allemagne',
+      'country.MG': 'Madagascar',
+      'country.CI': "Côte d'Ivoire",
+      'country.SN': 'Sénégal',
+      'country.CM': 'Cameroun',
+
+      // ── Profil / Réglages ──
+      'profile.phone': 'Numéro de téléphone',
+      'profile.email': 'E-mail',
+      'profile.country': 'Pays de résidence',
+      'profile.settings_title': 'Paramètres du compte',
+      'profile.notifications': 'Notifications',
+      'profile.theme': "Thème de l'application",
+      'profile.language': 'Langue',
+      'profile.logout': 'Se déconnecter',
+      'profile.logout_title': 'Se déconnecter ?',
+      'profile.logout_body':
+      'Vous devrez vous reconnecter pour accéder à vos numéros virtuels.',
+      'profile.active_numbers': 'Numéros actifs',
+      'profile.default_member': 'Membre AfriNumber',
+      'profile.plan_pro': 'Offre Pro',
+      'profile.fallback_email': 'support@afrinumber.com',
+    },
+
+    'en_US': {
+      // ── General ──
+      'common.cancel': 'Cancel',
+      'common.on': 'On',
+      'common.off': 'Off',
+      'common.theme_dark': 'Dark mode',
+      'common.theme_light': 'Light mode',
+      'common.loading': 'Loading…',
+      'common.retry': 'Retry',
+      'common.active': 'Active',
+      'common.inactive': 'Inactive',
+      'common.action': 'Action',
+      'common.today': 'Today',
+      'common.yesterday': 'Yesterday',
+      'common.minutes': 'min',
+
+      // ── Navigation ──
+      'nav.home': 'Home',
+      'nav.search': 'Search',
+      'nav.connectivity': 'Connectivity',
+      'nav.history': 'History',
+      'nav.profile': 'Profile',
+      'nav.dashboard': 'Dashboard',
+
+      // ── Authentication ──
+      'auth.module_login': 'Log in',
+      'auth.module_register': 'Sign up',
+      'login.title': 'Welcome back!',
+      'login.subtitle':
+      'Glad to see you again! Log in to continue where you left off.',
+      'login.phone_or_email': 'Phone or email',
+      'login.password': 'Password',
+      'login.remember_me': 'Remember me',
+      'login.forgot_password': 'Forgot password?',
+      'login.submit': 'Log in',
+      'login.no_account': "Don't have an account yet?",
+      'login.signup_free': 'Sign up for free',
+      'register.title': 'Create an account',
+      'register.subtitle': 'Join us in a few clicks!',
+      'register.last_name': 'Last name *',
+      'register.first_name': 'First name(s)',
+      'register.email': 'Email *',
+      'register.phone': 'Phone *',
+      'register.password': 'Password *',
+      'register.confirm_password': 'Confirm *',
+      'register.submit': 'Continue',
+      'register.already_registered': 'Already registered? Log in',
+      'register.legal':
+      'By continuing, you agree to our Terms of Service and Privacy Policy.',
+      'forgot.send_code': 'Send code',
+      'forgot.back_to_login': 'Back to login',
+      'reset.code_hint': 'Code received by email',
+      'reset.new_password': 'New password',
+      'reset.confirm_password': 'Confirm password',
+      'reset.submit': 'Reset',
+      'otp.back': 'Back',
+      'otp.resend': 'Resend',
+      'feedback.login_success_title': 'Login successful!',
+      'feedback.login_success_subtitle':
+      'Welcome back! You are now logged in to your account.',
+      'feedback.register_success_title': 'Registration successful!',
+      'feedback.register_success_subtitle':
+      'Welcome aboard! Your account is ready, you can start now.',
+      'feedback.continue': 'Continue',
+
+      // ── Validation ──
+      'error.field_required': 'This field is required',
+      'error.password_required': 'Password is required',
+      'error.password_too_short': 'Minimum 6 characters',
+      'error.register_password_too_short': 'Minimum 8 characters',
+      'error.name_required': 'Name is required',
+      'error.email_required': 'Email is required',
+      'error.email_invalid': 'Invalid email',
+      'error.phone_required': 'Phone is required',
+      'error.confirm_required': 'Confirm your password',
+      'error.password_mismatch': 'Passwords do not match',
+
+      // ── Application errors ──
+      'error.login_failed':
+      'Login error. Please try again.',
+      'error.register_failed':
+      'Registration error. Please try again.',
+      'error.code_length': 'The code must contain 4 digits',
+      'error.code_invalid': 'Invalid code. Please try again.',
+      'error.code_resend_failed':
+      'Error resending the code',
+      'error.email_send_failed':
+      'Error while sending. Check your connection.',
+      'error.code_expired':
+      'Invalid or expired code. Please try again.',
+      'error.code_required': 'Code is required',
+      'error.services_load':
+      'Unable to load your services. Please try again.',
+      'error.service_update':
+      'Unable to make the change at the moment.',
+
+      // ── OTP / Forgot password ──
+      'otp.title': 'Verification code',
+      'otp.subtitle':
+      'Enter the 4-digit code sent to your phone to continue.',
+      'otp.no_code_received': "Didn't receive the code?",
+      'forgot.title': 'Forgot password?',
+      'forgot.subtitle':
+      'Enter your email and we will send you a code to reset your password.',
+      'reset.title': 'New password',
+      'reset.subtitle':
+      'Enter the code received by email and choose your new password.',
+
+      // ── Welcome / Onboarding ──
+      'welcome.skip': 'Skip',
+      'welcome.next': 'Next',
+      'welcome.start': 'Get started',
+      'welcome.currency_usd': 'US Dollar',
+      'welcome.currency_gbp': 'British Pound',
+      'welcome.buy': 'Buy',
+      'welcome.pay': 'Pay',
+      'welcome.amount': 'Amount',
+      'welcome.balance': 'Your balance',
+      'welcome.virtual_number': 'Virtual number',
+      'welcome.local': 'Local',
+      'welcome.new_sms': 'New SMS',
+      'welcome.sms_preview': '“Hello, how are you?”',
+      'welcome.translate': 'Translate',
+      'welcome.zero_data': 'Zero Data',
+      'welcome.ai_translation': 'AI Translation',
+      'welcome.ai_translation_desc':
+      'Understand your SMS instantly.',
+      'welcome.zero_data_title': 'Zero Data Mode',
+      'welcome.zero_data_desc':
+      'Keep going even with a limited network.',
+      'welcome.no_bank_card':
+      'No international bank card needed to use AfriNumber.',
+      'welcome.slogan_number':
+      'Your international\nnumber\nstarts here.',
+      'welcome.slogan_number_sub':
+      'Your future has no borders,\nwith AfriNumber',
+      'welcome.slogan_payment':
+      'Your local\npayment\ngoes global.',
+      'welcome.slogan_payment_sub':
+      'Buy international services with your local payment methods.',
+      'welcome.slogan_conn':
+      'Stay\nconnected.\nEven beyond the network.',
+      'welcome.slogan_conn_sub':
+      'Manage your SMS and communications with tools designed for limited connectivity.',
+
+      // ── Dashboard ──
+      'dashboard.notifications': 'Notifications',
+      'dashboard.no_notifications':
+      'No new notifications at the moment.',
+      'dashboard.profile_opened':
+      'Opening your user profile.',
+      'dashboard.quick_actions_subtitle':
+      'Manage your virtual numbers and transactions in one click.',
+      'dashboard.buy_number': 'Buy a number',
+      'dashboard.recharge': 'Top up',
+      'dashboard.sms': 'SMS',
+      'dashboard.view_all_transactions':
+      'View all transactions',
+      'dashboard.view_all_offers': 'View all offers',
+      'dashboard.load_error': 'Could not load the dashboard.',
+      'dashboard.buy_offer': 'Buy an offer',
+      'dashboard.expiration_date': 'Expiration date',
+      'dashboard.recent_transactions': 'Recent transactions',
+      'dashboard.recommended_offers': 'Recommended offers',
+      'dashboard.starting_price': 'From {price} / month',
+      'dashboard.greeting': 'Hello',
+
+      // ── History ──
+      'history.subtitle':
+      'Review your transaction, SMS, and top-up history.',
+      'history.empty': 'No activity for this filter.',
+      'history.filter_all': 'All',
+      'history.filter_transactions': 'Transactions',
+      'history.filter_calls': 'Calls',
+
+      // ── Connectivity ──
+      'connectivity.subtitle':
+      'Manage your connectivity services and stay reachable anywhere.',
+      'connectivity.my_services': 'My active services',
+      'connectivity.available_plans': 'Available plans',
+      'connectivity.plan_selected': 'Selected plan',
+      'connectivity.service_esim': 'Virtual eSIM',
+      'connectivity.service_call_forwarding': 'Call forwarding',
+      'connectivity.service_sms_notification': 'SMS notification',
+      'connectivity.plan_1': '1 GB / month',
+      'connectivity.plan_1_desc':
+      'Ideal for everyday communication',
+      'connectivity.plan_5': '5 GB / month',
+      'connectivity.plan_5_desc':
+      'For active entrepreneurs',
+      'connectivity.plan_20': '20 GB / month',
+      'connectivity.plan_20_desc': 'For intensive use',
+
+      // ── Country search ──
+      'country.popular': 'Popular countries',
+      'country.all': 'All countries',
+      'country.empty': 'No country found',
+      'country.load_error': 'Could not load countries. Please try again.',
+      'country.selected': 'Selected country',
+      'country.search_hint':
+      'Search for a country or dialing code...',
+      'country.US': 'United States',
+      'country.UK': 'United Kingdom',
+      'country.FR': 'France',
+      'country.CA': 'Canada',
+      'country.DE': 'Germany',
+      'country.MG': 'Madagascar',
+      'country.CI': "Côte d'Ivoire",
+      'country.SN': 'Senegal',
+      'country.CM': 'Cameroon',
+
+      // ── Profile / Settings ──
+      'profile.phone': 'Phone number',
+      'profile.email': 'Email',
+      'profile.country': 'Country of residence',
+      'profile.settings_title': 'Account settings',
+      'profile.notifications': 'Notifications',
+      'profile.theme': 'App theme',
+      'profile.language': 'Language',
+      'profile.logout': 'Log out',
+      'profile.logout_title': 'Log out?',
+      'profile.logout_body':
+      'You will need to log in again to access your virtual numbers.',
+      'profile.active_numbers': 'Active numbers',
+      'profile.default_member': 'AfriNumber member',
+      'profile.plan_pro': 'Pro plan',
+      'profile.fallback_email': 'support@afrinumber.com',
+    },
+  };
+
+}
