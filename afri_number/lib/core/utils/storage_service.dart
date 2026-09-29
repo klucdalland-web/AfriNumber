@@ -24,8 +24,28 @@ class StorageService {
   Future<void> clearTokens() async {
     await remove(StorageKeys.accessToken);
     await remove(StorageKeys.refreshToken);
+    await remove(StorageKeys.user);
+  }
+
+  Future<void> saveUser(Map<String, dynamic> userData) =>
+      write(StorageKeys.user, userData);
+
+  Map<String, dynamic>? get user {
+    final raw = read(StorageKeys.user);
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return null;
   }
 
   bool get hasToken =>
-      accessToken != null && accessToken!.isNotEmpty;
+      accessToken != null && accessToken!.trim().isNotEmpty;
+
+
+  // Remember-me helpers (numéro de téléphone uniquement — jamais le mot de
+  // passe, qui n'est jamais persisté côté client).
+  String? get rememberedPhone => read<String>(StorageKeys.rememberedPhone);
+
+  Future<void> saveRememberedPhone(String phone) =>
+      write(StorageKeys.rememberedPhone, phone);
+
+  Future<void> clearRememberedPhone() => remove(StorageKeys.rememberedPhone);
 }

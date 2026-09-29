@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Filament\Commands\MakeUserCommand as AppMakeUserCommand;
+use Filament\Commands\MakeUserCommand as FilamentMakeUserCommand;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
@@ -12,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(FilamentMakeUserCommand::class, AppMakeUserCommand::class);
     }
 
     public function boot(UrlGenerator $url): void
@@ -21,29 +23,29 @@ class AppServiceProvider extends ServiceProvider
             $url->forceScheme('https');
         }
 
-            RateLimiter::for('login', function (Request $request) {
-                    $key = $request->ip();
+        RateLimiter::for('login', function (Request $request) {
+            $key = $request->ip();
 
-                return Limit::perMinute(20)->by($key)->response(function () use ($key) {
-                    $retryAfter = RateLimiter::availableIn(md5('login' . $key));
+            return Limit::perMinute(20)->by($key)->response(function () use ($key) {
+                $retryAfter = RateLimiter::availableIn(md5('login'.$key));
 
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Trop de tentatives de connexion depuis cette adresse. Veuillez réessayer dans ' . $retryAfter . ' secondes.',
-                        'retry_after' => $retryAfter,
-                    ], 429);
-                });
-            });                     
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Trop de tentatives de connexion depuis cette adresse. Veuillez réessayer dans '.$retryAfter.' secondes.',
+                    'retry_after' => $retryAfter,
+                ], 429);
+            });
+        });
 
         RateLimiter::for('register', function (Request $request) {
             $key = $request->ip();
 
             return Limit::perMinute(3)->by($key)->response(function () use ($key) {
-                $retryAfter = RateLimiter::availableIn(md5('register' . $key));
+                $retryAfter = RateLimiter::availableIn(md5('register'.$key));
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Trop de tentatives d\'inscription. Veuillez réessayer dans ' . $retryAfter . ' secondes.',
+                    'message' => 'Trop de tentatives d\'inscription. Veuillez réessayer dans '.$retryAfter.' secondes.',
                     'retry_after' => $retryAfter,
                 ], 429);
             });

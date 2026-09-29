@@ -16,7 +16,9 @@ class ThemeController extends GetxController {
   void onInit() {
     super.onInit();
     themeMode.value = _readMode();
-    Get.changeThemeMode(themeMode.value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.changeThemeMode(themeMode.value);
+    });
   }
 
   ThemeMode _readMode() {
