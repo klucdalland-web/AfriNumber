@@ -3,7 +3,11 @@ import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
+import '../widgets/widgets.dart';
 
+/// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +
+/// en-tête). Le contenu métier (champs, validation, soumission) vit dans
+/// [RegisterForm].
 /// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +
 /// en-tête). Le contenu métier (champs, validation, soumission) vit dans
 /// [RegisterForm].
@@ -12,6 +16,8 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     final r = context.responsive;
 
     return AppScaffold(
