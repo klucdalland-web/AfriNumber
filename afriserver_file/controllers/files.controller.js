@@ -38,7 +38,7 @@ async function upload(req, res, next) {
 
         // 1. Compression puis envoi direct vers Storj (depuis la mémoire)
         var documents = await Promise.all(received.map(async function(item) {
-            var image = await imageService.compresserImage(item.file.buffer);
+            var image = await imageService.compresserImage(item.file.buffer, item.file.mimetype);
             console.log('[Upload] ' + item.champ + ' : ' + item.file.size + ' -> ' + image.buffer.length + ' octets');
 
             var remotePath = await storageService.envoyerDocument(
