@@ -82,6 +82,11 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
+        return $this->isAdminType();
+    }
+
+    public function isAdminType(): bool
+    {
         return $this->typeUser?->code === 'admin';
     }
 }

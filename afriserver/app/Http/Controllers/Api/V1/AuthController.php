@@ -97,11 +97,20 @@ class AuthController extends Controller
         $login = $phones->normalizeForLookup($validated['email']) ?? $validated['email'];
 
         $user = User::query()
+            ->with('typeUser')
             ->where(function ($query) use ($login): void {
                 $query->where('email', $login)
                     ->orWhere('phone_number', $login);
             })
             ->first();
+
+        // Compte inconnu ou admin panel : même forme (anti-énumération).
+        // Seuls les utilisateurs (type user) peuvent se connecter via l'API.
+        if ($user?->isAdminType()) {
+            throw ValidationException::withMessages([
+                'login' => ['Identifiants incorrects.'],
+            ]);
+        }
 
         if ($user && $user->locked_until && $user->locked_until->isFuture()) {
             $minutesLeft = (int) ceil(now()->diffInMinutes($user->locked_until));
@@ -270,7 +279,13 @@ class AuthController extends Controller
                     ]);
 
                 } else {
-                    $user = User::query()->findOrFail($payload['user_id']);
+                    $user = User::query()->with('typeUser')->findOrFail($payload['user_id']);
+
+                    if ($user->isAdminType()) {
+                        throw ValidationException::withMessages([
+                            'code' => ['Code invalide ou expiré. Veuillez recommencer.'],
+                        ]);
+                    }
                 }
 
                 $user->load(['typeUser', 'pays.organisation']);
@@ -882,8 +897,8 @@ class AuthController extends Controller
 
         $user = $this->findUserByEmailOrPhone($email, $phoneNumber);
 
-        // Compte inconnu : même forme de réponse (anti-énumération)
-        if (! $user) {
+        // Compte inconnu ou admin panel : même forme de réponse (anti-énumération)
+        if (! $user || $user->isAdminType()) {
             return ApiResponse::success($genericMessage, $this->otpResendMeta(0));
         }
 
@@ -963,7 +978,8 @@ class AuthController extends Controller
             $resetCode->phone_number ?? $phoneNumber
         );
 
-        if (! $user) {
+        // Compte introuvable ou admin panel : refus (seuls les user API)
+        if (! $user || $user->isAdminType()) {
             throw ValidationException::withMessages([
                 'email' => ['Compte introuvable.'],
             ]);
@@ -1121,6 +1137,7 @@ class AuthController extends Controller
         }
 
         return User::query()
+            ->with('typeUser')
             ->where(function ($query) use ($email, $phoneNumber): void {
                 if ($email) {
                     $query->where('email', $email);
