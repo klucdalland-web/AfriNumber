@@ -115,7 +115,16 @@ class ProfileVerificationController extends Controller
 
             $profil = Profile::find($request->profile_id);
 
-            // 2. Sécurité : chaque chemin doit appartenir à CE profil
+            // 2. Garde-fou : un profil déjà approuvé / en vérif / rejeté non réouvert
+            //    ne peut pas être écrasé via Express (seul en_attente_d_upload est accepté).
+            if ($profil->status !== 'en_attente_d_upload') {
+                return response()->json([
+                    'statut' => 'refuse',
+                    'erreur' => 'Ce profil n\'accepte plus d\'upload. Relancez /verifier/init si le statut le permet.',
+                ], 409);
+            }
+
+            // 3. Sécurité : chaque chemin doit appartenir à CE profil
             foreach ($request->documents as $doc) {
                 if (! str_starts_with($doc['path'], $profil->id.'/') || str_contains($doc['path'], '..')) {
                     return response()->json([
@@ -125,12 +134,12 @@ class ProfileVerificationController extends Controller
                 }
             }
 
-            // 3. Enregistrement des documents et mise à jour du statut
+            // 4. Enregistrement des documents et mise à jour du statut
             $profil->documents = $request->documents;
             $profil->status = 'en_cours_de_verification';
             $profil->save();
 
-            // 4. Déclenchement de n8n APRÈS l'envoi de la réponse à Express
+            // 5. Déclenchement de n8n APRÈS l'envoi de la réponse à Express
             $profileId = $profil->id;
             dispatch(static function () use ($profileId) {
                 self::declencherN8n($profileId);
