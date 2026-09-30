@@ -13,7 +13,7 @@ class OutlineToggleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = context.responsive.u(24);
+    final size = context.responsive.u(40);
     return SizedBox(
       width: size,
       height: size,

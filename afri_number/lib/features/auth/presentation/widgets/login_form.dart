@@ -1,3 +1,4 @@
+import 'package:afri_number/features/auth/presentation/widgets/social_auth_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
@@ -72,8 +73,9 @@ class LoginForm extends StatelessWidget {
           SizedBox(height: r.space(12)),
           _OptionsRow(controller: controller),
 
-          const Spacer(),
-
+          const SizedBox(height: 5),
+          SocialAuthButtons(onApplePressed: ()=>print('Apple'),onGooglePressed: ()=>print('Google')),
+          // Spacer(),
           Obx(
             () => AppButton.primary(
               label: 'login.submit'.tr,

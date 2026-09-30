@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../responsive/responsive.dart';
 
-/// Champ de saisie réutilisable, adaptatif et thématique (pill shape).
+/// Champ de saisie réutilisable, adaptatif et thématique (pill shape avec bordure propre).
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
@@ -48,6 +48,7 @@ class CustomTextField extends StatefulWidget {
 class _CustomTextFieldState extends State<CustomTextField> {
   late bool _obscureText;
   late FocusNode _focusNode;
+  bool _isFocused = false;
 
   @override
   void initState() {
@@ -65,7 +66,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
   }
 
   void _onFocusChange() {
-    setState(() {});
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
   }
 
   @override
@@ -77,10 +80,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
     final hintColor = isDark
         ? const Color(0xFF94A3B8)
-        : const Color(0xFF475569);
+        : const Color(0xFF64748B);
     final textColor = isDark
         ? const Color(0xFFF8FAFC)
         : const Color(0xFF0F172A);
+    final defaultBorderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final activeBorderColor = theme.colorScheme.primary;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -113,64 +120,98 @@ class _CustomTextFieldState extends State<CustomTextField> {
               ),
             ),
           ),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(r.radius(30)),
-            color: fieldBg,
-          ),
-          child: TextFormField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            obscureText: _obscureText,
-            enabled: widget.enabled,
-            keyboardType: widget.keyboardType,
-            textInputAction: widget.textInputAction,
-            onChanged: widget.onChanged,
-            onFieldSubmitted: widget.onSubmitted,
-            validator: widget.validator,
-            autofillHints: widget.autofillHints,
-            style: GoogleFonts.zillaSlab(
-              fontSize: r.fontSize(16),
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
-            decoration: InputDecoration(
-              hintText: widget.hintText.replaceAll('*', '').trim(),
-              hintStyle: GoogleFonts.zillaSlab(
-                fontSize: r.fontSize(16),
-                fontWeight: FontWeight.w500,
-                color: hintColor,
-              ),
-              prefixIcon: widget.icon != null
-                  ? Padding(
-                      padding: EdgeInsets.only(
-                        left: r.space(20),
-                        right: r.space(12),
+        FormField<String>(
+          validator: widget.validator,
+          initialValue: widget.controller?.text,
+          builder: (FormFieldState<String> fieldState) {
+            final hasError = fieldState.hasError;
+            final borderColor = hasError
+                ? const Color(0xFFEF4444)
+                : (_isFocused ? activeBorderColor : defaultBorderColor);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: BoxDecoration(
+                    color: fieldBg,
+                    borderRadius: BorderRadius.circular(r.radius(28)),
+                    border: Border.all(
+                      color: borderColor,
+                      width: (_isFocused || hasError) ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: TextFormField(
+                    controller: widget.controller,
+                    focusNode: _focusNode,
+                    obscureText: _obscureText,
+                    enabled: widget.enabled,
+                    keyboardType: widget.keyboardType,
+                    textInputAction: widget.textInputAction,
+                    onChanged: (val) {
+                      fieldState.didChange(val);
+                      if (widget.onChanged != null) widget.onChanged!(val);
+                    },
+                    onFieldSubmitted: widget.onSubmitted,
+                    autofillHints: widget.autofillHints,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: r.fontSize(15),
+                      fontWeight: FontWeight.w500,
+                      color: textColor,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: widget.hintText.replaceAll('*', '').trim(),
+                      hintStyle: GoogleFonts.ibmPlexSans(
+                        fontSize: r.fontSize(15),
+                        fontWeight: FontWeight.w400,
+                        color: hintColor,
                       ),
-                      child: Icon(
-                        widget.icon,
-                        size: r.iconSize(22),
-                        color: textColor,
+                      prefixIcon: widget.icon != null
+                          ? Padding(
+                              padding: EdgeInsets.only(
+                                left: r.space(16),
+                                right: r.space(10),
+                              ),
+                              child: Icon(
+                                widget.icon,
+                                size: r.iconSize(20),
+                                color: _isFocused ? activeBorderColor : hintColor,
+                              ),
+                            )
+                          : null,
+                      suffixIcon: _buildSuffixIcon(r, textColor, hintColor),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: r.space(14),
+                        horizontal: widget.icon == null ? r.space(20) : r.space(12),
                       ),
-                    )
-                  : SizedBox(width: r.space(20)),
-              suffixIcon: _buildSuffixIcon(r, textColor, hintColor),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                vertical: r.space(16),
-                horizontal: r.space(20),
-              ),
-              filled: true,
-              fillColor: Colors.transparent,
-              errorStyle: GoogleFonts.ibmPlexSans(
-                fontSize: r.fontSize(12),
-                color: const Color(0xFFEF4444),
-                fontWeight: FontWeight.w500,
-              ),
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-            ),
-          ),
+                      filled: false,
+                    ),
+                  ),
+                ),
+                if (hasError)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: r.space(16),
+                      top: r.space(6),
+                    ),
+                    child: Text(
+                      fieldState.errorText ?? '',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: r.fontSize(12),
+                        color: const Color(0xFFEF4444),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );

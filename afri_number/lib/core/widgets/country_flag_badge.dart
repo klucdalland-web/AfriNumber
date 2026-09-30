@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../responsive/responsive.dart';
 
-/// True vector flag badge supporting major countries (MG, FR, US, UK, CA, DE, CI, SN, CM).
+/// True vector flag badge supporting major countries (MG, FR, US, UK, CA, DE, CI, SN, CM, CD).
 /// Renders crisp vector graphics using CustomPainter without emojis or raster images.
 class CountryFlagBadge extends StatelessWidget {
   const CountryFlagBadge({
@@ -12,7 +12,7 @@ class CountryFlagBadge extends StatelessWidget {
     this.showBorder = true,
   });
 
-  /// Country code (e.g. 'MG', 'FR', 'US', 'UK', 'CA', 'DE', 'CI', 'SN', 'CM').
+  /// Country code (e.g. 'MG', 'FR', 'US', 'UK', 'CA', 'DE', 'CI', 'SN', 'CM', 'CD').
   final String code;
 
   /// Diameter/size of the flag.
@@ -108,7 +108,7 @@ class _VectorFlagPainter extends CustomPainter {
           ..strokeWidth = w * 0.12
           ..style = PaintingStyle.stroke;
 
-        canvas.drawLine(Offset(0, 0), Offset(w, h), whitePaint);
+        canvas.drawLine(const Offset(0, 0), Offset(w, h), whitePaint);
         canvas.drawLine(Offset(w, 0), Offset(0, h), whitePaint);
         canvas.drawLine(Offset(w / 2, 0), Offset(w / 2, h), whitePaint);
         canvas.drawLine(Offset(0, h / 2), Offset(w, h / 2), whitePaint);
@@ -155,6 +155,22 @@ class _VectorFlagPainter extends CustomPainter {
           ..drawRect(Rect.fromLTWH(w / 3, 0, w / 3, h), fill(_red))
           ..drawRect(Rect.fromLTWH(2 * w / 3, 0, w / 3, h), fill(_yellow));
         canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.08, fill(_yellow));
+        break;
+
+      case 'CD': // RD Congo: Sky blue background + diagonal red stripe with yellow border + yellow star
+        const skyBlue = Color(0xFF00A3E0);
+        canvas.drawRect(Rect.fromLTWH(0, 0, w, h), fill(skyBlue));
+        final redPaint = Paint()
+          ..color = _red
+          ..strokeWidth = w * 0.22
+          ..style = PaintingStyle.stroke;
+        final yellowBorderPaint = Paint()
+          ..color = _yellow
+          ..strokeWidth = w * 0.30
+          ..style = PaintingStyle.stroke;
+        canvas.drawLine(Offset(0, h), Offset(w, 0), yellowBorderPaint);
+        canvas.drawLine(Offset(0, h), Offset(w, 0), redPaint);
+        canvas.drawCircle(Offset(w * 0.22, h * 0.25), w * 0.09, fill(_yellow));
         break;
 
       default:
