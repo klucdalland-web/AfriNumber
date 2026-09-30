@@ -246,7 +246,9 @@ class ProfileVerificationController extends Controller
     {
         try {
             // 🔐 1. Validation de la signature cryptographique SHA-256
-            if (! self::signatureValide($request->getContent(), $request->header('X-Signature'))) {
+            $profileIdRecu = (string) $request->input('profile_id');
+
+            if (! self::signatureValide($profileIdRecu, $request->header('X-Signature'))) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Signature invalide. Requête non autorisée.',
