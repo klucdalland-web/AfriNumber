@@ -52,7 +52,17 @@ final class PanelPermission
 
     public const CONTINENTS_DELETE = 'continents.delete';
 
-    
+    public const PLATFORMS_VIEW = 'platforms.view';
+
+    public const PLATFORMS_CREATE = 'platforms.create';
+
+    public const PLATFORMS_UPDATE = 'platforms.update';
+
+    public const PLATFORMS_DELETE = 'platforms.delete';
+
+    public const OBSERVABILITY_VIEW = 'observability.view';
+
+    public const OBSERVABILITY_DELETE = 'observability.delete';
 
     /**
      * @return list<string>
@@ -84,6 +94,12 @@ final class PanelPermission
             self::CONTINENTS_CREATE,
             self::CONTINENTS_UPDATE,
             self::CONTINENTS_DELETE,
+            self::PLATFORMS_VIEW,
+            self::PLATFORMS_CREATE,
+            self::PLATFORMS_UPDATE,
+            self::PLATFORMS_DELETE,
+            self::OBSERVABILITY_VIEW,
+            self::OBSERVABILITY_DELETE,
         ];
     }
 

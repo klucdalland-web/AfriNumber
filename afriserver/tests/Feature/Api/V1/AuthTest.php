@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
+    $this->withHeader('x-api-key', (string) env('X_API_KEY_V1', 'testing-api-key'));
+
     TypeUser::query()->updateOrCreate(
         ['code' => 'user'],
         [

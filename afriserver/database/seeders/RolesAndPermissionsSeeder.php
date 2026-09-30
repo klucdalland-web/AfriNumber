@@ -50,6 +50,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ...PanelPermission::forResource('pays'),
             ...PanelPermission::forResource('organisations'),
             ...PanelPermission::forResource('continents'),
+            ...PanelPermission::forResource('platforms'),
         ]);
     }
 }

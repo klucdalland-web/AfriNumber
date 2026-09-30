@@ -684,6 +684,7 @@ class AuthController extends Controller
                 'region' => $geo['region'] ?? null,
                 'timezone' => $geo['timezone'] ?? null,
                 'latitude' => $geo['latitude'] ?? null,
+                'longitude' => $geo['longitude'] ?? null,
                 'internet_provider' => $geo['internet_provider'] ?? null,
                 'network_type' => $geo['network_type'] ?? null,
                 'last_activity' => now(),
