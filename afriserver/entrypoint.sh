@@ -20,6 +20,8 @@ server {
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
+        # Sans ça, nginx/PHP-FPM droppe Authorization → Sanctum = Unauthenticated partout
+        fastcgi_param HTTP_AUTHORIZATION \$http_authorization;
     }
 }
 EOF
