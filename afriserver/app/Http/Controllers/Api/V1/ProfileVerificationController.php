@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 // 🚀 Pour suivre les erreurs dans les logs de Render
@@ -173,7 +174,7 @@ class ProfileVerificationController extends Controller
     }
 
     /**
-     * Étape 3 : n8n récupère les infos user liées au profile_id.
+     * Étape 3 : n8n récupère les infos user et les liens temporaires des documents.
      * Sécurité : HMAC SHA-256 du profile_id (pas de body sur un GET).
      */
     public function show(Request $request, string $profile_id)
@@ -200,12 +201,26 @@ class ProfileVerificationController extends Controller
                 ], 404);
             }
 
+            // Liens temporaires (10 minutes) vers les documents stockés sur Storj
+            $documents = [];
+            foreach ($profile->documents ?? [] as $doc) {
+                try {
+                    $documents[$doc['champ']] = Storage::disk('storj')->temporaryUrl(
+                        $doc['path'],
+                        now()->addMinutes(10)
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Lien temporaire impossible pour '.$doc['path'].' : '.$e->getMessage());
+                }
+            }
+
             return response()->json([
                 'statut' => 'succes',
                 'data' => [
                     'id' => $profile->id,
                     'name' => $profile->user->name,
                     'first_name' => $profile->user->first_name,
+                    'documents' => $documents,
                 ],
             ], 200);
         } catch (\Exception $e) {
@@ -262,6 +277,11 @@ class ProfileVerificationController extends Controller
 
             $profil->save();
 
+            // 🧹 3 bis. Décision prise : suppression des documents (pas en revue manuelle)
+            if (in_array($request->kyc_status, ['approved', 'rejected'])) {
+                $this->supprimerDocuments($profil);
+            }
+
             // 📢 4. Traitement des Notifications (Selon le statut)
             switch ($request->kyc_status) {
                 case 'approved':
@@ -303,6 +323,30 @@ class ProfileVerificationController extends Controller
                 'statut' => 'erreur',
                 'erreur' => 'Erreur interne lors du traitement du verdict.',
             ], 500);
+        }
+    }
+
+    /**
+     * Supprime les documents du profil sur Storj. Le verdict est déjà enregistré :
+     * un échec ici est seulement journalisé, et les chemins restent en base pour un nouvel essai.
+     */
+    private function supprimerDocuments(Profile $profil): void
+    {
+        $paths = collect($profil->documents ?? [])->pluck('path')->all();
+
+        if (empty($paths)) {
+            return;
+        }
+
+        try {
+            if (Storage::disk('storj')->delete($paths)) {
+                $profil->documents = null;
+                $profil->save();
+            } else {
+                Log::error('Suppression des documents échouée pour le profil '.$profil->id);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression des documents du profil '.$profil->id.' : '.$e->getMessage());
         }
     }
 }
