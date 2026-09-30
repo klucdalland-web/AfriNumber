@@ -72,4 +72,11 @@ class UserFactory extends Factory
                 ?? TypeUser::factory()->create(['code' => $code])->id,
         ]);
     }
+
+    public function withRole(string $role): static
+    {
+        return $this->afterCreating(function (User $user) use ($role): void {
+            $user->assignRole($role);
+        });
+    }
 }
