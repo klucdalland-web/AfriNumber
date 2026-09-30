@@ -25,7 +25,10 @@ return [
         'key' => env('ZAVU_API_KEY'),
         'base_url' => 'https://zavu.dev',
     ],
-
+    'internal' => [
+        'secret' => env('SERVICE_SECRET_KEY'), 
+        'n8n_url' => env('N8N_WEBHOOK_URL')
+    ],
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

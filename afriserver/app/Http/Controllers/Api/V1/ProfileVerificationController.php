@@ -16,6 +16,24 @@ use Illuminate\Validation\ValidationException;
 
 class ProfileVerificationController extends Controller
 {
+    private static function secret(): string
+    {
+        $secret = config('services.internal.secret');
+
+        if (! is_string($secret) || $secret === '') {
+            Log::critical('services.internal.secret est vide : requêtes internes refusées.');
+            abort(500, 'Configuration serveur invalide.');
+        }
+
+        return $secret;
+    }
+
+    private static function signatureValide(string $donnees, ?string $signatureRecue): bool
+    {
+        return $signatureRecue
+            && hash_equals(hash_hmac('sha256', $donnees, self::secret()), $signatureRecue);
+    }
+
     /**
      * Étape 1 : Le Mobile demande à démarrer l'upload.
      * Génère l'ID unique (UUID) et prépare le ticket de profil.
@@ -79,13 +97,8 @@ class ProfileVerificationController extends Controller
     {
         try {
             // 🔒 COUCHE DE SÉCURITÉ : Vérification de la signature HMAC SHA-256
-            $secret = env('SERVICE_SECRET_KEY');
-            $body = $request->getContent(); // Récupère le JSON brut envoyé par Express
-            $signatureAttendue = hash_hmac('sha256', $body, $secret);
-            $signatureRecue = $request->header('X-Signature');
-
             // Si la signature est absente ou ne correspond pas au contenu, on bloque direct !
-            if (! $signatureRecue || ! hash_equals($signatureAttendue, $signatureRecue)) {
+            if (! self::signatureValide($request->getContent(), $request->header('X-Signature'))) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Requête non autorisée ou signature cryptographique invalide.',
@@ -96,7 +109,7 @@ class ProfileVerificationController extends Controller
             $request->validate([
                 'profile_id' => 'required|string|uuid|exists:profiles,id',
                 'documents' => 'required|array|size:3',
-                'documents.*.champ' => 'required|string|in:photopath,pieceavantpath,piecearrierepath',
+                'documents.*.champ' => 'required|string|distinct|in:photopath,pieceavantpath,piecearrierepath',
                 'documents.*.path' => 'required|string',
             ]);
 
@@ -151,7 +164,7 @@ class ProfileVerificationController extends Controller
      */
     private static function declencherN8n(string $profileId): void
     {
-        $url = env('N8N_WEBHOOK_URL');
+        $url = config('services.internal.n8n_url');
 
         if (! $url) {
             Log::error('N8N_WEBHOOK_URL manquant : n8n non déclenché pour le profil '.$profileId);
@@ -160,7 +173,7 @@ class ProfileVerificationController extends Controller
         }
 
         $payload = json_encode(['profile_id' => $profileId]);
-        $signature = hash_hmac('sha256', $payload, env('SERVICE_SECRET_KEY'));
+        $signature = hash_hmac('sha256', $payload, self::secret());
 
         try {
             Http::timeout(60)
@@ -181,11 +194,7 @@ class ProfileVerificationController extends Controller
     {
         try {
             // 🔒 Même secret que Express, mais on signe le profile_id (GET sans body)
-            $secret = env('SERVICE_SECRET_KEY');
-            $signatureAttendue = hash_hmac('sha256', $profile_id, $secret);
-            $signatureRecue = $request->header('X-Signature');
-
-            if (! $signatureRecue || ! hash_equals($signatureAttendue, $signatureRecue)) {
+            if (! self::signatureValide($profile_id, $request->header('X-Signature'))) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Requête non autorisée ou signature cryptographique invalide.',
@@ -237,12 +246,7 @@ class ProfileVerificationController extends Controller
     {
         try {
             // 🔐 1. Validation de la signature cryptographique SHA-256
-            $secret = env('SERVICE_SECRET_KEY');
-            $body = $request->getContent();
-            $signatureAttendue = hash_hmac('sha256', $body, $secret);
-            $signatureRecue = $request->header('X-Signature');
-
-            if (! $signatureRecue || ! hash_equals($signatureAttendue, $signatureRecue)) {
+            if (! self::signatureValide($request->getContent(), $request->header('X-Signature'))) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Signature invalide. Requête non autorisée.',
@@ -260,6 +264,14 @@ class ProfileVerificationController extends Controller
 
             // 🗄️ 3. Mise à jour du profil en Base de Données
             $profil = Profile::find($request->profile_id);
+
+            // 🛡️ Anti-rejeu : on n'accepte un verdict que si le profil l'attend encore
+            if ($profil->status !== 'en_cours_de_verification') {
+                return response()->json([
+                    'statut' => 'refuse',
+                    'erreur' => 'Ce profil n\'attend plus de verdict.',
+                ], 409);
+            }
 
             // Mapping des statuts n8n vers tes statuts de base de données
             $statutMapping = [
