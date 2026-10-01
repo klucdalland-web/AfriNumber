@@ -13,6 +13,8 @@ import '../../features/splash/presentation/views/splash_page.dart';
 import '../../features/splash/presentation/bindings/splash_binding.dart';
 import '../../features/welcome/presentation/views/welcome_page.dart';
 import 'app_routes.dart';
+import '../../features/messages/presentation/pages/messages_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 
 class AppPages {
   AppPages._();
@@ -28,7 +30,14 @@ class AppPages {
       page: () => const SplashPage(),
       binding: SplashBinding(),
     ),
-
+    GetPage(
+      name: AppRoutes.messages,
+      page: () => const MessagesPage(),
+    ),
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationsPage(),
+    ),
     // ── Onboarding ──────────────────────────────────────────────────────────
     GetPage(
       name: AppRoutes.welcome,
