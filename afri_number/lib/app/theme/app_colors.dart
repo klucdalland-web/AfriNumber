@@ -43,4 +43,9 @@ abstract class AppColors {
   /// Montants négatifs.
   static const Color dangerBackground = Color(0xFFFEE2E2);
   static const Color dangerText = Color(0xFFEF4444);
+  static const Color textPrimary = Color(0xFF222222);
+  static const Color textTertiary = Color(0xFFA6A6A6);
+  static const Color divider = Color(0xFFF2F2F2);
+  static const Color mapDot = Color(0xFF4A4A4A);
+  static const Color mintDark = Color(0xFF3D483E);
 }
