@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PasswordResetCode;
 use App\Models\TypeUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -8,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
+    $this->withHeader('x-api-key', (string) env('X_API_KEY_V1', 'testing-api-key'));
+
     TypeUser::query()->updateOrCreate(
         ['code' => 'user'],
         [
@@ -16,7 +19,34 @@ beforeEach(function (): void {
             'actif' => true,
         ],
     );
+
+    TypeUser::query()->updateOrCreate(
+        ['code' => 'admin'],
+        [
+            'label' => 'Administrateur',
+            'description' => 'Administrateur système',
+            'actif' => true,
+        ],
+    );
 });
+
+/**
+ * @return array<string, mixed>
+ */
+function apiLoginDevicePayload(string $email, string $password): array
+{
+    return [
+        'email' => $email,
+        'password' => $password,
+        'device_name' => 'test-device',
+        'platform' => 'android',
+        'device_id' => 'device-test-001',
+        'device_model' => 'Pixel',
+        'os_version' => '14',
+        'app_version' => '1.0.0',
+        'fcm_token' => 'fcm-test-token',
+    ];
+}
 
 test('a user can register via the v1 api', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
@@ -223,4 +253,58 @@ test('change password rejects invalid current password', function (): void {
         ])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['current_password']);
+});
+
+test('admin cannot login via the api and gets the same response as unknown credentials', function (): void {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin-api@example.com',
+        'phone_number' => '+22990000010',
+        'password' => Hash::make('password123'),
+        'statut' => 'actif',
+    ]);
+
+    $unknownResponse = $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload('unknown@example.com', 'password123')
+    );
+
+    $adminResponse = $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload($admin->email, 'password123')
+    );
+
+    $unknownResponse->assertUnprocessable()
+        ->assertJsonValidationErrors(['login']);
+
+    $adminResponse->assertUnprocessable()
+        ->assertJsonValidationErrors(['login'])
+        ->assertJsonPath('errors.login.0', $unknownResponse->json('errors.login.0'));
+
+    $this->assertDatabaseMissing('otp_verifications', [
+        'email' => $admin->email,
+        'purpose' => 'login',
+    ]);
+});
+
+test('forgot password returns the same success for unknown and admin accounts', function (): void {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin-reset@example.com',
+        'phone_number' => '+22990000011',
+        'statut' => 'actif',
+    ]);
+
+    $unknownResponse = $this->postJson('/api/v1/auth/forgot-password', [
+        'email' => 'nobody@example.com',
+    ]);
+
+    $adminResponse = $this->postJson('/api/v1/auth/forgot-password', [
+        'email' => $admin->email,
+    ]);
+
+    $unknownResponse->assertOk()->assertJsonPath('success', true);
+    $adminResponse->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('message', $unknownResponse->json('message'));
+
+    expect(PasswordResetCode::query()->where('email', $admin->email)->exists())->toBeFalse();
 });

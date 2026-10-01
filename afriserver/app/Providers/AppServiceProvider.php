@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Filament\Commands\MakeUserCommand as AppMakeUserCommand;
+use App\Policies\RolePolicy;
 use Filament\Commands\MakeUserCommand as FilamentMakeUserCommand;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,24 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(UrlGenerator $url): void
     {
+        Gate::policy(Role::class, RolePolicy::class);
+
+        Gate::before(function ($user, string $ability, array $arguments = []): ?bool {
+            if (! method_exists($user, 'hasRole') || ! $user->hasRole('super_admin')) {
+                return null;
+            }
+
+            if (
+                $ability === 'delete'
+                && ($arguments[0] ?? null) instanceof Role
+                && $arguments[0]->name === 'super_admin'
+            ) {
+                return false;
+            }
+
+            return true;
+        });
+
         if ($this->app->environment('production')) {
             $url->forceScheme('https');
         }

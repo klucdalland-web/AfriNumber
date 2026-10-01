@@ -21,6 +21,7 @@ class SessionUser extends Model
         'region',
         'timezone',
         'latitude',
+        'longitude',
         'internet_provider',
         'network_type',
         'is_active',
@@ -38,6 +39,7 @@ class SessionUser extends Model
         return [
             'is_active' => 'boolean',
             'latitude' => 'decimal:8',
+            'longitude' => 'decimal:8',
         ];
     }
 

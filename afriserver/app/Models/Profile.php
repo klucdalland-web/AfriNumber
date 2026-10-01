@@ -20,6 +20,8 @@ class Profile extends Model
         'status',
         'document_url',
         'documents',
+        'rejection_reason', // 👈 à ajouter
+
     ];
     protected $casts = [
         'documents' => 'array',

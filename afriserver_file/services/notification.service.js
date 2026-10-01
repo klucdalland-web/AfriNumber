@@ -2,13 +2,11 @@ var crypto = require('crypto');
 var axios = require('axios');
 var config = require('../config');
 
-async function notifierFinTraitement(idprofile) {
+async function notifierFinTraitement(idprofile, documents) {
     var urlLaravel = `${config.laravelBaseUrl}/express/upload-complete`;
 
-    if (!config.serviceSecretKey) throw new Error('SERVICE_SECRET_KEY manquant');
-
     // Le body est sérialisé une seule fois : c'est cette chaîne qui est signée ET envoyée
-    var data = JSON.stringify({ profile_id: idprofile });
+    var data = JSON.stringify({ profile_id: idprofile, documents: documents });
 
     var signature = crypto
         .createHmac('sha256', config.serviceSecretKey)
@@ -18,6 +16,7 @@ async function notifierFinTraitement(idprofile) {
     var axiosConfig = {
         method: 'post',
         maxBodyLength: Infinity,
+        timeout: 30000, // Laravel sur Render peut être en veille
         url: urlLaravel,
         headers: {
             'Accept': 'application/json',
