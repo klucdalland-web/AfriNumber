@@ -9,12 +9,14 @@ class DashboardHeader extends StatelessWidget {
     required this.scale,
     required this.country,
     this.onNotificationTap,
+    this.onMessageTap,
     this.onProfileTap,
   });
 
   final double scale;
   final String country;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onMessageTap;
   final VoidCallback? onProfileTap;
 
   @override
@@ -104,21 +106,24 @@ class DashboardHeader extends StatelessWidget {
             ),
             SizedBox(width: r.space(10 * scale)),
 
-            // Profile Avatar Circle
+            // Messages Icon Button (Replaces Profile Avatar)
             GestureDetector(
-              onTap: onProfileTap,
+              onTap: onMessageTap ?? onProfileTap,
               child: Container(
                 width: r.widthOf(38 * scale),
                 height: r.heightOf(38 * scale),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFBC02D),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  ),
                 ),
                 child: Center(
                   child: Icon(
-                    Icons.person_rounded,
-                    size: r.iconSize(22 * scale),
-                    color: Colors.black87,
+                    Icons.chat_bubble_outline_rounded,
+                    size: r.iconSize(19 * scale),
+                    color: textColor,
                   ),
                 ),
               ),

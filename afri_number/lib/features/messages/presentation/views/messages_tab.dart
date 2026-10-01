@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/inbox_header.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../controllers/messages_controller.dart';
 import '../widgets/message_search_field.dart';
 import '../widgets/message_tile.dart';
 
 /// Écran « Messages » (Figma : Accueil/Messages).
-class MessagesPage extends GetView<MessagesController> {
-  const MessagesPage({super.key});
+class MessagesTab extends GetView<MessagesController> {
+  const MessagesTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return AppScaffold(
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             Obx(

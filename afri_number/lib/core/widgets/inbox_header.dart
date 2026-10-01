@@ -25,6 +25,9 @@ class InboxHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onSurface;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
@@ -33,14 +36,14 @@ class InboxHeader extends StatelessWidget {
             width: 32,
             height: 32,
             child: InkResponse(
-              onTap: onBack,
+              onTap: onBack ?? () => Navigator.of(context).maybePop(),
               radius: 20,
-              child: const Align(
+              child: Align(
                 alignment: Alignment.centerLeft,
                 child: Icon(
                   Icons.chevron_left_rounded,
-                  size: 26,
-                  color: AppColors.ink,
+                  size: 28,
+                  color: textColor,
                 ),
               ),
             ),
@@ -50,9 +53,17 @@ class InboxHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: AppTypography.screenTitle),
+                Text(
+                  title,
+                  style: AppTypography.screenTitle.copyWith(color: textColor),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: AppTypography.subtitle),
+                Text(
+                  subtitle,
+                  style: AppTypography.subtitle.copyWith(
+                    color: textColor.withValues(alpha: 0.6),
+                  ),
+                ),
               ],
             ),
           ),
@@ -81,12 +92,15 @@ class UnreadBadge extends StatelessWidget {
         color: AppColors.mint,
         borderRadius: BorderRadius.circular(100),
       ),
-      child: Text('$count non lus', style: AppTypography.badge),
+      child: Text(
+        '$count non lus',
+        style: AppTypography.badge.copyWith(color: AppColors.ink),
+      ),
     );
   }
 }
 
-/// Bouton rond blanc (filtre, etc.) de 36 px.
+/// Bouton rond (filtre, etc.) de 36 px.
 class RoundIconButton extends StatelessWidget {
   const RoundIconButton({
     super.key,
@@ -101,8 +115,11 @@ class RoundIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Material(
-      color: AppColors.surface,
+      color: isDark ? const Color(0xFF1E293B) : AppColors.surface,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -110,7 +127,11 @@ class RoundIconButton extends StatelessWidget {
         child: SizedBox(
           width: size,
           height: size,
-          child: Icon(icon, size: 18, color: AppColors.ink),
+          child: Icon(
+            icon,
+            size: 18,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
       ),
     );

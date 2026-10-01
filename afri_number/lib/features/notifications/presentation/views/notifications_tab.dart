@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/inbox_header.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../controllers/notifications_controller.dart';
 import '../widgets/notification_group_section.dart';
 
 /// Écran « Notifications » (Figma : Accueil/Notifications).
-class NotificationsPage extends GetView<NotificationsController> {
-  const NotificationsPage({super.key});
+class NotificationsTab extends GetView<NotificationsController> {
+  const NotificationsTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return AppScaffold(
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             Obx(

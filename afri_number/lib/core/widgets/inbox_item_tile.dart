@@ -5,9 +5,6 @@ import '../../app/theme/app_typography.dart';
 
 /// Ligne d'une boîte de réception (message ou notification) :
 /// avatar · titre + heure · aperçu + point non lu / badge.
-///
-/// N'a ni fond ni marge : c'est au parent de fournir la carte
-/// (une carte par ligne pour Messages, une carte groupée pour Notifications).
 class InboxItemTile extends StatelessWidget {
   const InboxItemTile({
     super.key,
@@ -34,6 +31,13 @@ class InboxItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.colorScheme.onSurface;
+    final subtitleColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -54,11 +58,18 @@ class InboxItemTile extends StatelessWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.inboxTitle,
+                          style: AppTypography.inboxTitle.copyWith(
+                            color: textColor,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(timeLabel, style: AppTypography.inboxTime),
+                      Text(
+                        timeLabel,
+                        style: AppTypography.inboxTime.copyWith(
+                          color: subtitleColor,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -69,7 +80,9 @@ class InboxItemTile extends StatelessWidget {
                           preview,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.inboxPreview,
+                          style: AppTypography.inboxPreview.copyWith(
+                            color: subtitleColor,
+                          ),
                         ),
                       ),
                       if (isUnread) ...[
