@@ -18,8 +18,6 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = context.responsive;
 
-    final r = context.responsive;
-
     return AppScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
