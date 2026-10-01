@@ -21,6 +21,9 @@ return [
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
+    'discord' => [
+        'alert_webhook' => env('DISCORD_ALERT_WEBHOOK'),
+    ],
     'zavu' => [
         'key' => env('ZAVU_API_KEY'),
         'base_url' => 'https://zavu.dev',
