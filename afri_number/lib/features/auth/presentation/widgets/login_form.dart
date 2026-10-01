@@ -74,7 +74,9 @@ class LoginForm extends StatelessWidget {
           _OptionsRow(controller: controller),
 
           const SizedBox(height: 5),
-          SocialAuthButtons(onApplePressed: ()=>print('Apple'),onGooglePressed: ()=>print('Google')),
+          SocialAuthButtons(
+              onApplePressed: ()=>(),onGooglePressed: ()=>()
+          ),
           // Spacer(),
           Obx(
             () => AppButton.primary(

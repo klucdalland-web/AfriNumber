@@ -9,8 +9,12 @@ import '../../features/auth/presentation/views/register_page.dart';
 import '../../features/auth/presentation/views/reset_password_page.dart';
 import '../../features/main/presentation/bindings/main_binding.dart';
 import '../../features/main/presentation/views/main_page.dart';
-import '../../features/splash/presentation/views/splash_page.dart';
+import '../../features/messages/presentation/bindings/messages_binding.dart';
+import '../../features/messages/presentation/views/messages_tab.dart';
+import '../../features/notifications/presentation/bindings/notifications_binding.dart';
+import '../../features/notifications/presentation/views/notifications_tab.dart';
 import '../../features/splash/presentation/bindings/splash_binding.dart';
+import '../../features/splash/presentation/views/splash_page.dart';
 import '../../features/welcome/presentation/views/welcome_page.dart';
 import 'app_routes.dart';
 
@@ -27,6 +31,18 @@ class AppPages {
       name: AppRoutes.splash,
       page: () => const SplashPage(),
       binding: SplashBinding(),
+    ),
+
+    // ── Messages & Notifications ──────────────────────────────────────────────
+    GetPage(
+      name: AppRoutes.messages,
+      page: () => const MessagesTab(),
+      binding: MessagesBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationsTab(),
+      binding: NotificationsBinding(),
     ),
 
     // ── Onboarding ──────────────────────────────────────────────────────────
