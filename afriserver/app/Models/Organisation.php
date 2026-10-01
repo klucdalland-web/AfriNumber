@@ -14,6 +14,16 @@ class Organisation extends Model
         'actif',
     ];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'actif' => 'boolean',
+        ];
+    }
+
     public function pays(): HasMany
     {
         return $this->hasMany(Pays::class);

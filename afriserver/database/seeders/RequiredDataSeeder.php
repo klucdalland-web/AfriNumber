@@ -25,6 +25,7 @@ class RequiredDataSeeder extends Seeder
             OrganisationSeeder::class,
             PlatformSeeder::class,
             TypePieceIdentiteSeeder::class,
+            RolesAndPermissionsSeeder::class,
         ];
     }
 

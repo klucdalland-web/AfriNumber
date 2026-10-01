@@ -60,6 +60,19 @@ return [
             'report' => false,
         ],
 
+        // Documents KYC stockés sur Storj (compatible S3) : lecture et suppression uniquement
+        'storj' => [
+            'driver' => 's3',
+            'key' => env('STORJ_ACCESS_KEY'),
+            'secret' => env('STORJ_SECRET_KEY'),
+            'region' => 'us-1',
+            'bucket' => env('STORJ_BUCKET'),
+            'endpoint' => env('STORJ_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
