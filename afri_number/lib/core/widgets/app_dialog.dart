@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,12 +13,14 @@ class AppDialog {
   AppDialog._();
 
   /// Affiche une boîte de dialogue d'erreur adaptative selon la plateforme.
+  /// Se ferme automatiquement après [autoDismissDuration] (par défaut 5 secondes).
   static Future<void> showError({
     BuildContext? context,
     String? title,
     required String message,
     String? buttonText,
     VoidCallback? onConfirm,
+    Duration autoDismissDuration = const Duration(seconds: 5),
   }) async {
     final ctx = context ?? Get.context;
     if (ctx == null) return;
@@ -28,52 +31,69 @@ class AppDialog {
     final dialogTitle = title ?? 'Erreur';
     final confirmText = buttonText ?? 'Compris';
 
+    Timer? dismissTimer;
+
+    void dismissDialog(BuildContext dialogCtx) {
+      dismissTimer?.cancel();
+      if (Navigator.of(dialogCtx).canPop()) {
+        Navigator.of(dialogCtx).pop();
+      }
+      if (onConfirm != null) onConfirm();
+    }
+
     if (isApplePlatform) {
-      await showCupertinoDialog(
-        context: ctx,
-        barrierDismissible: true,
-        builder: (dialogCtx) => CupertinoAlertDialog(
-          title: Text(
-            dialogTitle,
-            style: GoogleFonts.ibmPlexSans(
-              fontWeight: FontWeight.w600,
-              fontSize: 17,
-            ),
-          ),
-          content: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              message,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 13,
-                height: 1.35,
-              ),
-            ),
-          ),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () {
-                Navigator.of(dialogCtx).pop();
-                if (onConfirm != null) onConfirm();
-              },
-              child: Text(
-                confirmText,
-                style: GoogleFonts.ibmPlexSans(
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoColors.activeBlue,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Android / Material 3 Dialog
-      await showDialog(
+      showCupertinoDialog(
         context: ctx,
         barrierDismissible: true,
         builder: (dialogCtx) {
+          dismissTimer = Timer(autoDismissDuration, () {
+            dismissDialog(dialogCtx);
+          });
+
+          return CupertinoAlertDialog(
+            title: Text(
+              dialogTitle,
+              style: GoogleFonts.ibmPlexSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 17,
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                message,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  height: 1.35,
+                ),
+              ),
+            ),
+            actions: [
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => dismissDialog(dialogCtx),
+                child: Text(
+                  confirmText,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontWeight: FontWeight.w600,
+                    color: CupertinoColors.activeBlue,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // Android / Material 3 Dialog
+      showDialog(
+        context: ctx,
+        barrierDismissible: true,
+        builder: (dialogCtx) {
+          dismissTimer = Timer(autoDismissDuration, () {
+            dismissDialog(dialogCtx);
+          });
+
           final theme = Theme.of(dialogCtx);
           final isDark = theme.brightness == Brightness.dark;
           final r = dialogCtx.responsive;
@@ -145,10 +165,7 @@ class AppDialog {
                           borderRadius: BorderRadius.circular(r.radius(24)),
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.of(dialogCtx).pop();
-                        if (onConfirm != null) onConfirm();
-                      },
+                      onPressed: () => dismissDialog(dialogCtx),
                       child: Text(
                         confirmText,
                         style: GoogleFonts.ibmPlexSans(

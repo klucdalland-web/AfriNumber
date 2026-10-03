@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/utils/storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
-import '../../../../core/utils/storage_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remote, this._storage);
@@ -19,9 +20,19 @@ class AuthRepositoryImpl implements AuthRepository {
     final result = await _request(
       () => _remote.login(email: email, password: password),
     );
+    if (kDebugMode) {
+      print('=== Login API Raw Response ===');
+      print(result);
+    }
     final token = _extractToken(result);
     if (token != null) {
+      if (kDebugMode) {
+        print('=== Extracted Access Token ===');
+        print(token);
+      }
       await _storage.saveAccessToken(token);
+    } else if (kDebugMode) {
+      print('⚠️ Aucun token n\'a pu être extrait de la réponse login.');
     }
   }
 
@@ -118,32 +129,39 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  String? _extractToken(Map<String, dynamic> result) {
-    if (result['token'] is String && (result['token'] as String).isNotEmpty) {
-      return result['token'] as String;
+  /// Extraction récursive du token JWT/Bearer dans la réponse JSON backend
+  /// (compatible avec token, access_token, bearer_token, data.token, authorization.token, etc.)
+  String? _extractToken(dynamic json) {
+    if (json == null) return null;
+
+    if (json is String && json.isNotEmpty && json.length > 10) {
+      return json;
     }
-    if (result['access_token'] is String && (result['access_token'] as String).isNotEmpty) {
-      return result['access_token'] as String;
+
+    if (json is Map) {
+      // 1. Clés directes courantes
+      for (final key in [
+        'token',
+        'access_token',
+        'accessToken',
+        'bearer_token',
+        'jwt',
+        'auth_token',
+      ]) {
+        final val = json[key];
+        if (val is String && val.isNotEmpty) {
+          return val;
+        }
+      }
+
+      // 2. Recherche dans les objets imbriqués
+      for (final key in ['data', 'user', 'authorization', 'authorisation', 'auth', 'result']) {
+        final child = json[key];
+        final extracted = _extractToken(child);
+        if (extracted != null) return extracted;
+      }
     }
-    final data = result['data'];
-    if (data is Map) {
-      if (data['token'] is String && (data['token'] as String).isNotEmpty) {
-        return data['token'] as String;
-      }
-      if (data['access_token'] is String && (data['access_token'] as String).isNotEmpty) {
-        return data['access_token'] as String;
-      }
-    }
-    final auth = result['authorisation'] ?? result['authorization'];
-    if (auth is Map) {
-      if (auth['token'] is String && (auth['token'] as String).isNotEmpty) {
-        return auth['token'] as String;
-      }
-      if (auth['access_token'] is String && (auth['access_token'] as String).isNotEmpty) {
-        return auth['access_token'] as String;
-      }
-    }
+
     return null;
   }
 }
-

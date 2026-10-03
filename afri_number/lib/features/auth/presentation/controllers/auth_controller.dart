@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
@@ -12,12 +13,9 @@ class AuthController extends GetxController {
 
   final AuthRepository _repository;
   final StorageService _storage;
-
   final isLoading = false.obs;
   final rememberMe = false.obs;
-
   final selectedCountry = kCountries.first.obs;
-
   final loginFormKey = GlobalKey<FormState>();
   final registerFormKey = GlobalKey<FormState>();
   final forgotPasswordFormKey = GlobalKey<FormState>();
@@ -45,6 +43,7 @@ class AuthController extends GetxController {
   final confirmNewPasswordController = TextEditingController();
 
   final errorMessage = ''.obs;
+  Timer? _errorTimer;
 
   @override
   void onInit() {
@@ -58,6 +57,7 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
+    _errorTimer?.cancel();
     phoneController.dispose();
     passwordController.dispose();
     lastNameController.dispose();
@@ -74,7 +74,22 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  void clearError() => errorMessage.value = '';
+  void setError(String msg) {
+    _errorTimer?.cancel();
+    errorMessage.value = msg;
+    AppDialog.showError(
+      message: msg,
+      autoDismissDuration: const Duration(seconds: 5),
+    );
+    _errorTimer = Timer(const Duration(seconds: 5), () {
+      errorMessage.value = '';
+    });
+  }
+
+  void clearError() {
+    _errorTimer?.cancel();
+    errorMessage.value = '';
+  }
 
   void toggleRememberMe(bool value) => rememberMe.value = value;
 
@@ -126,13 +141,10 @@ class AuthController extends GetxController {
       Get.offAllNamed(AppRoutes.authFeedbackConnexion);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
-      AppDialog.showError(message: e.message);
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      final msg = 'error.login_failed'.tr;
-      errorMessage.value = msg;
-      AppDialog.showError(message: msg);
+      setError('error.login_failed'.tr);
     }
   }
 
@@ -167,13 +179,10 @@ class AuthController extends GetxController {
       Get.offAllNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
-      AppDialog.showError(message: e.message);
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      final msg = 'error.register_failed'.tr;
-      errorMessage.value = msg;
-      AppDialog.showError(message: msg);
+      setError('error.register_failed'.tr);
     }
   }
 
@@ -186,10 +195,8 @@ class AuthController extends GetxController {
       final code = otpController.text.trim();
 
       if (code.length != 4) {
-        final msg = 'error.code_length'.tr;
-        errorMessage.value = msg;
         isLoading.value = false;
-        AppDialog.showError(message: msg);
+        setError('error.code_length'.tr);
         return;
       }
 
@@ -204,14 +211,11 @@ class AuthController extends GetxController {
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.authFeedbackInscription);
     } on ApiException catch (e) {
-      errorMessage.value = e.message;
       isLoading.value = false;
-      AppDialog.showError(message: e.message);
+      setError(e.message);
     } catch (_) {
-      final msg = 'error.code_invalid'.tr;
-      errorMessage.value = msg;
       isLoading.value = false;
-      AppDialog.showError(message: msg);
+      setError('error.code_invalid'.tr);
     }
   }
 
@@ -223,12 +227,9 @@ class AuthController extends GetxController {
       final email = emailController.text.trim();
       await _repository.resendOtp(email: email.isNotEmpty ? email : null);
     } on ApiException catch (e) {
-      errorMessage.value = e.message;
-      AppDialog.showError(message: e.message);
+      setError(e.message);
     } catch (_) {
-      final msg = 'error.code_resend_failed'.tr;
-      errorMessage.value = msg;
-      AppDialog.showError(message: msg);
+      setError('error.code_resend_failed'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -249,13 +250,10 @@ class AuthController extends GetxController {
       Get.toNamed(AppRoutes.resetPassword);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
-      AppDialog.showError(message: e.message);
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      final msg = 'error.email_send_failed'.tr;
-      errorMessage.value = msg;
-      AppDialog.showError(message: msg);
+      setError('error.email_send_failed'.tr);
     }
   }
 
@@ -281,13 +279,10 @@ class AuthController extends GetxController {
       Get.offAllNamed(AppRoutes.login);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
-      AppDialog.showError(message: e.message);
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      final msg = 'error.code_expired'.tr;
-      errorMessage.value = msg;
-      AppDialog.showError(message: msg);
+      setError('error.code_expired'.tr);
     }
   }
 
