@@ -581,9 +581,9 @@ class AuthController extends Controller
             ]
         );
 
-        if ($email) {
-            app(OtpMailService::class)->send($email, (string) $code, 10);
-        }
+        // if ($email) {
+        //     app(OtpMailService::class)->send($email, (string) $code, 10);
+        // }
 
         Log::info('Code OTP généré.', [
             'email' => $email,
@@ -1187,9 +1187,9 @@ class AuthController extends Controller
             ]
         );
 
-        if ($email) {
-            app(OtpMailService::class)->send($email, (string) $code, 15);
-        }
+        // if ($email) {
+        //     app(OtpMailService::class)->send($email, (string) $code, 15);
+        // }
 
         Log::info('Code de réinitialisation généré.', [
             'email' => $email,
