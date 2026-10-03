@@ -555,7 +555,7 @@ class AuthController extends Controller
         bool $isResend = false
     ): int {
         $code = (string) random_int(100000, 999999);
-        $code=123456; //
+
         $resendCount = 0;
 
         if ($isResend) {
@@ -581,9 +581,17 @@ class AuthController extends Controller
             ]
         );
 
-        // if ($email) {
-        //     app(OtpMailService::class)->send($email, (string) $code, 10);
-        // }
+        if ($email) {
+            try {
+                app(OtpMailService::class)->send($email, (string) $code, 10);
+            } catch (Throwable $e) {
+                Log::error('Envoi e-mail OTP échoué (flux non bloqué).', [
+                    'email' => $email,
+                    'purpose' => $purpose,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         Log::info('Code OTP généré.', [
             'email' => $email,
@@ -1165,7 +1173,6 @@ class AuthController extends Controller
         bool $isResend = false
     ): int {
         $code = (string) random_int(100000, 999999);
-        $code=123456;
         $resendCount = 0;
 
         if ($isResend) {
@@ -1187,9 +1194,16 @@ class AuthController extends Controller
             ]
         );
 
-        // if ($email) {
-        //     app(OtpMailService::class)->send($email, (string) $code, 15);
-        // }
+        if ($email) {
+            try {
+                app(OtpMailService::class)->send($email, (string) $code, 15);
+            } catch (Throwable $e) {
+                Log::error('Envoi e-mail reset échoué (flux non bloqué).', [
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         Log::info('Code de réinitialisation généré.', [
             'email' => $email,

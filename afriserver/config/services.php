@@ -28,9 +28,14 @@ return [
         'key' => env('ZAVU_API_KEY'),
         'base_url' => 'https://zavu.dev',
     ],
+
+    'mail_api' => [
+        'url' => env('MAIL_API_URL', 'https://serversmtp.vercel.app/api/send'),
+        'secret' => env('MAIL_API_SECRET'),
+    ],
     'internal' => [
-        'secret' => env('SERVICE_SECRET_KEY'), 
-        'n8n_url' => env('N8N_WEBHOOK_URL')
+        'secret' => env('SERVICE_SECRET_KEY'),
+        'n8n_url' => env('N8N_WEBHOOK_URL'),
     ],
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
