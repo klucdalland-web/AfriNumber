@@ -15,6 +15,7 @@ export 'status_badge.dart';
 export 'tab_page.dart';
 export 'country_flag_badge.dart';
 export 'hacking_number_text.dart';
+export 'app_dialog.dart';
 
 /// Responsive utilities
 export '../responsive/responsive.dart';

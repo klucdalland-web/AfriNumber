@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/constants/country_constants.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/utils/storage_service.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
@@ -127,9 +127,12 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       isLoading.value = false;
       errorMessage.value = e.message;
+      AppDialog.showError(message: e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.login_failed'.tr;
+      final msg = 'error.login_failed'.tr;
+      errorMessage.value = msg;
+      AppDialog.showError(message: msg);
     }
   }
 
@@ -165,9 +168,12 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       isLoading.value = false;
       errorMessage.value = e.message;
+      AppDialog.showError(message: e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.register_failed'.tr;
+      final msg = 'error.register_failed'.tr;
+      errorMessage.value = msg;
+      AppDialog.showError(message: msg);
     }
   }
 
@@ -180,8 +186,10 @@ class AuthController extends GetxController {
       final code = otpController.text.trim();
 
       if (code.length != 4) {
-        errorMessage.value = 'error.code_length'.tr;
+        final msg = 'error.code_length'.tr;
+        errorMessage.value = msg;
         isLoading.value = false;
+        AppDialog.showError(message: msg);
         return;
       }
 
@@ -198,9 +206,12 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       errorMessage.value = e.message;
       isLoading.value = false;
+      AppDialog.showError(message: e.message);
     } catch (_) {
-      errorMessage.value = 'error.code_invalid'.tr;
+      final msg = 'error.code_invalid'.tr;
+      errorMessage.value = msg;
       isLoading.value = false;
+      AppDialog.showError(message: msg);
     }
   }
 
@@ -213,8 +224,11 @@ class AuthController extends GetxController {
       await _repository.resendOtp(email: email.isNotEmpty ? email : null);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
+      AppDialog.showError(message: e.message);
     } catch (_) {
-      errorMessage.value = 'error.code_resend_failed'.tr;
+      final msg = 'error.code_resend_failed'.tr;
+      errorMessage.value = msg;
+      AppDialog.showError(message: msg);
     } finally {
       isLoading.value = false;
     }
@@ -236,9 +250,12 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       isLoading.value = false;
       errorMessage.value = e.message;
+      AppDialog.showError(message: e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.email_send_failed'.tr;
+      final msg = 'error.email_send_failed'.tr;
+      errorMessage.value = msg;
+      AppDialog.showError(message: msg);
     }
   }
 
@@ -265,9 +282,12 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       isLoading.value = false;
       errorMessage.value = e.message;
+      AppDialog.showError(message: e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.code_expired'.tr;
+      final msg = 'error.code_expired'.tr;
+      errorMessage.value = msg;
+      AppDialog.showError(message: msg);
     }
   }
 

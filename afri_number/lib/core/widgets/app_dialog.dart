@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package0/get/get.dart'; // wait let's write correctly
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
