@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -29,10 +30,14 @@ class AbonnementPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
-    final price = period == BillingPeriod.monthly ? plan.monthlyPrice : plan.annualPrice;
+    final price =
+        period == BillingPeriod.monthly ? plan.monthlyPrice : plan.annualPrice;
 
     return Padding(
-      padding: EdgeInsets.only(top: plan.isRecommended ? r.space(18) : 0, bottom: r.space(16)),
+      padding: EdgeInsets.only(
+        top: plan.isRecommended ? r.space(18) : 0,
+        bottom: r.space(16),
+      ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -46,36 +51,49 @@ class AbonnementPlanCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Nom du plan et prix ──
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       plan.name,
                       style: AppTextStyles.sectionTitle(r.fontSize(22))
-                          .copyWith(color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                          .copyWith(
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const Spacer(),
+                    // Affichage "Gratuit" ou prix avec période traduite
                     if (plan.isFree)
                       Text(
-                        'Gratuit',
+                        'abonnement.free'.tr,
                         style: AppTextStyles.sectionTitle(r.fontSize(22)),
                       )
                     else
                       RichText(
                         text: TextSpan(children: [
                           TextSpan(
-                            text: Formatters.amount(price, currency: plan.currency),
+                            text: Formatters.amount(price,
+                                currency: plan.currency),
                             style: AppTextStyles.sectionTitle(r.fontSize(22)),
                           ),
                           TextSpan(
-                            text: ' / ${period.unit}',
-                            style: AppTextStyles.body(r.fontSize(16), color: AppColors.textMuted),
+                            // Unité de période traduite (mois / an)
+                            text: ' / ${period.unitKey.tr}',
+                            style: AppTextStyles.body(
+                              r.fontSize(16),
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         ]),
                       ),
                   ],
                 ),
+
                 SizedBox(height: r.space(4)),
+
+                // ── Tagline du plan ──
                 Text(
                   plan.tagline,
                   style: AppTextStyles.body(
@@ -84,11 +102,23 @@ class AbonnementPlanCard extends StatelessWidget {
                     color: AppColors.ink,
                   ),
                 ),
+
                 SizedBox(height: r.space(18)),
-                for (final feature in plan.features) PlanFeatureRow(feature: feature),
+
+                // ── Liste des fonctionnalités ──
+                for (final feature in plan.features)
+                  PlanFeatureRow(feature: feature),
+
                 SizedBox(height: r.space(8)),
+
+                // ── Bouton d'action traduit ──
                 AppButton.primary(
-                  label: isCurrent ? 'Abonnement actuel' : 'Passer ${plan.name}',
+                  label: isCurrent
+                      // Plan déjà souscrit
+                      ? 'abonnement.current_plan'.tr
+                      // Invite à souscrire avec interpolation du nom
+                      : 'abonnement.subscribe'
+                          .trParams({'plan': plan.name}),
                   isLoading: isProcessing,
                   onPressed: isCurrent ? null : onSubscribe,
                   backgroundColor: _buttonColor,
@@ -99,11 +129,13 @@ class AbonnementPlanCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // ── Badge "Recommandé" traduit ──
           if (plan.isRecommended)
             Positioned(
               top: -r.space(8),
               right: r.space(18),
-              child: const StatusBadge.success('Recommandé'),
+              child: StatusBadge.success('abonnement.recommended'.tr),
             ),
         ],
       ),

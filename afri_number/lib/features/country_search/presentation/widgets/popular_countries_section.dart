@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/models/country_item.dart';
 
+/// Section des pays mis en avant, affichée en liste horizontale.
+/// N'est visible que quand la recherche est vide.
 class PopularCountriesSection extends StatelessWidget {
   const PopularCountriesSection({
     super.key,
@@ -23,16 +25,14 @@ class PopularCountriesSection extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark
-        ? const Color(0xFF334155)
-        : const Color(0xFFE2E8F0);
-    final badgeBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
-    final textColor = isDark
-        ? const Color(0xFFF8FAFC)
-        : const Color(0xFF0F172A);
-    final subtextColor = isDark
-        ? const Color(0xFF94A3B8)
-        : const Color(0xFF64748B);
+    final cardBorder =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final badgeBg =
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+    final textColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final subtextColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,12 +105,14 @@ class PopularCountriesSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            CountryFlagBadge(code: country.id, size: 32 * scale),
+            // Drapeau identifié par le code ISO (ex. "MG")
+            CountryFlagBadge(code: country.code, size: 32 * scale),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Nom du pays depuis l'API
                 Text(
-                  'country.${country.id.toUpperCase()}'.tr,
+                  country.name,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: r.fontSize(12 * scale),
                     fontWeight: FontWeight.w700,
@@ -120,8 +122,9 @@ class PopularCountriesSection extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: r.space(2 * scale)),
+                // Indicatif téléphonique (ex. "+261")
                 Text(
-                  country.code,
+                  country.dialCode,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: r.fontSize(11 * scale),
                     fontWeight: FontWeight.w400,

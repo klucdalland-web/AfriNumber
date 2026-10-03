@@ -1,17 +1,20 @@
 import '../../domain/models/country_item.dart';
 import '../../domain/repositories/country_repository.dart';
 
+/// Implémentation de test (mock) de [CountryRepository].
+/// Utilisée uniquement en développement si [CountryRepositoryImpl] n'est pas branché.
+/// Les données reflètent la même structure que l'API `/pays`.
 class MockCountryRepository implements CountryRepository {
   @override
   Future<List<CountryItem>> fetchCountries() async => const [
-    CountryItem(id: 'us', name: 'États-Unis', code: '+1', availableNumbers: 1240, isPopular: true),
-    CountryItem(id: 'uk', name: 'Royaume-Uni', code: '+44', availableNumbers: 850, isPopular: true),
-    CountryItem(id: 'fr', name: 'France', code: '+33', availableNumbers: 2100, isPopular: true),
-    CountryItem(id: 'ca', name: 'Canada', code: '+1', availableNumbers: 1500, isPopular: true),
-    CountryItem(id: 'de', name: 'Allemagne', code: '+49', availableNumbers: 920),
-    CountryItem(id: 'mg', name: 'Madagascar', code: '+261', availableNumbers: 430),
-    CountryItem(id: 'ci', name: "Côte d'Ivoire", code: '+225', availableNumbers: 670),
-    CountryItem(id: 'sn', name: 'Sénégal', code: '+221', availableNumbers: 510),
-    CountryItem(id: 'cm', name: 'Cameroun', code: '+237', availableNumbers: 390),
-  ];
+        CountryItem(id: 1,  name: 'États-Unis',     code: 'US', dialCode: '+1',   isPopular: true),
+        CountryItem(id: 2,  name: 'Royaume-Uni',    code: 'GB', dialCode: '+44',  isPopular: true),
+        CountryItem(id: 3,  name: 'France',          code: 'FR', dialCode: '+33',  isPopular: true),
+        CountryItem(id: 4,  name: 'Canada',          code: 'CA', dialCode: '+1',   isPopular: true),
+        CountryItem(id: 5,  name: 'Allemagne',       code: 'DE', dialCode: '+49'),
+        CountryItem(id: 28, name: 'Madagascar',      code: 'MG', dialCode: '+261'),
+        CountryItem(id: 6,  name: "Côte d'Ivoire",  code: 'CI', dialCode: '+225'),
+        CountryItem(id: 7,  name: 'Sénégal',         code: 'SN', dialCode: '+221'),
+        CountryItem(id: 11, name: 'Congo',           code: 'CG', dialCode: '+242'),
+      ];
 }

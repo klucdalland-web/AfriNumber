@@ -42,6 +42,10 @@ class ApiConstants {
   static const String profile = '/user/profile';
   static const String updateProfile = '/user/profile';
 
+  // Country endpoints
+  /// Retourne la liste des pays disponibles sur la plateforme.
+  static const String pays = '/pays';
+
   /// Vérifie si l'URL est configurée pour le développement local
   static bool get isLocalDevelopment {
     return baseUrl.contains('localhost') || 

@@ -31,7 +31,6 @@ class ProfileBinding extends Bindings {
         Get.find<StorageService>(),
         Get.find<ThemeController>(),
         Get.find<AuthRepository>(),
-        Get.find<ProfileRepository>(),
       ),
       fenix: true,
     );

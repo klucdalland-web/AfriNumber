@@ -35,3 +35,5 @@ const List<CountryData> kCountries = [
   CountryData(id: 9, name: 'Canada', code: 'CA', dialCode: '+1'),
   CountryData(id: 10, name: 'Allemagne', code: 'DE', dialCode: '+49'),
 ];
+
+const kDefaultCountry = CountryData(id: 1, name: 'Madagascar', code: 'MG', dialCode: '+261');
