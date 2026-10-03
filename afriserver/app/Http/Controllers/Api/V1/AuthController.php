@@ -24,6 +24,7 @@ use App\Models\TypeUser;
 use App\Models\User;
 use App\Services\GeoLocationService;
 use App\Services\ObservabilityService;
+use App\Services\OtpMailService;
 use App\Services\PhoneNumberService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -554,7 +555,6 @@ class AuthController extends Controller
         bool $isResend = false
     ): int {
         $code = (string) random_int(100000, 999999);
-        $code = 123456; // Pour tests, à retirer en production
 
         $resendCount = 0;
 
@@ -581,7 +581,10 @@ class AuthController extends Controller
             ]
         );
 
-        // TODO : envoyer $code par email ou SMS
+        if ($email) {
+            app(OtpMailService::class)->send($email, (string) $code, 10);
+        }
+
         Log::info('Code OTP généré.', [
             'email' => $email,
             'phone_number' => $phoneNumber,
@@ -1162,7 +1165,6 @@ class AuthController extends Controller
         bool $isResend = false
     ): int {
         $code = (string) random_int(100000, 999999);
-        $code = 123456; // Pour tests, à retirer en production
 
         $resendCount = 0;
 
@@ -1185,7 +1187,10 @@ class AuthController extends Controller
             ]
         );
 
-        // TODO : envoyer $code par email ou SMS
+        if ($email) {
+            app(OtpMailService::class)->send($email, (string) $code, 15);
+        }
+
         Log::info('Code de réinitialisation généré.', [
             'email' => $email,
             'phone_number' => $phoneNumber,
