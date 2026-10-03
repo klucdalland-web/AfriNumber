@@ -12,18 +12,18 @@ class ProfilRepositoryImplement implements ProfileRepository {
   final ProfileRemoteDataSource _remote;
 
   @override
-  Future<UserProfile> getProfile() async {
+  Future<UserModel> getProfile() async {
     final rawData = await _request(_remote.getProfile);
     if (kDebugMode) {
       print('=== Profile API Raw Response ===');
       print(rawData);
     }
-    final userProfile = UserProfile.fromJson(rawData);
+    final userModel = UserModel.fromJson(rawData);
     if (kDebugMode) {
-      print('=== Parsed UserProfile Object ===');
-      print(userProfile.toString());
+      print('=== Parsed UserModel Object ===');
+      print(userModel.toString());
     }
-    return userProfile;
+    return userModel;
   }
 
   Future<T> _request<T>(Future<T> Function() request) async {

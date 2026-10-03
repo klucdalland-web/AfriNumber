@@ -150,13 +150,13 @@ class ProfileTab extends StatelessWidget {
                         ProfileRow(
                           icon: Icons.call_outlined,
                           label: 'profile.phone'.tr,
-                          value: profile.phoneNumber,
+                          value: profile.phoneNumber ?? '+xxxxxxxxxxxx',
                           trailing: ProfileRow.chevron(context),
                         ),
                         ProfileRow(
                           icon: Icons.alternate_email_rounded,
                           label: 'profile.email'.tr,
-                          value: profile.email,
+                          value: profile.email ?? 'JeanDuBois.arthur@example.com',
                           trailing: ProfileRow.chevron(context),
                         ),
                         ProfileRow(
@@ -219,7 +219,6 @@ class ProfileTab extends StatelessWidget {
                         ),
                       ],
                     ),
-
                     SizedBox(height: r.space(32)),
                   ],
                 ),

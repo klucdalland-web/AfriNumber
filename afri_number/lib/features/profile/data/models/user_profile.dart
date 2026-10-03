@@ -1,87 +1,80 @@
-/// Informations affichées dans l'onglet Profil.
-class UserProfile {
-  const UserProfile({
-    required this.fullName,
-    required this.username,
-    required this.phoneNumber,
-    required this.email,
-    required this.countryName,
-    required this.countryCode,
-    required this.planName,
-    required this.activeNumbers,
-    required this.countriesCount,
+class UserModel {
+  const UserModel({
+    this.name,
+    this.email,
+    this.phoneNumber,
+    this.status,
+    this.validationStatus,
+    this.typeUser,
+    this.country,
+    this.organisation,
   });
 
-  /// Données d'exemple de la maquette (interface seule, sans backend).
-  static const sample = UserProfile(
-    fullName: 'Claudio Arthur',
-    username: '@claudio_arthur_008',
-    phoneNumber: '+261 08 977 00',
-    email: 'claudio.arthur@example.com',
-    countryName: 'Madagascar',
-    countryCode: 'MG',
-    planName: 'Basique',
-    activeNumbers: 3,
-    countriesCount: 2,
-  );
+  final String? name;
+  final String? email;
+  final String? phoneNumber;
+  final String? status;
+  final String? validationStatus;
+  final Map<String, dynamic>? typeUser;
+  final Map<String, dynamic>? country;
+  final Map<String, dynamic>? organisation;
 
-  final String fullName;
-  final String username;
-  final String phoneNumber;
-  final String email;
-  final String countryName;
-
-  /// Code ISO du pays (« MG », « FR »).
-  final String countryCode;
-  final String planName;
-  final int activeNumbers;
-  final int countriesCount;
-
-  factory UserProfile.fromJson(Map<String, dynamic> json) {
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     final userMap = (json['data'] is Map && (json['data'] as Map).containsKey('user'))
         ? (json['data'] as Map)['user'] as Map<String, dynamic>
         : (json['data'] is Map ? Map<String, dynamic>.from(json['data'] as Map) : json);
 
-    final firstName = userMap['first_name'] as String? ?? '';
-    final lastName = userMap['name'] as String? ?? userMap['last_name'] as String? ?? '';
-    final fullNameCombined = '$firstName $lastName'.trim();
-    final emailStr = userMap['email'] as String? ?? 'user@afrinumber.com';
-
-    return UserProfile(
-      fullName: fullNameCombined.isNotEmpty
-          ? fullNameCombined
-          : (userMap['full_name'] as String? ?? 'Membre AfriNumber'),
-      username: userMap['username'] as String? ??
-          (userMap['user_name'] as String? ?? '@${emailStr.split('@').first}'),
-      phoneNumber: userMap['phone_number'] as String? ??
-          (userMap['phone'] as String? ?? '+261 34 00 000 00'),
-      email: emailStr,
-      countryName: userMap['country_name'] as String? ??
-          (userMap['country'] is Map ? (userMap['country'] as Map)['name'] as String? : null) ??
-          'Madagascar',
-      countryCode: userMap['country_code'] as String? ??
-          (userMap['country'] is Map ? (userMap['country'] as Map)['code'] as String? : null) ??
-          'MG',
-      planName: userMap['plan_name'] as String? ?? 'Offre Pro',
-      activeNumbers: (userMap['active_numbers'] as num?)?.toInt() ?? 2,
-      countriesCount: (userMap['countries_count'] as num?)?.toInt() ?? 4,
+    return UserModel(
+      name: userMap['name'] as String? ?? userMap['full_name'] as String?,
+      email: userMap['email'] as String?,
+      phoneNumber: userMap['phone_number'] as String? ?? userMap['phone'] as String?,
+      status: userMap['statut'] as String? ?? userMap['status'] as String?,
+      validationStatus: userMap['status_valide'] as String?,
+      typeUser: _toMap(userMap['type_user']),
+      country: _toMap(userMap['pays'] ?? userMap['country']),
+      organisation: _toMap(userMap['organisation']),
     );
   }
 
+  static Map<String, dynamic>? _toMap(Object? value) {
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() => {
-        'full_name': fullName,
-        'username': username,
-        'phone_number': phoneNumber,
+        'name': name,
         'email': email,
-        'country_name': countryName,
-        'country_code': countryCode,
-        'plan_name': planName,
-        'active_numbers': activeNumbers,
-        'countries_count': countriesCount,
+        'phone_number': phoneNumber,
+        'statut': status,
+        'status_valide': validationStatus,
+        'type_user': typeUser,
+        'pays': country,
+        'organisation': organisation,
       };
+
+  // Getters de commodité pour l'UI de l'onglet Profil
+  String get fullName => name ?? 'Claudio Arthur';
+  String get username => email != null && email!.isNotEmpty ? '@${email!.split('@').first}' : '@claudio_arthur_008';
+  String get countryName => country?['name'] as String? ?? 'Madagascar';
+  String get countryCode => country?['code'] as String? ?? 'MG';
+  String get planName => typeUser?['name'] as String? ?? 'Offre Pro';
+  int get activeNumbers => 3;
+  int get countriesCount => 2;
+
+  static const sample = UserModel(
+    name: 'Claudio Arthur',
+    email: 'claudio.arthur@example.com',
+    phoneNumber: '+261 08 977 00',
+    status: 'actif',
+    validationStatus: 'valide',
+  );
 
   @override
   String toString() {
-    return 'UserProfile(fullName: $fullName, username: $username, email: $email, phone: $phoneNumber, country: $countryName)';
+    return 'UserModel(name: $name, email: $email, phone: $phoneNumber, status: $status)';
   }
 }
+
+typedef UserProfile = UserModel;
