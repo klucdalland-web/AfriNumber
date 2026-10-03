@@ -18,11 +18,7 @@ class AuthRemoteDataSource {
     final device = await _deviceInfo.collect();
     final response = await _client.post(
       ApiConstants.login,
-      data: {
-        'email': email,
-        'password': password,
-        ...device,
-      },
+      data: {'email': email, 'password': password, ...device},
     );
     return Map<String, dynamic>.from(response.data as Map);
   }
@@ -59,29 +55,20 @@ class AuthRemoteDataSource {
   }) async {
     final response = await _client.post(
       '/auth/verify-otp',
-      data: {
-        'code': code,
-        'email': email,
-      },
+      data: {'code': code, 'email': email},
     );
     return Map<String, dynamic>.from(response.data as Map);
   }
 
-  Future<Map<String, dynamic>> resendOtp({
-    String? email,
-  }) async {
+  Future<Map<String, dynamic>> resendOtp({String? email}) async {
     final response = await _client.post(
       '/auth/resend-otp',
-      data: {
-        'email': email,
-      },
+      data: {'email': email},
     );
     return Map<String, dynamic>.from(response.data as Map);
   }
 
-  Future<Map<String, dynamic>> forgotPassword({
-    required String email,
-  }) async {
+  Future<Map<String, dynamic>> forgotPassword({required String email}) async {
     final response = await _client.post(
       ApiConstants.forgotPassword,
       data: {'email': email},
@@ -96,11 +83,7 @@ class AuthRemoteDataSource {
   }) async {
     final response = await _client.post(
       ApiConstants.resetPassword,
-      data: {
-        'email': email,
-        'code': code,
-        'password': newPassword,
-      },
+      data: {'email': email, 'code': code, 'password': newPassword},
     );
     return Map<String, dynamic>.from(response.data as Map);
   }
@@ -115,5 +98,13 @@ class AuthRemoteDataSource {
     final data = response.data;
     if (data is Map) return Map<String, dynamic>.from(data);
     return null;
+  }
+
+  Future<List<dynamic>> getCountries() async {
+    final response = await _client.get('/pays');
+    final body = response.data;
+    final data = body is Map ? body['data'] : null;
+    final list = data is Map ? data['pays'] : null;
+    return (list as List?) ?? [];
   }
 }

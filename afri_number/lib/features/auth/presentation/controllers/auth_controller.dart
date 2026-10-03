@@ -16,7 +16,10 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final rememberMe = false.obs;
 
-  final selectedCountry = kCountries.first.obs;
+  // Pays
+  final countries = <CountryData>[].obs;
+  final selectedCountry = Rxn<CountryData>();
+  final isLoadingCountries = false.obs;
 
   final loginFormKey = GlobalKey<FormState>();
   final registerFormKey = GlobalKey<FormState>();
@@ -54,6 +57,7 @@ class AuthController extends GetxController {
       phoneController.text = remembered;
       rememberMe.value = true;
     }
+    loadCountries();
   }
 
   @override
@@ -85,7 +89,10 @@ class AuthController extends GetxController {
     if (text.isEmpty) return '';
 
     if (text.startsWith('+')) {
-      for (final country in kCountries) {
+      final current = selectedCountry.value;
+      if (current != null && text.startsWith(current.dialCode)) return text;
+
+      for (final country in countries) {
         if (text.startsWith(country.dialCode)) {
           selectedCountry.value = country;
           return text;
@@ -94,11 +101,10 @@ class AuthController extends GetxController {
       return text;
     }
 
-    if (text.startsWith('0')) {
-      text = text.substring(1);
-    }
+    if (text.startsWith('0')) text = text.substring(1);
 
-    return '${selectedCountry.value.dialCode}$text';
+    final dial = selectedCountry.value?.dialCode ?? '';
+    return '$dial$text';
   }
 
   Future<void> login() async {
@@ -133,9 +139,32 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> loadCountries() async {
+    if (isLoadingCountries.value) return;
+    isLoadingCountries.value = true;
+    try {
+      final list = await _repository.getCountries();
+      countries.assignAll(list);
+      if (list.isNotEmpty) {
+        selectedCountry.value =
+            list.firstWhereOrNull((c) => c.code == 'MG') ?? list.first;
+      }
+    } catch (_) {
+      errorMessage.value = 'error.countries_load_failed'.tr;
+    } finally {
+      isLoadingCountries.value = false;
+    }
+  }
+
   Future<void> register() async {
     if (isLoading.value) return;
     if (!(registerFormKey.currentState?.validate() ?? false)) return;
+
+    final country = selectedCountry.value;
+    if (country == null) {
+      errorMessage.value = 'error.country_required'.tr;
+      return;
+    }
 
     clearError();
     isLoading.value = true;
@@ -155,7 +184,7 @@ class AuthController extends GetxController {
         firstName: firstName,
         email: email,
         phoneNumber: phoneNumber,
-        countryId: selectedCountry.value.id,
+        countryId: selectedCountry.value?.id ?? country.id,
         password: password,
         passwordConfirmation: passwordConfirmation,
       );
