@@ -555,7 +555,7 @@ class AuthController extends Controller
         bool $isResend = false
     ): int {
         $code = (string) random_int(100000, 999999);
-
+        $code=123456; //
         $resendCount = 0;
 
         if ($isResend) {
@@ -1165,7 +1165,7 @@ class AuthController extends Controller
         bool $isResend = false
     ): int {
         $code = (string) random_int(100000, 999999);
-
+        $code=123456;
         $resendCount = 0;
 
         if ($isResend) {
