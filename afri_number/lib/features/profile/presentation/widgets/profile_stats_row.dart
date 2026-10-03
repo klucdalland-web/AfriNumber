@@ -7,22 +7,22 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'profile_scale.dart';
 
-/// Rangée « 03 Numéros actifs │ Abonnement Basique │ 02 Pays ».
-///
-/// Les colonnes sont positionnées comme dans la maquette : centres à ±156 pt
-/// du milieu d'un cadre de 440, séparateurs à ±0,357 (en `Alignment`), ce qui
-/// garde les proportions sur toutes les largeurs d'écran.
+
+
+
 class ProfileStatsRow extends StatelessWidget {
   const ProfileStatsRow({
     super.key,
     required this.activeNumbers,
     required this.planName,
     required this.countriesCount,
+    this.onTapAbonnement,
   });
 
   final int activeNumbers;
   final String planName;
   final int countriesCount;
+  final VoidCallback? onTapAbonnement;
 
   static String _two(int value) => value.toString().padLeft(2, '0');
 
@@ -68,10 +68,14 @@ class ProfileStatsRow extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.center,
-            child: column([
-              Text('Abonnement', style: strong),
-              Text(planName, style: soft),
-            ]),
+            child: GestureDetector(
+              onTap: onTapAbonnement,
+              behavior: HitTestBehavior.opaque,
+              child: column([
+                Text('Abonnement', style: strong),
+                Text(planName, style: soft),
+              ]),
+            ),
           ),
           Align(
             alignment: const Alignment(0.709, 0),

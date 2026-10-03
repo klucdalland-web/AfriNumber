@@ -9,6 +9,7 @@ import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart
 import '../../features/auth/presentation/views/auth_feedback_inscription_page.dart';
 import '../../features/welcome/presentation/views/welcome_page.dart';
 import '../../features/dashboard/presentation/views/dashboard_page.dart';
+import '../../features/abonnement/abonnement.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -52,6 +53,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.dashboard,
       page: () => const DashboardPage(),
+    ),
+    GetPage(
+      name: AppRoutes.abonnement,
+      page: () => const AbonnementPage(),
+      binding: AbonnementBinding(),
     ),
   ];
 }

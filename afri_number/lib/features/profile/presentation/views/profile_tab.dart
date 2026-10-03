@@ -3,6 +3,7 @@ import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -16,12 +17,9 @@ import '../widgets/profile_row.dart';
 import '../widgets/profile_scale.dart';
 import '../widgets/profile_stats_row.dart';
 
-/// Onglet **Profil** — corps de page uniquement (Scaffold et
-/// BottomNavigationBar fournis par le layout principal).
-///
-/// Toutes les valeurs de mise en page viennent de la maquette (cadre 440 pt)
-/// via `r.u()` / `r.f()`. Les lignes à chevron n'ont pas encore de
-/// destination : elles seront branchées avec la navigation.
+
+
+
 class ProfileTab extends GetView<ProfileController> {
   const ProfileTab({super.key});
 
@@ -110,6 +108,7 @@ class ProfileTab extends GetView<ProfileController> {
                 activeNumbers: profile.activeNumbers,
                 planName: profile.planName,
                 countriesCount: profile.countriesCount,
+                onTapAbonnement: () => Get.toNamed(AppRoutes.abonnement),
               ),
               SizedBox(height: r.u(26)),
 

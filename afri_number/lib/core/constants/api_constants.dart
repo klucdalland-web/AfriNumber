@@ -38,6 +38,11 @@ class ApiConstants {
   static const String profile = '/user/profile';
   static const String updateProfile = '/user/profile';
 
+  // Abonnement endpoints
+  static const String abonnementPlans = '/subscriptions/plans';
+  static const String abonnementCurrent = '/subscriptions/current';
+  static const String abonnementSubscribe = '/subscriptions/subscribe';
+
   /// Vérifie si l'URL est configurée pour le développement local
   static bool get isLocalDevelopment {
     return baseUrl.contains('localhost') || 
@@ -51,7 +56,7 @@ class ApiConstants {
     if (kDebugMode) {
       print('API Base URL: $baseUrl');
       if (isLocalDevelopment) {
-        print('⚠️ Mode développement local détecté');
+        print(' Mode développement local détecté');
       }
     }
   }
