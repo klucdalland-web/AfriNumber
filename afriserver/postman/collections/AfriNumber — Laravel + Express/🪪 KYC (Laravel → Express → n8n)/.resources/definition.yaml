@@ -1,0 +1,9 @@
+$kind: collection
+description: |-
+  Flux réel dans l'ordre :
+  ① Init Laravel (Bearer) → profile_id
+  ② Upload Express multipart → Storj + notifie Laravel
+  ③ (debug) simuler Express→Laravel upload-complete
+  ④ n8n lit le profil
+  ⑤ n8n renvoie le verdict
+order: 2000

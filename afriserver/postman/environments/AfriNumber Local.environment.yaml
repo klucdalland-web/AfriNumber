@@ -1,0 +1,12 @@
+name: AfriNumber Local
+values:
+  - key: base_url
+    value: 'http://localhost:8000/api/v1'
+  - key: express_base_url
+    value: 'http://localhost:3000'
+  - key: x_api_key
+    value: ''
+  - key: service_secret_key
+    value: ''
+  - key: device_id
+    value: postman-device-001lrkrlr

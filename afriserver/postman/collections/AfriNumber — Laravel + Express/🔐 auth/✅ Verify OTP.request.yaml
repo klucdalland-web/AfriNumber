@@ -1,0 +1,51 @@
+$kind: http-request
+description: |-
+  `purpose` est auto-set à `register` ou `login` par les requêtes précédentes (`{{otp_purpose}}`).
+
+  Alternative téléphone :
+  ```json
+  {
+    "phone_number": "{{phone_number}}",
+    "purpose": "{{otp_purpose}}",
+    "code": "{{otp_code}}"
+  }
+  ```
+
+  Sauvegarde auto : `access_token`, `refresh_token`, infos user.
+url: "{{base_url}}/auth/verify-otp"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+  x-api-key: "{{x_api_key}}"
+body:
+  type: text
+  content: |-
+    {
+      "email": "{{email}}",
+      "purpose": "{{otp_purpose}}",
+      "code": "{{otp_code}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Verify OTP OK', function () {
+          pm.expect([200, 201]).to.include(pm.response.code);
+          const j = pm.response.json();
+          pm.expect(j.success).to.eql(true);
+          pm.expect(j.data).to.have.property('access_token');
+          pm.expect(j.data).to.have.property('refresh_token');
+      });
+
+      const j = pm.response.json();
+      if (j && j.data) {
+          if (j.data.access_token) pm.collectionVariables.set('access_token', j.data.access_token);
+          if (j.data.refresh_token) pm.collectionVariables.set('refresh_token', j.data.refresh_token);
+          if (j.data.access_token_expires_at) pm.collectionVariables.set('access_token_expires_at', j.data.access_token_expires_at);
+          if (j.data.refresh_token_expires_at) pm.collectionVariables.set('refresh_token_expires_at', j.data.refresh_token_expires_at);
+          console.log('✅ Tokens sauvegardés dans les variables de collection');
+      }
+    language: text/javascript
+order: 3000

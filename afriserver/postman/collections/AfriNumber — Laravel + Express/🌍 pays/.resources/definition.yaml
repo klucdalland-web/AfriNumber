@@ -1,0 +1,3 @@
+$kind: collection
+description: Pays avec organisation_id non null (public — inscription).
+order: 7000

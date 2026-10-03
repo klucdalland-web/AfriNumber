@@ -1,0 +1,58 @@
+$kind: http-request
+description: |-
+  Crée un OTP `purpose=register` et stocke le payload user (pas encore créé en base).
+
+  Code OTP test actuel : `123456`.
+url: "{{base_url}}/auth/register"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+  x-api-key: "{{x_api_key}}"
+body:
+  type: text
+  content: |-
+    {
+      "contrie_id": {{contrie_id}},
+      "name": "{{name}}",
+      "first_name": "{{first_name}}",
+      "email": "{{email}}",
+      "phone_number": "{{phone_number}}",
+      "password": "{{password}}",
+      "password_confirmation": "{{password}}",
+      "platform": "{{platform}}",
+      "device_id": "{{device_id}}",
+      "device_name": "{{device_name}}",
+      "device_model": "{{device_model}}",
+      "os_version": "{{os_version}}",
+      "app_version": "{{app_version}}",
+      "fcm_token": "{{fcm_token}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: pm.collectionVariables.set('otp_purpose', 'register');
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('Register OK (OTP envoyé)', function () {
+          pm.response.to.have.status(200);
+          const j = pm.response.json();
+          pm.expect(j.success).to.eql(true);
+      });
+
+      try {
+          const body = JSON.parse(pm.request.body.raw);
+          if (body.email) pm.collectionVariables.set('email', body.email);
+          if (body.phone_number) pm.collectionVariables.set('phone_number', body.phone_number);
+          if (body.password) pm.collectionVariables.set('password', body.password);
+          if (body.device_id) pm.collectionVariables.set('device_id', body.device_id);
+          pm.collectionVariables.set('otp_purpose', 'register');
+          pm.collectionVariables.set('otp_code', '123456');
+          console.log('✅ Variables capturées → email, phone, password, otp_purpose=register');
+      } catch (e) {
+          console.warn('Body non JSON, variables non mises à jour');
+      }
+    language: text/javascript
+order: 1000

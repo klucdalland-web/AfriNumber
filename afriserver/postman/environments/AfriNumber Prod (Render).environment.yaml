@@ -1,0 +1,12 @@
+name: AfriNumber Prod (Render)
+values:
+  - key: base_url
+    value: 'https://afriserver.onrender.com/api/v1'
+  - key: express_base_url
+    value: 'http://localhost:3000'
+  - key: x_api_key
+    value: ''
+  - key: service_secret_key
+    value: ''
+  - key: device_id
+    value: postman-device-001lrkrlr

@@ -1,0 +1,20 @@
+$kind: http-request
+description: Déconnecte un appareil (`device_db_id` = id DB, pas le X-Device-Id).\n\nRévoque session + tokens Sanctum + FCM de cet appareil.
+url: "{{base_url}}/devices/{{device_db_id}}"
+method: DELETE
+headers:
+  Accept: application/json
+  x-api-key: "{{x_api_key}}"
+  X-Device-Id: "{{device_id}}"
+auth:
+  type: bearer
+  credentials:
+    token: "{{access_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Disconnect device', function () {
+          pm.expect([200, 404]).to.include(pm.response.code);
+      });
+    language: text/javascript
+order: 2000
