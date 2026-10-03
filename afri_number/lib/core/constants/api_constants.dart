@@ -15,6 +15,10 @@ class ApiConstants {
   /// Pour le développement local, utilisez l'IP de votre machine sur le réseau local
   /// Exemple: 'http://192.168.1.100:3000/api' ou 'http://10.0.2.2:3000/api' (Android emulator)
   /// static const String baseUrl = 'http://192.168.1.XXX:3000/api';
+// Abonnement endpoints
+  static const String abonnementPlans = '/subscriptions/plans';
+  static const String abonnementCurrent = '/subscriptions/current';
+  static const String abonnementSubscribe = '/subscriptions/subscribe';
 
   static const Duration connectTimeout = Duration(seconds: 20);
   static const Duration receiveTimeout = Duration(seconds: 30);
