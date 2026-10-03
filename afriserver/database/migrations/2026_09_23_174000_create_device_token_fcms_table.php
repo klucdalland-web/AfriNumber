@@ -12,8 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('device_token_fcms', function (Blueprint $table) {
-            $table->id();
-
             $table->foreignId('device_id')->primary()->constrained('session_users', 'device_id');
             $table->string('token')->unique();
             $table->boolean('actif')->default(true);

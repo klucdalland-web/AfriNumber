@@ -38,7 +38,7 @@ async function upload(req, res, next) {
 
         // 1. Compression puis envoi direct vers Storj (depuis la mémoire)
         var documents = await Promise.all(received.map(async function(item) {
-            var image = await imageService.compresserImage(item.file.buffer);
+            var image = await imageService.compresserImage(item.file.buffer, item.file.mimetype);
             console.log('[Upload] ' + item.champ + ' : ' + item.file.size + ' -> ' + image.buffer.length + ' octets');
 
             var remotePath = await storageService.envoyerDocument(
@@ -51,7 +51,15 @@ async function upload(req, res, next) {
         var result = await notifierFinTraitement(idprofile, documents);
 
         if (!result.ok) {
-            if (result.status === 422 || result.status === 404) {
+            if (result.status === 409) {
+                return apiResponse.error(
+                    res,
+                    'Ce profil n\'accepte plus d\'upload (déjà validé ou vérification en cours).',
+                    null,
+                    409
+                );
+            }
+            if (result.status === 422 || result.status === 404 || result.status === 400) {
                 return apiResponse.error(res, 'Profil introuvable ou invalide.', null, 400);
             }
             return apiResponse.error(res, 'Problème au niveau du serveur. Veuillez réessayer plus tard.', null, 500);

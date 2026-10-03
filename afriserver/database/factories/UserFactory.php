@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\TypeUser;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -31,7 +32,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone_number' => fake()->unique()->e164PhoneNumber(),
             'statut' => 'actif',
-                    'first_name' => fake()->firstName(), // <-- Ajoutez cette ligne
+            'first_name' => fake()->firstName(), // <-- Ajoutez cette ligne
 
             'status_valide' => 'non_valide',
             'email_verified_at' => now(),
@@ -48,5 +49,34 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type_user_id' => TypeUser::query()->updateOrCreate(
+                ['code' => 'admin'],
+                [
+                    'label' => 'Administrateur',
+                    'description' => 'Administrateur système',
+                    'actif' => true,
+                ],
+            )->id,
+        ]);
+    }
+
+    public function ofType(string $code): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type_user_id' => TypeUser::query()->where('code', $code)->value('id')
+                ?? TypeUser::factory()->create(['code' => $code])->id,
+        ]);
+    }
+
+    public function withRole(string $role): static
+    {
+        return $this->afterCreating(function (User $user) use ($role): void {
+            $user->assignRole($role);
+        });
     }
 }

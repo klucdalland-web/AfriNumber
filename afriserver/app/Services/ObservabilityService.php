@@ -39,7 +39,7 @@ class ObservabilityService
      * @param  array<string, mixed>  $context
      * @param  array<string, mixed>|null  $payload
      * @param  array<string, mixed>|null  $dataBefore  État avant modification
-     * @param  array<string, mixed>|null  $dataAfter   État après modification
+     * @param  array<string, mixed>|null  $dataAfter  État après modification
      */
     public function action(
         string $category,
@@ -224,6 +224,7 @@ class ObservabilityService
             'region' => $session->region,
             'timezone' => $session->timezone,
             'latitude' => $session->latitude !== null ? (float) $session->latitude : null,
+            'longitude' => $session->longitude !== null ? (float) $session->longitude : null,
             'internet_provider' => $session->internet_provider,
             'network_type' => $session->network_type,
             'device' => $session->device ? [
@@ -255,7 +256,7 @@ class ObservabilityService
                 'region' => $session['region'] ?? null,
                 'timezone' => $session['timezone'] ?? null,
                 'latitude' => $session['latitude'] ?? null,
-                'longitude' => null,
+                'longitude' => $session['longitude'] ?? null,
                 'internet_provider' => $session['internet_provider'] ?? null,
                 'network_type' => $session['network_type'] ?? null,
                 'source' => 'session',
@@ -396,16 +397,19 @@ class ObservabilityService
 
             if ($this->isSensitiveKey($keyStr)) {
                 $clean[$keyStr] = '[REDACTED]';
+
                 continue;
             }
 
             if (is_array($value)) {
                 $clean[$keyStr] = $this->sanitize($value);
+
                 continue;
             }
 
             if (is_string($value) && strlen($value) > 2000) {
                 $clean[$keyStr] = substr($value, 0, 2000).'…[truncated]';
+
                 continue;
             }
 
