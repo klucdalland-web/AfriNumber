@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -74,6 +75,51 @@ class User extends Authenticatable implements FilamentUser
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function activeSubscription(): ?Subscription
+    {
+        /** @var Subscription|null $subscription */
+        $subscription = $this->subscriptions()
+            ->with(['plan.services'])
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->where(function ($query): void {
+                $query->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', now());
+            })
+            ->latest('starts_at')
+            ->first();
+
+        return $subscription;
+    }
+
+    public function hasService(string $code): bool
+    {
+        $subscription = $this->activeSubscription();
+
+        if ($subscription === null || $subscription->plan === null) {
+            return false;
+        }
+
+        return $subscription->plan->services
+            ->contains(fn (Service $service): bool => $service->is_active && $service->code === $code);
+    }
+
+    public function planMaxNumbers(): int
+    {
+        return (int) ($this->activeSubscription()?->plan?->max_numbers ?? 0);
     }
 
     public function canAccessPanel(Panel $panel): bool
