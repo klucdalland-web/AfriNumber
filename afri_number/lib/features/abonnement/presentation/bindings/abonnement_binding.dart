@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/network/dio_client.dart';
 import '../../data/datasources/abonnement_remote_datasource.dart';
-import '../../data/repositories/abonnement_repository.dart';
+import '../../domain/repositories/abonnement_repository.dart';
 import '../../data/repositories/abonnement_repository_impl.dart';
 import '../controllers/abonnement_controller.dart';
 

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../constants/storage_keys.dart';
@@ -45,7 +46,13 @@ class LocaleController extends GetxController {
     if (!AppTranslations.supportedLanguageCodes.contains(code)) return;
     final next = AppTranslations.localeFor(code);
     locale.value = next;
-    await Get.updateLocale(next);
-    await _storage.write(StorageKeys.language, code);
+    try {
+      await Get.updateLocale(next);
+      await _storage.write(StorageKeys.language, code);
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[LocaleController] Change locale failed: $error');
+      }
+    }
   }
 }

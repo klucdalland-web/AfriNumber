@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
 
 import '../../../app/routes/app_routes.dart';
@@ -24,7 +25,9 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
-      _storage.clearTokens();
+      _storage.clearTokens().catchError((Object error) {
+        debugPrint('[AuthInterceptor] Could not clear expired session: $error');
+      });
       final currentRoute = Get.currentRoute;
       if (currentRoute != AppRoutes.login &&
           currentRoute != AppRoutes.welcome &&

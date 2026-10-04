@@ -1,7 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/organisations"
-method: GET
-headers:
-  Accept: application/json
-  x-api-key: "{{x_api_key}}"
-order: 1000

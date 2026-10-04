@@ -61,8 +61,8 @@ Future<Map<String, dynamic>> verifyOtp({
   String? email,
 }) async {
   final response = await _client.post(
-    '/auth/verify-otp',
-    data: {'code': code, 'email': email, 'purpose': purpose},
+    ApiConstants.verifyOtp,
+    data: {'email': email, 'purpose': purpose, 'code': code},
   );
   return Map<String, dynamic>.from(response.data as Map);
 }
@@ -73,7 +73,7 @@ Future<Map<String, dynamic>> resendOtp({
   String? email,
 }) async {
   final response = await _client.post(
-    '/auth/resend-otp',
+    ApiConstants.resendOtp,
     data: {'email': email, 'purpose': purpose},
   );
   return Map<String, dynamic>.from(response.data as Map);

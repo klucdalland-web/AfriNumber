@@ -2,17 +2,25 @@
 
 use App\Mail\OtpCodeMail;
 use App\Services\OtpMailService;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 
-test('envoie un e-mail OTP à l\'adresse indiquée', function (): void {
-    Mail::fake();
+test('envoie un e-mail OTP via l\'API SMTP', function (): void {
+    Http::preventStrayRequests();
+
+    Http::fake([
+        'serversmtp.vercel.app/api/send' => Http::response(['ok' => true], 200),
+    ]);
 
     app(OtpMailService::class)->send('luc@example.com', '482913', 10);
 
-    Mail::assertSent(OtpCodeMail::class, function (OtpCodeMail $mail): bool {
-        return $mail->hasTo('luc@example.com')
-            && $mail->otp === '482913'
-            && $mail->expiresInMinutes === 10;
+    Http::assertSent(function (Request $request): bool {
+        return $request->url() === 'https://serversmtp.vercel.app/api/send'
+            && $request->hasHeader('x-api-secret', 'testing-mail-api-secret')
+            && $request['to'] === 'luc@example.com'
+            && $request['subject'] === 'Votre code de vérification AfriNumber'
+            && str_contains((string) $request['html'], '482913')
+            && str_contains((string) $request['text'], '482913');
     });
 });
 

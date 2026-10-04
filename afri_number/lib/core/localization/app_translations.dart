@@ -32,6 +32,7 @@ class AppTranslations extends Translations {
       'common.today': "Aujourd'hui",
       'common.yesterday': 'Hier',
       'common.minutes': 'min',
+      'inbox.unread': '{count} non lus',
 
       // ── Navigation ──
       'nav.home': 'Accueil',
@@ -82,12 +83,10 @@ class AppTranslations extends Translations {
       // OTP
       'otp.expires_in': 'Expire dans',
       'otp.expired': 'Code expiré. Veuillez réessayer.',
-      'otp.no_code_received': 'Code non reçu ?',
+      'otp_resends_in': 'Renvoi dans {seconds} secondes',
       'otp.resends_left': 'Renvois restants :',
       'otp.resend_limit_reached':
           'Limite de renvois atteinte. Réessayez plus tard.',
-          'otp.resend_in': 'Renvoyer le code dans @time',
-'otp.sent_to': 'Code envoyé à @target',
 
       // ── Validation ──
       'error.field_required': 'Ce champ est requis',
@@ -105,7 +104,7 @@ class AppTranslations extends Translations {
       'error.login_failed': 'Erreur de connexion. Veuillez réessayer.',
       'error.register_failed':
           "Erreur lors de l'inscription. Veuillez réessayer.",
-      'error.code_length': 'Le code doit contenir 4 chiffres',
+      'error.code_length': 'Le code doit contenir 6 chiffres',
       'error.code_invalid': 'Code invalide. Veuillez réessayer.',
       'error.code_resend_failed': 'Erreur lors du renvoi du code',
       'error.email_send_failed':
@@ -114,9 +113,13 @@ class AppTranslations extends Translations {
       'error.code_required': 'Le code est requis',
       'error.services_load': 'Impossible de charger vos services. Réessayez.',
       'error.service_update': 'Modification impossible pour le moment.',
+      'error.countries_load_failed': 'Impossible de charger les pays. Réessayez.',
+      'error.country_required': 'Veuillez sélectionner un pays.',
+      'error.otp_resend_limit': 'La limite de renvois du code est atteinte.',
 
       // ── OTP / Mot de passe oublié ──
       'otp.title': 'Code de vérification',
+      'otp.verifying': 'Vérification du code en cours…',
       'otp.subtitle':
           'Entrez le code à 6 chiffres envoyé à votre numéro pour continuer.',
       'otp.no_code_received': "Vous n'avez pas reçu le code ?",
@@ -154,6 +157,37 @@ class AppTranslations extends Translations {
       'welcome.slogan_payment_sub': 'Achetez vos services internationaux avec vos moyens de paiement locaux.',
       'welcome.slogan_conn': 'Restez\nconnecté.\nMême au-delà du réseau.',
       'welcome.slogan_conn_sub': 'Gérez vos SMS et vos communications avec des outils pensés pour une connectivité parfois limitée.',
+
+      // ── Vérification d'identité ──
+      'kyc.title': 'Vérification d’identité',
+      'kyc.choose.title': 'Choisissez une pièce d’identité',
+      'kyc.choose.subtitle': 'Sélectionnez le document à utiliser pour vérifier votre identité.',
+      'kyc.doc.id_card': 'Carte d’identité',
+      'kyc.doc.passport': 'Passeport',
+      'kyc.doc.driver_license': 'Permis de conduire',
+      'kyc.empty': 'Aucun document n’est disponible pour le moment.',
+      'kyc.front.title': 'Photographiez le recto',
+      'kyc.front.subtitle': 'Placez le recto de votre document dans le cadre.',
+      'kyc.back.title': 'Photographiez le verso',
+      'kyc.back.subtitle': 'Placez le verso de votre document dans le cadre.',
+      'kyc.face.title': 'Prenez un selfie',
+      'kyc.face.subtitle': 'Votre visage doit être bien éclairé et entièrement visible.',
+      'kyc.continue': 'Continuer',
+      'kyc.take_photo': 'Prendre la photo',
+      'kyc.start_scan': 'Lancer la vérification',
+      'kyc.verifying.title': 'Vérification en cours',
+      'kyc.verifying.body': 'Vos documents ont été envoyés. Nous vous informerons dès que la vérification sera terminée.',
+      'kyc.verifying.home': 'Retour à l’accueil',
+      'kyc.verified.title': 'Identité vérifiée',
+      'kyc.verified.body': 'Votre identité a été confirmée. Vous pouvez continuer.',
+      'kyc.verified.buy': 'Acheter un numéro',
+      'kyc.rejected': 'La vérification a échoué. Vous pouvez réessayer.',
+      'kyc.err': 'Une erreur est survenue pendant la vérification.',
+      'kyc.camera_denied': 'L’accès à la caméra est nécessaire pour continuer.',
+      'kyc.camera_err': 'Impossible d’ouvrir la caméra. Réessayez.',
+      'kyc.info.title': 'Vérification d’identité',
+      'kyc.info.body': 'Prenez des photos nettes et lisibles de vos documents. Ces informations servent à confirmer votre identité.',
+      'kyc.info.close': 'Compris',
 
       // ── Dashboard ──
       'dashboard.notifications': 'Notifications',
@@ -258,6 +292,8 @@ class AppTranslations extends Translations {
       'abonnement.retry_msg': 'Veuillez réessayer.',
       'abonnement.period_monthly': 'Mensuel',
       'abonnement.period_annual': 'Annuel',
+      'abonnement.duration_days': ' / {days} jours',
+      'abonnement.history_title': 'Historique des abonnements',
       'abonnement.unit_month': 'mois',
       'abonnement.unit_year': 'an',
     },
@@ -277,6 +313,7 @@ class AppTranslations extends Translations {
       'common.today': 'Today',
       'common.yesterday': 'Yesterday',
       'common.minutes': 'min',
+      'inbox.unread': '{count} unread',
 
       // ── Navigation ──
       'nav.home': 'Home',
@@ -341,7 +378,7 @@ class AppTranslations extends Translations {
       // ── Application errors ──
       'error.login_failed': 'Login error. Please try again.',
       'error.register_failed': 'Registration error. Please try again.',
-      'error.code_length': 'The code must contain 4 digits',
+      'error.code_length': 'The code must contain 6 digits',
       'error.code_invalid': 'Invalid code. Please try again.',
       'error.code_resend_failed': 'Error resending the code',
       'error.email_send_failed': 'Error while sending. Check your connection.',
@@ -349,10 +386,14 @@ class AppTranslations extends Translations {
       'error.code_required': 'Code is required',
       'error.services_load': 'Unable to load your services. Please try again.',
       'error.service_update': 'Unable to make the change at the moment.',
+      'error.countries_load_failed': 'Unable to load countries. Please try again.',
+      'error.country_required': 'Please select a country.',
+      'error.otp_resend_limit': 'The OTP resend limit has been reached.',
 
       // ── OTP / Forgot password ──
       'otp.title': 'Verification code',
-      'otp.subtitle': 'Enter the 4-digit code sent to your phone to continue.',
+      'otp.verifying': 'Verifying your code…',
+      'otp.subtitle': 'Enter the 6-digit code sent to your phone to continue.',
       'otp.no_code_received': "Didn't receive the code?",
       'forgot.title': 'Forgot password?',
       'forgot.subtitle': 'Enter your email and we will send you a code to reset your password.',
@@ -390,6 +431,37 @@ class AppTranslations extends Translations {
           'Buy international services with your local payment methods.',
       'welcome.slogan_conn': 'Stay\nconnected.\nEven beyond the network.',
       'welcome.slogan_conn_sub': 'Manage your SMS and communications with tools designed for limited connectivity.',
+
+      // ── Identity verification ──
+      'kyc.title': 'Identity verification',
+      'kyc.choose.title': 'Choose an identity document',
+      'kyc.choose.subtitle': 'Select the document you want to use to verify your identity.',
+      'kyc.doc.id_card': 'Identity card',
+      'kyc.doc.passport': 'Passport',
+      'kyc.doc.driver_license': 'Driver’s license',
+      'kyc.empty': 'No documents are available right now.',
+      'kyc.front.title': 'Photograph the front',
+      'kyc.front.subtitle': 'Place the front of your document inside the frame.',
+      'kyc.back.title': 'Photograph the back',
+      'kyc.back.subtitle': 'Place the back of your document inside the frame.',
+      'kyc.face.title': 'Take a selfie',
+      'kyc.face.subtitle': 'Make sure your face is well lit and fully visible.',
+      'kyc.continue': 'Continue',
+      'kyc.take_photo': 'Take photo',
+      'kyc.start_scan': 'Start verification',
+      'kyc.verifying.title': 'Verification in progress',
+      'kyc.verifying.body': 'Your documents have been submitted. We’ll notify you when verification is complete.',
+      'kyc.verifying.home': 'Back to home',
+      'kyc.verified.title': 'Identity verified',
+      'kyc.verified.body': 'Your identity has been confirmed. You can continue.',
+      'kyc.verified.buy': 'Buy a number',
+      'kyc.rejected': 'Verification failed. You can try again.',
+      'kyc.err': 'An error occurred during verification.',
+      'kyc.camera_denied': 'Camera access is required to continue.',
+      'kyc.camera_err': 'Unable to open the camera. Please try again.',
+      'kyc.info.title': 'Identity verification',
+      'kyc.info.body': 'Take clear, readable photos of your documents. This information is used to confirm your identity.',
+      'kyc.info.close': 'Got it',
 
       // ── Dashboard ──
       'dashboard.notifications': 'Notifications',
@@ -492,6 +564,8 @@ class AppTranslations extends Translations {
       'abonnement.retry_msg': 'Please try again.',
       'abonnement.period_monthly': 'Monthly',
       'abonnement.period_annual': 'Annual',
+      'abonnement.duration_days': ' / {days} days',
+      'abonnement.history_title': 'Subscription history',
       'abonnement.unit_month': 'month',
       'abonnement.unit_year': 'year',
     },

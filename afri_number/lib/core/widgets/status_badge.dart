@@ -37,13 +37,21 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
+    final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final badgeBackground = isDark && background == AppColors.chip
+        ? colors.surfaceContainerHighest
+        : background;
+    final badgeForeground = isDark && foreground == AppColors.textSecondary
+        ? colors.onSurfaceVariant
+        : foreground;
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: r.space(10),
         vertical: r.space(4),
       ),
       decoration: BoxDecoration(
-        color: background,
+        color: badgeBackground,
         borderRadius: BorderRadius.circular(r.radius(20)),
       ),
       child: Text(
@@ -51,7 +59,7 @@ class StatusBadge extends StatelessWidget {
         style: AppTextStyles.body(
           r.fontSize(14),
           weight: weight,
-          color: foreground,
+          color: badgeForeground,
         ),
       ),
     );

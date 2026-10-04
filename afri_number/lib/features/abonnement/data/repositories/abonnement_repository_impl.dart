@@ -1,10 +1,11 @@
 import '../../../../core/errors/api_exception.dart';
 import '../datasources/abonnement_remote_datasource.dart';
 import '../models/abonnement_checkout_result.dart';
+import '../models/abonnement_history_entry.dart';
 import '../models/abonnement_plan.dart';
 import '../models/billing_period.dart';
 import '../models/plan_feature.dart';
-import 'abonnement_repository.dart';
+import '../../domain/repositories/abonnement_repository.dart';
 
 class AbonnementRepositoryImpl implements AbonnementRepository {
   AbonnementRepositoryImpl(this._remote);
@@ -23,8 +24,21 @@ class AbonnementRepositoryImpl implements AbonnementRepository {
   @override
   Future<String> fetchCurrentPlanId() async {
     final json = await _remote.fetchCurrent();
-    final id = json['plan_id'] ?? json['id'];
+    final rawPlan = json['plan'];
+    final plan = rawPlan is Map ? rawPlan : null;
+    final id = json['plan_id'] ?? plan?['id'];
     return id == null ? '' : id.toString();
+  }
+
+  @override
+  Future<List<AbonnementHistoryEntry>> fetchHistory() async {
+    final rows = await _remote.fetchHistory();
+    return rows
+        .whereType<Map>()
+        .map((row) => AbonnementHistoryEntry.fromJson(
+              Map<String, dynamic>.from(row),
+            ))
+        .toList();
   }
 
   @override
@@ -52,29 +66,47 @@ class AbonnementRepositoryImpl implements AbonnementRepository {
   }
 
   AbonnementPlan _planFromJson(Map<String, dynamic> json) {
-    final rawFeatures = json['features'];
+    final rawFeatures = json['services'] ?? json['features'];
     final features = rawFeatures is List
         ? rawFeatures
             .whereType<Map>()
             .map(
               (feature) => PlanFeature(
-                label: (feature['label'] ?? '').toString(),
-                included: feature['included'] == true,
+                label: _serviceLabel(feature),
+                included: feature['included'] != false,
               ),
             )
             .toList()
         : const <PlanFeature>[];
 
+    final price = _asNum(json['price']);
+
     return AbonnementPlan(
       id: (json['id'] ?? '').toString(),
-      name: (json['name'] ?? '').toString(),
-      tagline: (json['tagline'] ?? '').toString(),
-      monthlyPrice: _asInt(json['monthly_price']),
-      annualPrice: _asInt(json['annual_price']),
-      currency: (json['currency'] ?? 'Ar').toString(),
+      name: (json['label'] ?? json['name'] ?? '').toString(),
+      tagline: (json['description'] ?? json['tagline'] ?? '').toString(),
+      monthlyPrice: _asInt(json['monthly_price'] ?? price),
+      annualPrice: _asInt(json['annual_price'] ?? price),
+      currency: (json['currency'] ?? 'XOF').toString(),
       features: features,
       isRecommended: json['is_recommended'] == true,
+      code: (json['code'] ?? '').toString(),
+      price: json.containsKey('price') ? price : null,
+      durationDays: _asInt(json['duration_days']),
+      maxNumbers: _asInt(json['max_numbers']),
+      currently: json['currently'] == true,
     );
+  }
+
+  String _serviceLabel(Map<dynamic, dynamic> service) {
+    final label = (service['label'] ?? service['code'] ?? '').toString();
+    final quota = service['quota'];
+    return quota == null ? label : '$label ($quota)';
+  }
+
+  num _asNum(dynamic value) {
+    if (value is num) return value;
+    return num.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   int _asInt(dynamic value) {

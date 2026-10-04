@@ -18,6 +18,7 @@ class AuthController extends GetxController {
   final StorageService _storage;
 
   final isLoading = false.obs;
+  final isVerifyingOtp = false.obs;
   final rememberMe = false.obs;
 
   // Pays
@@ -61,22 +62,12 @@ class AuthController extends GetxController {
   /// Contexte dans lequel la page OTP est ouverte : 'login' ou 'register'.
   String otpPurpose = otpPurposeRegister;
 
-  /// Valeur de secours si le serveur ne fournit pas de délai.
   static const int resendCooldownSeconds = 30;
 
   final resendCooldown = 0.obs;
   Timer? _cooldownTimer;
-  DateTime? _resendAvailableAt;
 
   bool get isResendCoolingDown => resendCooldown.value > 0;
-
-  /// "04:59" pendant le cooldown.
-  String get resendCooldownLabel {
-    final s = resendCooldown.value;
-    final m = (s ~/ 60).toString().padLeft(2, '0');
-    final sec = (s % 60).toString().padLeft(2, '0');
-    return '$m:$sec';
-  }
 
   final otpRemainingSeconds = 0.obs;
   final otpResendCount = 0.obs;
@@ -85,40 +76,13 @@ class AuthController extends GetxController {
 
   bool get isOtpExpired => otpRemainingSeconds.value <= 0;
   bool get canResendOtp => otpResendCount.value < maxOtpResends;
-  int get otpResendsLeft =>
-      (maxOtpResends - otpResendCount.value).clamp(0, maxOtpResends);
+  int get otpResendsLeft => maxOtpResends - otpResendCount.value;
 
   String get otpTimerLabel {
     final s = otpRemainingSeconds.value;
     final m = (s ~/ 60).toString().padLeft(2, '0');
     final sec = (s % 60).toString().padLeft(2, '0');
     return '$m:$sec';
-  }
-
-  // Identifiant (email ou téléphone) pour lequel le code a été envoyé
-  String _otpTarget = '';
-  final otpTargetLabel = ''.obs; 
-
-  String? get _otpIdentifier => _otpTarget.isEmpty ? null : _otpTarget;
-
-  void _setOtpTarget(String value) {
-    _otpTarget = value.trim();
-    otpTargetLabel.value = _mask(_otpTarget);
-  }
-
-  void _clearOtpTarget() {
-    _otpTarget = '';
-    otpTargetLabel.value = '';
-  }
-
-  String _mask(String v) {
-    if (v.isEmpty) return '';
-    final at = v.indexOf('@');
-    if (at > 1) return '${v.substring(0, 2)}***${v.substring(at)}';
-    if (v.length > 4) {
-      return '${v.substring(0, 4)}***${v.substring(v.length - 2)}';
-    }
-    return v;
   }
 
   final errorMessage = ''.obs;
@@ -132,14 +96,45 @@ class AuthController extends GetxController {
       phoneController.text = remembered;
       rememberMe.value = true;
     }
+    _restorePendingOtp();
     loadCountries();
   }
+
+  void _restorePendingOtp() {
+    final pending = _storage.pendingOtp;
+    if (pending == null) return;
+    final purpose = pending['purpose'];
+    final identifier = pending['identifier'];
+    if ((purpose != otpPurposeLogin && purpose != otpPurposeRegister) ||
+        identifier is! String || identifier.isEmpty) {
+      _storage.clearPendingOtp();
+      return;
+    }
+
+    otpPurpose = purpose as String;
+    if (otpPurpose == otpPurposeLogin) {
+      phoneController.text = identifier;
+    } else {
+      emailController.text = identifier;
+    }
+    final expiry = pending['expires_at'];
+    final expiresAtMillis = expiry is int ? expiry : 0;
+    _otpExpiresAt = DateTime.fromMillisecondsSinceEpoch(expiresAtMillis);
+    _tickOtp();
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickOtp());
+  }
+
+  Future<void> _savePendingOtp() => _storage.savePendingOtp(
+    purpose: otpPurpose,
+    identifier: _otpIdentifier ?? '',
+    expiresAtMillis: (_otpExpiresAt ?? DateTime.now())
+        .millisecondsSinceEpoch,
+  );
 
   @override
   void onClose() {
     _errorTimer?.cancel();
     _otpTimer?.cancel();
-    _cooldownTimer?.cancel();
     phoneController.dispose();
     passwordController.dispose();
     lastNameController.dispose();
@@ -153,6 +148,7 @@ class AuthController extends GetxController {
     resetCodeController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
+    _cooldownTimer?.cancel();
     super.onClose();
   }
 
@@ -162,7 +158,9 @@ class AuthController extends GetxController {
     AppDialog.showError(
       message: msg,
       autoDismissDuration: const Duration(seconds: 5),
-    );
+    ).catchError((Object error) {
+      debugPrint('[AuthController] Could not show error dialog: $error');
+    });
     _errorTimer = Timer(const Duration(seconds: 5), () {
       errorMessage.value = '';
     });
@@ -201,14 +199,40 @@ class AuthController extends GetxController {
     return '$dial$text';
   }
 
-// Compteurs
-  void startOtpTimer() {
+  String? get _otpIdentifier {
+    final value = otpPurpose == otpPurposeLogin
+        ? phoneController.text.trim()
+        : emailController.text.trim();
+    return value.isNotEmpty ? value : null;
+  }
+
+  Future<void> startOtpTimer() async {
     _otpTimer?.cancel();
     _otpExpiresAt = DateTime.now().add(
       const Duration(seconds: otpValiditySeconds),
     );
+    await _savePendingOtp();
     _tickOtp();
     _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickOtp());
+  }
+
+  void startResendCooldown() {
+    _cooldownTimer?.cancel();
+    resendCooldown.value = resendCooldownSeconds;
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendCooldown.value <= 1) {
+        resendCooldown.value = 0;
+        timer.cancel();
+      } else {
+        resendCooldown.value--;
+      }
+    });
+  }
+
+  void stopResendCooldown() {
+    _cooldownTimer?.cancel();
+    _cooldownTimer = null;
+    resendCooldown.value = 0;
   }
 
   void _tickOtp() {
@@ -235,62 +259,6 @@ class AuthController extends GetxController {
     stopResendCooldown();
   }
 
-  void startResendCooldown([int seconds = resendCooldownSeconds]) {
-    _cooldownTimer?.cancel();
-    _resendAvailableAt = DateTime.now().add(Duration(seconds: seconds));
-    _tickCooldown();
-    _cooldownTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => _tickCooldown(),
-    );
-  }
-
-  void _tickCooldown() {
-    final at = _resendAvailableAt;
-    final remaining = at == null
-        ? 0
-        : (at.difference(DateTime.now()).inMilliseconds / 1000).ceil();
-    if (remaining <= 0) {
-      resendCooldown.value = 0;
-      _cooldownTimer?.cancel();
-    } else {
-      resendCooldown.value = remaining;
-    }
-  }
-
-  void stopResendCooldown() {
-    _cooldownTimer?.cancel();
-    _cooldownTimer = null;
-    _resendAvailableAt = null;
-    resendCooldown.value = 0;
-  }
-
-  /// Applique `resend_count`, `next_resend_at` et `next_resend_wait_minutes`
-  /// renvoyés par le serveur.
-  void _applyOtpMeta(Map<String, dynamic>? response) {
-    final raw = response?['data'];
-    final data = raw is Map
-        ? Map<String, dynamic>.from(raw)
-        : <String, dynamic>{};
-
-    final count = data['resend_count'];
-    if (count is num) otpResendCount.value = count.toInt();
-
-    final waitMinutes = data['next_resend_wait_minutes'];
-    final maxWait = waitMinutes is num ? waitMinutes.toInt() * 60 : null;
-    final nextAt = DateTime.tryParse('${data['next_resend_at'] ?? ''}');
-
-    var seconds = nextAt?.difference(DateTime.now()).inSeconds ?? 0;
-    // Horloge du téléphone décalée : on se rabat sur la durée annoncée.
-    if (maxWait != null && (seconds <= 0 || seconds > maxWait)) {
-      seconds = maxWait;
-    }
-    if (seconds <= 0) seconds = resendCooldownSeconds;
-
-    startResendCooldown(seconds);
-  }
-
-// Pays
   Future<void> loadCountries() async {
     if (isLoadingCountries.value) return;
     isLoadingCountries.value = true;
@@ -320,10 +288,7 @@ class AuthController extends GetxController {
       final identifier = phoneController.text.trim();
       final password = passwordController.text;
 
-      final res = await _repository.login(
-        email: identifier,
-        password: password,
-      );
+      await _repository.login(email: identifier, password: password);
 
       if (rememberMe.value) {
         await _storage.saveRememberedPhone(identifier);
@@ -331,12 +296,11 @@ class AuthController extends GetxController {
         await _storage.clearRememberedPhone();
       }
 
-      _setOtpTarget(identifier);
       otpPurpose = otpPurposeLogin;
       otpResendCount.value = 0;
       otpController.clear();
-      startOtpTimer();
-      _applyOtpMeta(res);
+      await startOtpTimer();
+      startResendCooldown();
       isLoading.value = false;
       Get.toNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
@@ -372,7 +336,7 @@ class AuthController extends GetxController {
       final password = registerPasswordController.text;
       final passwordConfirmation = confirmPasswordController.text;
 
-      final res = await _repository.register(
+      await _repository.register(
         name: name,
         firstName: firstName,
         email: email,
@@ -382,12 +346,11 @@ class AuthController extends GetxController {
         passwordConfirmation: passwordConfirmation,
       );
 
-      _setOtpTarget(email.isNotEmpty ? email : phoneNumber);
       otpPurpose = otpPurposeRegister;
       otpResendCount.value = 0;
       otpController.clear();
-      startOtpTimer();
-      _applyOtpMeta(res);
+      await startOtpTimer();
+      startResendCooldown();
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
@@ -410,6 +373,7 @@ class AuthController extends GetxController {
     }
 
     isLoading.value = true;
+    isVerifyingOtp.value = true;
     try {
       final code = otpController.text.trim();
       if (code.length != otpLength) {
@@ -418,15 +382,27 @@ class AuthController extends GetxController {
         return;
       }
 
-      await _repository.verifyOtp(
+      final response = await _repository.verifyOtp(
         code: code,
         purpose: otpPurpose,
         email: _otpIdentifier,
       );
+      if (response['success'] == false) {
+        final message = response['message'];
+        throw ApiException(
+          message: message is String && message.isNotEmpty
+              ? message
+              : 'error.code_invalid'.tr,
+        );
+      }
 
-      await _fetchUserProfile();
+      final data = response['data'];
+      final user = data is Map ? data['user'] : null;
+      if (user is Map) {
+        await _storage.saveUser(Map<String, dynamic>.from(user));
+      }
       stopOtpTimer();
-      _clearOtpTarget();
+      await _storage.clearPendingOtp();
       isLoading.value = false;
       Get.offAllNamed(
         otpPurpose == otpPurposeLogin
@@ -439,6 +415,9 @@ class AuthController extends GetxController {
     } catch (_) {
       isLoading.value = false;
       setError('error.code_invalid'.tr);
+    } finally {
+      isVerifyingOtp.value = false;
+      isLoading.value = false;
     }
   }
 
@@ -455,24 +434,32 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      final res = await _repository.resendOtp(
-        purpose: otpPurpose,
-        email: _otpIdentifier,
-      );
-      // Si la réponse ne contient pas resend_count, on incrémente localement.
-      final data = res['data'];
-      if (data is! Map || data['resend_count'] is! num) {
-        otpResendCount.value++;
-      }
+      await _repository.resendOtp(purpose: otpPurpose, email: _otpIdentifier);
+      otpResendCount.value++;
       otpController.clear();
-      startOtpTimer();
-      _applyOtpMeta(res);
+      await startOtpTimer();
+      startResendCooldown();
     } on ApiException catch (e) {
       setError(e.message);
     } catch (_) {
       setError('error.code_resend_failed'.tr);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> leaveOtpFlow() async {
+    stopOtpTimer();
+    otpController.clear();
+    try {
+      await _storage.clearPendingOtp();
+      await _storage.clearTokens();
+    } catch (error) {
+      debugPrint('[AuthController] Could not clear pending OTP state: $error');
+    } finally {
+      Get.offAllNamed(
+        otpPurpose == otpPurposeLogin ? AppRoutes.login : AppRoutes.register,
+      );
     }
   }
 
@@ -529,31 +516,18 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Récupère les informations du profil utilisateur connecté depuis le backend.
-  Future<void> _fetchUserProfile() async {
-    try {
-      final response = await _repository.me();
-      if (response == null) return;
-
-      final nestedUser = response['data'];
-      final user = nestedUser is Map
-          ? Map<String, dynamic>.from(nestedUser)
-          : response;
-      await _storage.saveUser(user);
-    } catch (_) {
-      debugPrint(
-        '[AuthController] Impossible de récupérer le profil utilisateur.',
-      );
-    }
-  }
-
   /// Déconnecte l'utilisateur.
   Future<void> logout() async {
     try {
       await _repository.logout();
     } catch (_) {
-      await _storage.clearTokens();
+      try {
+        await _storage.clearTokens();
+      } catch (error) {
+        debugPrint('[AuthController] Could not clear auth tokens: $error');
+      }
+    } finally {
+      Get.offAllNamed(AppRoutes.welcome);
     }
-    Get.offAllNamed(AppRoutes.welcome);
   }
 }
