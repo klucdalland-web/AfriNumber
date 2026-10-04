@@ -74,44 +74,46 @@ class AbonnementPage extends GetView<AbonnementController> {
             children: [
               // ── En-tête avec bouton retour et titre traduit ──
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: Icon(
-                      Icons.chevron_left,
-                      size: r.iconSize(28),
-                      color: colors.onSurface,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  SizedBox(width: r.space(4)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Titre de la page traduit
-                        Text(
-                          'abonnement.title'.tr,
-                          style: AppTextStyles.screenTitle(r.fontSize(28)),
-                        ),
-                        // Nom du forfait actuel, si disponible
-                        if (currentPlanName != null)
-                          Text(
-                            currentPlanName,
-                            style: AppTextStyles.body(
-                              r.fontSize(16),
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  _InfoButton(),
-                ],
-              ),
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    IconButton(
+      onPressed: () => Get.back(),
+      icon: Icon(
+        Icons.chevron_left,
+        size: r.iconSize(28),
+        color: colors.onSurface,
+      ),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+    ),
 
+    SizedBox(width: r.space(4)),
+
+    Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'abonnement.title'.tr,
+            style: AppTextStyles.screenTitle(r.fontSize(28)),
+          ),
+
+          if (currentPlanName?.trim().isNotEmpty == true)
+            Text(
+              currentPlanName!,
+              style: AppTextStyles.body(
+                r.fontSize(16),
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+    ),
+
+    _InfoButton(),
+  ],
+),
               SizedBox(height: r.space(20)),
 
               // ── Sous-titre invitant au choix d'offre ──
