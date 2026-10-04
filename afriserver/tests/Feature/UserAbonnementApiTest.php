@@ -127,3 +127,92 @@ test('get abonnement requires authentication', function (): void {
     $this->getJson('/api/v1/abonnement')
         ->assertUnauthorized();
 });
+
+test('get abonnements returns all subscriptions with is_currently_active', function (): void {
+    $free = Plan::query()->create([
+        'code' => Plan::CODE_FREE,
+        'label' => 'Free',
+        'description' => 'Essai',
+        'price' => 0,
+        'currency' => 'XOF',
+        'duration_days' => 14,
+        'max_numbers' => 1,
+        'is_active' => true,
+        'sort_order' => 0,
+    ]);
+
+    $pro = Plan::query()->create([
+        'code' => Plan::CODE_PRO,
+        'label' => 'Pro',
+        'description' => 'Pro',
+        'price' => 5000,
+        'currency' => 'XOF',
+        'duration_days' => 30,
+        'max_numbers' => 10,
+        'is_active' => true,
+        'sort_order' => 2,
+    ]);
+
+    $sms = Service::query()->create([
+        'code' => 'sms',
+        'label' => 'SMS',
+        'description' => 'SMS',
+        'is_active' => true,
+    ]);
+
+    $pro->services()->attach($sms->id, ['quota' => 100]);
+
+    [$user] = authenticatedUserForAbonnement();
+
+    $expired = $user->subscriptions()->create([
+        'plan_id' => $free->id,
+        'status' => Subscription::STATUS_EXPIRED,
+        'starts_at' => now()->subDays(30),
+        'ends_at' => now()->subDays(16),
+        'auto_renew' => false,
+    ]);
+
+    $current = $user->subscriptions()->create([
+        'plan_id' => $pro->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'starts_at' => now()->subDay(),
+        'ends_at' => now()->addDays(29),
+        'auto_renew' => true,
+    ]);
+
+    $response = $this->getJson('/api/v1/abonnements')
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonCount(2, 'data.abonnements');
+
+    $abonnements = collect($response->json('data.abonnements'));
+
+    expect($abonnements->firstWhere('id', $current->id))
+        ->toMatchArray([
+            'status' => Subscription::STATUS_ACTIVE,
+            'is_currently_active' => true,
+            'auto_renew' => true,
+        ])
+        ->and($abonnements->firstWhere('id', $current->id)['plan']['code'])->toBe(Plan::CODE_PRO)
+        ->and($abonnements->firstWhere('id', $current->id)['plan']['services'][0]['code'])->toBe('sms')
+        ->and($abonnements->firstWhere('id', $current->id)['plan']['services'][0]['quota'])->toBe(100)
+        ->and($abonnements->firstWhere('id', $expired->id))
+        ->toMatchArray([
+            'status' => Subscription::STATUS_EXPIRED,
+            'is_currently_active' => false,
+        ]);
+});
+
+test('get abonnements returns empty list when user has none', function (): void {
+    authenticatedUserForAbonnement();
+
+    $this->getJson('/api/v1/abonnements')
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonCount(0, 'data.abonnements');
+});
+
+test('get abonnements requires authentication', function (): void {
+    $this->getJson('/api/v1/abonnements')
+        ->assertUnauthorized();
+});

@@ -54,6 +54,7 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
 
 Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expiration'])->group(function (): void {
     Route::get('/user', [UserController::class, 'show'])->name('user.show');
+    Route::get('/abonnements', [SubscriptionController::class, 'index'])->name('abonnements.index');
     Route::get('/abonnement', [SubscriptionController::class, 'show'])->name('abonnement.show');
 
     Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
