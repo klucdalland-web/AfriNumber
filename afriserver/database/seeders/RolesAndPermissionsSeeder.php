@@ -51,6 +51,9 @@ class RolesAndPermissionsSeeder extends Seeder
             ...PanelPermission::forResource('organisations'),
             ...PanelPermission::forResource('continents'),
             ...PanelPermission::forResource('platforms'),
+            ...PanelPermission::forResource('services'),
+            ...PanelPermission::forResource('plans'),
+            ...PanelPermission::forResource('subscriptions'),
         ]);
     }
 }

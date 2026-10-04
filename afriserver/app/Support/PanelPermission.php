@@ -60,6 +60,30 @@ final class PanelPermission
 
     public const PLATFORMS_DELETE = 'platforms.delete';
 
+    public const SERVICES_VIEW = 'services.view';
+
+    public const SERVICES_CREATE = 'services.create';
+
+    public const SERVICES_UPDATE = 'services.update';
+
+    public const SERVICES_DELETE = 'services.delete';
+
+    public const PLANS_VIEW = 'plans.view';
+
+    public const PLANS_CREATE = 'plans.create';
+
+    public const PLANS_UPDATE = 'plans.update';
+
+    public const PLANS_DELETE = 'plans.delete';
+
+    public const SUBSCRIPTIONS_VIEW = 'subscriptions.view';
+
+    public const SUBSCRIPTIONS_CREATE = 'subscriptions.create';
+
+    public const SUBSCRIPTIONS_UPDATE = 'subscriptions.update';
+
+    public const SUBSCRIPTIONS_DELETE = 'subscriptions.delete';
+
     public const OBSERVABILITY_VIEW = 'observability.view';
 
     public const OBSERVABILITY_DELETE = 'observability.delete';
@@ -98,6 +122,18 @@ final class PanelPermission
             self::PLATFORMS_CREATE,
             self::PLATFORMS_UPDATE,
             self::PLATFORMS_DELETE,
+            self::SERVICES_VIEW,
+            self::SERVICES_CREATE,
+            self::SERVICES_UPDATE,
+            self::SERVICES_DELETE,
+            self::PLANS_VIEW,
+            self::PLANS_CREATE,
+            self::PLANS_UPDATE,
+            self::PLANS_DELETE,
+            self::SUBSCRIPTIONS_VIEW,
+            self::SUBSCRIPTIONS_CREATE,
+            self::SUBSCRIPTIONS_UPDATE,
+            self::SUBSCRIPTIONS_DELETE,
             self::OBSERVABILITY_VIEW,
             self::OBSERVABILITY_DELETE,
         ];
