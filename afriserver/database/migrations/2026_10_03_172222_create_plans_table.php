@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique(); // basic, pro
+            $table->string('code')->unique(); // free, basic, pro
             $table->string('label');
             $table->text('description')->nullable();
             $table->decimal('price', 12, 2);

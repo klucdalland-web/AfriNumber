@@ -17,6 +17,19 @@ class PlanSeeder extends Seeder
 
         $plans = [
             [
+                'code' => 'free',
+                'label' => 'Free',
+                'description' => 'Essai : 1 numéro virtuel pendant 14 jours',
+                'price' => 0,
+                'currency' => 'XOF',
+                'duration_days' => 14,
+                'max_numbers' => 1,
+                'sort_order' => 0,
+                'services' => [
+                    'virtual_number' => null,
+                ],
+            ],
+            [
                 'code' => 'basic',
                 'label' => 'Basic',
                 'description' => '1 numéro virtuel avec SMS entrants',
