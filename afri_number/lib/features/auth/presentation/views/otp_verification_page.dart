@@ -84,7 +84,21 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     : const SizedBox.shrink(),
               ),
 
-              SizedBox(height: r.space(40)),
+              SizedBox(height: r.space(16)),
+              Obx(
+                () => Text(
+                  authController.isOtpExpired
+                      ? 'otp.expired'.tr
+                      : '${'otp.expires_in'.tr} ${authController.otpTimerLabel}',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: authController.isOtpExpired
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
               OTPInput(
                 key: _otpInputKey,
                 length: 4,
@@ -143,28 +157,45 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     ThemeData theme,
     AuthController controller,
   ) {
-    return Obx(
-      () => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Obx(() {
+      final limitReached = !controller.canResendOtp;
+      return Column(
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${'otp.no_code_received'.tr} ',
+                style: TextStyle(
+                  fontSize: r.fontSize(14),
+                  fontWeight: FontWeight.w400,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                ),
+              ),
+              AppButton.text(
+                label: 'otp.resend'.tr,
+                onPressed: (controller.isLoading.value || limitReached)
+                    ? null
+                    : () => controller.resendOtp(),
+                foregroundColor: theme.colorScheme.onSurface,
+                underline: true,
+              ),
+            ],
+          ),
+          SizedBox(height: r.space(4)),
           Text(
-            '${'otp.no_code_received'.tr} ',
+            limitReached
+                ? 'otp.resend_limit_reached'.tr
+                : '${'otp.resends_left'.tr} ${controller.otpResendsLeft}',
             style: TextStyle(
-              fontSize: r.fontSize(14),
-              fontWeight: FontWeight.w400,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              fontSize: r.fontSize(12),
+              color: limitReached
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
-          AppButton.text(
-            label: 'otp.resend'.tr,
-            onPressed: controller.isLoading.value
-                ? null
-                : () => controller.resendOtp(),
-            foregroundColor: theme.colorScheme.onSurface,
-            underline: true,
-          ),
         ],
-      ),
-    );
+      );
+    });
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -47,6 +49,26 @@ class AuthController extends GetxController {
   final newPasswordController = TextEditingController();
   final confirmNewPasswordController = TextEditingController();
 
+  // OTP : validité 10 min, 5 renvois maximum
+  static const int otpValiditySeconds = 600;
+  static const int maxOtpResends = 5;
+
+  final otpRemainingSeconds = 0.obs;
+  final otpResendCount = 0.obs;
+  Timer? _otpTimer;
+  DateTime? _otpExpiresAt;
+
+  bool get isOtpExpired => otpRemainingSeconds.value <= 0;
+  bool get canResendOtp => otpResendCount.value < maxOtpResends;
+  int get otpResendsLeft => maxOtpResends - otpResendCount.value;
+
+  String get otpTimerLabel {
+    final s = otpRemainingSeconds.value;
+    final m = (s ~/ 60).toString().padLeft(2, '0');
+    final sec = (s % 60).toString().padLeft(2, '0');
+    return '$m:$sec';
+  }
+
   final errorMessage = ''.obs;
 
   @override
@@ -75,6 +97,7 @@ class AuthController extends GetxController {
     resetCodeController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
+    _otpTimer?.cancel();
     super.onClose();
   }
 
@@ -139,6 +162,31 @@ class AuthController extends GetxController {
     }
   }
 
+  void startOtpTimer() {
+    _otpTimer?.cancel();
+    _otpExpiresAt = DateTime.now().add(
+      const Duration(seconds: otpValiditySeconds),
+    );
+    _tickOtp();
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickOtp());
+  }
+
+  void _tickOtp() {
+    final remaining = _otpExpiresAt!.difference(DateTime.now()).inSeconds;
+    if (remaining <= 0) {
+      otpRemainingSeconds.value = 0;
+      _otpTimer?.cancel();
+    } else {
+      otpRemainingSeconds.value = remaining;
+    }
+  }
+
+  void stopOtpTimer() {
+    _otpTimer?.cancel();
+    _otpTimer = null;
+    otpRemainingSeconds.value = 0;
+  }
+
   Future<void> loadCountries() async {
     if (isLoadingCountries.value) return;
     isLoadingCountries.value = true;
@@ -190,6 +238,9 @@ class AuthController extends GetxController {
       );
 
       isLoading.value = false;
+      otpResendCount.value = 0;
+      otpController.clear();
+      startOtpTimer();
       Get.offAllNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
       isLoading.value = false;
@@ -203,11 +254,15 @@ class AuthController extends GetxController {
   Future<void> verifyOtp() async {
     if (isLoading.value) return;
     clearError();
-    isLoading.value = true;
 
+    if (isOtpExpired) {
+      errorMessage.value = 'error.code_expired'.tr;
+      return;
+    }
+
+    isLoading.value = true;
     try {
       final code = otpController.text.trim();
-
       if (code.length != 4) {
         errorMessage.value = 'error.code_length'.tr;
         isLoading.value = false;
@@ -222,6 +277,7 @@ class AuthController extends GetxController {
 
       await _fetchUserProfile();
 
+      stopOtpTimer();
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.authFeedbackInscription);
     } on ApiException catch (e) {
@@ -236,10 +292,19 @@ class AuthController extends GetxController {
   Future<void> resendOtp() async {
     if (isLoading.value) return;
     clearError();
+
+    if (!canResendOtp) {
+      errorMessage.value = 'error.otp_resend_limit'.tr;
+      return;
+    }
+
     isLoading.value = true;
     try {
       final email = emailController.text.trim();
       await _repository.resendOtp(email: email.isNotEmpty ? email : null);
+      otpResendCount.value++;
+      otpController.clear();
+      startOtpTimer();
     } on ApiException catch (e) {
       errorMessage.value = e.message;
     } catch (_) {
