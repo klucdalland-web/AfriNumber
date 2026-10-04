@@ -28,6 +28,7 @@ class RequiredDataSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             ServiceSeeder::class,
             PlanSeeder::class,
+            TypeTransactionSeeder::class,
         ];
     }
 
