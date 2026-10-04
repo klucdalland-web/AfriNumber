@@ -14,6 +14,22 @@ class OTPVerificationPage extends StatefulWidget {
 
 class _OTPVerificationPageState extends State<OTPVerificationPage> {
   final _otpInputKey = GlobalKey<OTPInputState>();
+  Worker? _resendWorker;
+
+  @override
+  void initState() {
+    super.initState();
+    _resendWorker = ever(
+      Get.find<AuthController>().otpResendCount,
+      (_) => _otpInputKey.currentState?.clear(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _resendWorker?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +45,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: r.space(20)),
-              AuthHeader(moduleLabel: 'otp.title'.tr, showBackButton: true),
+              AuthHeader(moduleLabel: 'otp.title'.tr),
               SizedBox(height: r.space(8)),
               Text(
                 'otp.title'.tr,
@@ -47,8 +63,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   height: 1.5,
                 ),
               ),
-
-              // Error message
               Obx(
                 () => authController.errorMessage.isNotEmpty
                     ? Container(
@@ -83,7 +97,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                       )
                     : const SizedBox.shrink(),
               ),
-
               SizedBox(height: r.space(16)),
               Obx(
                 () => Text(
@@ -99,26 +112,24 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   ),
                 ),
               ),
+              SizedBox(height: r.space(20)),
               OTPInput(
                 key: _otpInputKey,
-                length: 4,
+                length: AuthController.otpLength,
                 onCompleted: (code) => _handleVerifyOtp(authController, code),
-                onChanged: (code) {
-                  // Update the controller text for the numeric keypad sync
-                  authController.otpController.text = code;
-                },
+                onChanged: (code) => authController.otpController.text = code,
               ),
               SizedBox(height: r.space(24)),
               _buildResendSection(r, theme, authController),
-              SizedBox(height: r.space(32)),
+              SizedBox(height: r.space(24)),
               Obx(
                 () => CustomNumericKeypad(
                   onDigitTap: (digit) {
+                    debugPrint('[OTP] digit tapped: $digit');
                     _otpInputKey.currentState?.addDigit(digit);
                   },
-                  onBackspaceTap: () {
-                    _otpInputKey.currentState?.deleteLastDigit();
-                  },
+                  onBackspaceTap: () =>
+                      _otpInputKey.currentState?.deleteLastDigit(),
                   enabled: !authController.isLoading.value,
                   foregroundColor: theme.colorScheme.onSurface,
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,
@@ -146,7 +157,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   }
 
   Future<void> _handleVerifyOtp(AuthController controller, String code) async {
-    if (code.length == 4) {
+    if (code.length == AuthController.otpLength) {
       controller.otpController.text = code;
       await controller.verifyOtp();
     }
@@ -159,6 +170,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   ) {
     return Obx(() {
       final limitReached = !controller.canResendOtp;
+      final cooldown = controller.resendCooldown.value;
+      final coolingDown = cooldown > 0;
+
       return Column(
         children: [
           Row(
@@ -168,13 +182,13 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 '${'otp.no_code_received'.tr} ',
                 style: TextStyle(
                   fontSize: r.fontSize(14),
-                  fontWeight: FontWeight.w400,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                 ),
               ),
               AppButton.text(
                 label: 'otp.resend'.tr,
-                onPressed: (controller.isLoading.value || limitReached)
+                onPressed:
+                    (controller.isLoading.value || limitReached || coolingDown)
                     ? null
                     : () => controller.resendOtp(),
                 foregroundColor: theme.colorScheme.onSurface,
@@ -186,6 +200,8 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
           Text(
             limitReached
                 ? 'otp.resend_limit_reached'.tr
+                : coolingDown
+                ? 'otp.resend_in'.trParams({'seconds': '$cooldown'})
                 : '${'otp.resends_left'.tr} ${controller.otpResendsLeft}',
             style: TextStyle(
               fontSize: r.fontSize(12),

@@ -1,6 +1,5 @@
 import 'package:afri_number/core/constants/country_constants.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/utils/storage_service.dart';
@@ -14,28 +13,23 @@ class AuthRepositoryImpl implements AuthRepository {
   final StorageService _storage;
 
   @override
-  Future<void> login({required String email, required String password}) async {
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
     final result = await _request(
       () => _remote.login(email: email, password: password),
     );
-    if (kDebugMode) {
-      print('=== Login API Raw Response ===');
-      print(result);
-    }
+
     final token = _extractToken(result);
     if (token != null) {
-      if (kDebugMode) {
-        print('=== Extracted Access Token ===');
-        print(token);
-      }
       await _storage.saveAccessToken(token);
-    } else if (kDebugMode) {
-      print('⚠️ Aucun token n\'a pu être extrait de la réponse login.');
     }
+    return result;
   }
 
   @override
-  Future<void> register({
+  Future<Map<String, dynamic>> register({
     required String name,
     required String firstName,
     required String email,
@@ -59,12 +53,25 @@ class AuthRepositoryImpl implements AuthRepository {
     if (token != null) {
       await _storage.saveAccessToken(token);
     }
+    return result;
   }
 
   @override
-  Future<void> verifyOtp({required String code, String? email}) async {
+  Future<Map<String, dynamic>> resendOtp({
+    required String purpose,
+    String? email,
+  }) {
+    return _request(() => _remote.resendOtp(email: email, purpose: purpose));
+  }
+
+  @override
+  Future<void> verifyOtp({
+    required String code,
+    String? email,
+    required String purpose,
+  }) async {
     final result = await _request(
-      () => _remote.verifyOtp(code: code, email: email),
+      () => _remote.verifyOtp(code: code, email: email, purpose: purpose),
     );
     final token = _extractToken(result);
     if (token != null) {
@@ -78,11 +85,6 @@ class AuthRepositoryImpl implements AuthRepository {
     return result
         .map((e) => CountryData.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
-  }
-
-  @override
-  Future<void> resendOtp({String? email}) async {
-    await _request(() => _remote.resendOtp(email: email));
   }
 
   @override

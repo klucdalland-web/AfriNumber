@@ -54,6 +54,19 @@ class AuthController extends GetxController {
   // OTP : validité 10 min, 5 renvois maximum
   static const int otpValiditySeconds = 600;
   static const int maxOtpResends = 5;
+  static const String otpPurposeLogin = 'login';
+  static const String otpPurposeRegister = 'register';
+  static const int otpLength = 6;
+
+  /// Contexte dans lequel la page OTP est ouverte : 'login' ou 'register'.
+  String otpPurpose = otpPurposeRegister;
+
+  static const int resendCooldownSeconds = 30;
+
+  final resendCooldown = 0.obs;
+  Timer? _cooldownTimer;
+
+  bool get isResendCoolingDown => resendCooldown.value > 0;
 
   final otpRemainingSeconds = 0.obs;
   final otpResendCount = 0.obs;
@@ -102,6 +115,7 @@ class AuthController extends GetxController {
     resetCodeController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
+    _cooldownTimer?.cancel();
     super.onClose();
   }
 
@@ -150,6 +164,13 @@ class AuthController extends GetxController {
     return '$dial$text';
   }
 
+  String? get _otpIdentifier {
+    final value = otpPurpose == otpPurposeLogin
+        ? phoneController.text.trim()
+        : emailController.text.trim();
+    return value.isNotEmpty ? value : null;
+  }
+
   void startOtpTimer() {
     _otpTimer?.cancel();
     _otpExpiresAt = DateTime.now().add(
@@ -157,6 +178,25 @@ class AuthController extends GetxController {
     );
     _tickOtp();
     _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickOtp());
+  }
+
+  void startResendCooldown() {
+    _cooldownTimer?.cancel();
+    resendCooldown.value = resendCooldownSeconds;
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendCooldown.value <= 1) {
+        resendCooldown.value = 0;
+        timer.cancel();
+      } else {
+        resendCooldown.value--;
+      }
+    });
+  }
+
+  void stopResendCooldown() {
+    _cooldownTimer?.cancel();
+    _cooldownTimer = null;
+    resendCooldown.value = 0;
   }
 
   void _tickOtp() {
@@ -180,6 +220,7 @@ class AuthController extends GetxController {
     _otpTimer = null;
     otpRemainingSeconds.value = 0;
     _otpExpiresAt = null;
+    stopResendCooldown();
   }
 
   Future<void> loadCountries() async {
@@ -212,7 +253,6 @@ class AuthController extends GetxController {
       final password = passwordController.text;
 
       await _repository.login(email: identifier, password: password);
-      await _fetchUserProfile();
 
       if (rememberMe.value) {
         await _storage.saveRememberedPhone(identifier);
@@ -220,8 +260,13 @@ class AuthController extends GetxController {
         await _storage.clearRememberedPhone();
       }
 
+      otpPurpose = otpPurposeLogin;
+      otpResendCount.value = 0;
+      otpController.clear();
+      startOtpTimer();
+      startResendCooldown();
       isLoading.value = false;
-      Get.offAllNamed(AppRoutes.authFeedbackConnexion);
+      Get.toNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
       isLoading.value = false;
       setError(e.message);
@@ -265,9 +310,11 @@ class AuthController extends GetxController {
         passwordConfirmation: passwordConfirmation,
       );
 
+      otpPurpose = otpPurposeRegister;
       otpResendCount.value = 0;
       otpController.clear();
       startOtpTimer();
+      startResendCooldown();
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
@@ -292,22 +339,26 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       final code = otpController.text.trim();
-      if (code.length != 4) {
+      if (code.length != otpLength) {
         isLoading.value = false;
         setError('error.code_length'.tr);
         return;
       }
 
-      final email = emailController.text.trim();
       await _repository.verifyOtp(
         code: code,
-        email: email.isNotEmpty ? email : null,
+        purpose: otpPurpose,
+        email: _otpIdentifier,
       );
 
       await _fetchUserProfile();
       stopOtpTimer();
       isLoading.value = false;
-      Get.offAllNamed(AppRoutes.authFeedbackInscription);
+      Get.offAllNamed(
+        otpPurpose == otpPurposeLogin
+            ? AppRoutes.authFeedbackConnexion
+            : AppRoutes.authFeedbackInscription,
+      );
     } on ApiException catch (e) {
       isLoading.value = false;
       setError(e.message);
@@ -320,6 +371,7 @@ class AuthController extends GetxController {
   /// Renvoie le code OTP.
   Future<void> resendOtp() async {
     if (isLoading.value) return;
+    if (isResendCoolingDown) return;
     clearError();
 
     if (!canResendOtp) {
@@ -329,11 +381,11 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      final email = emailController.text.trim();
-      await _repository.resendOtp(email: email.isNotEmpty ? email : null);
+      await _repository.resendOtp(purpose: otpPurpose, email: _otpIdentifier);
       otpResendCount.value++;
       otpController.clear();
       startOtpTimer();
+      startResendCooldown();
     } on ApiException catch (e) {
       setError(e.message);
     } catch (_) {

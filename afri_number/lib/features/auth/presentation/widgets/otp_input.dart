@@ -20,31 +20,50 @@ class OTPInput extends StatefulWidget {
 }
 
 class OTPInputState extends State<OTPInput> {
-  late List<TextEditingController> _controllers;
-  late List<FocusNode> _focusNodes;
-  late FocusNode _hiddenFocusNode;
+  late final List<TextEditingController> _controllers;
+  late final FocusNode _hiddenFocusNode;
+  int _currentIndex = 0;
+
+  static final Map<LogicalKeyboardKey, int> _digitMap = {
+    LogicalKeyboardKey.digit0: 0,
+    LogicalKeyboardKey.digit1: 1,
+    LogicalKeyboardKey.digit2: 2,
+    LogicalKeyboardKey.digit3: 3,
+    LogicalKeyboardKey.digit4: 4,
+    LogicalKeyboardKey.digit5: 5,
+    LogicalKeyboardKey.digit6: 6,
+    LogicalKeyboardKey.digit7: 7,
+    LogicalKeyboardKey.digit8: 8,
+    LogicalKeyboardKey.digit9: 9,
+    LogicalKeyboardKey.numpad0: 0,
+    LogicalKeyboardKey.numpad1: 1,
+    LogicalKeyboardKey.numpad2: 2,
+    LogicalKeyboardKey.numpad3: 3,
+    LogicalKeyboardKey.numpad4: 4,
+    LogicalKeyboardKey.numpad5: 5,
+    LogicalKeyboardKey.numpad6: 6,
+    LogicalKeyboardKey.numpad7: 7,
+    LogicalKeyboardKey.numpad8: 8,
+    LogicalKeyboardKey.numpad9: 9,
+  };
 
   @override
   void initState() {
     super.initState();
     _controllers = List.generate(widget.length, (_) => TextEditingController());
-    _focusNodes = List.generate(widget.length, (_) => FocusNode());
     _hiddenFocusNode = FocusNode();
 
     if (widget.autoFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _hiddenFocusNode.requestFocus();
+        if (mounted) _hiddenFocusNode.requestFocus();
       });
     }
   }
 
   @override
   void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    for (final node in _focusNodes) {
-      node.dispose();
+    for (final c in _controllers) {
+      c.dispose();
     }
     _hiddenFocusNode.dispose();
     super.dispose();
@@ -52,100 +71,77 @@ class OTPInputState extends State<OTPInput> {
 
   String get _currentCode => _controllers.map((c) => c.text).join();
 
+  // ----- API publique -----
   void addDigit(int digit) => _handleNumericInput(digit);
 
   void deleteLastDigit() => _handleBackspace();
 
-  void _onKeyEvent(KeyEvent event) {
-    if (event is KeyDownEvent) {
-      final logicalKey = event.logicalKey;
-
-      if (logicalKey == LogicalKeyboardKey.backspace) {
-        _handleBackspace();
-      } else if (logicalKey == LogicalKeyboardKey.enter ||
-          logicalKey == LogicalKeyboardKey.numpadEnter) {
-        _handleSubmit();
-      } else if (_isNumericKey(logicalKey)) {
-        _handleNumericInput(_getDigitFromKey(logicalKey));
+  /// Vide tous les champs (utilisé après un "resend").
+  void clear() {
+    if (!mounted) return;
+    setState(() {
+      for (final c in _controllers) {
+        c.clear();
       }
+      _currentIndex = 0;
+    });
+    widget.onChanged?.call('');
+  }
+
+  // ----- Gestion clavier physique -----
+  bool _isHandledKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.backspace ||
+      key == LogicalKeyboardKey.enter ||
+      key == LogicalKeyboardKey.numpadEnter ||
+      _digitMap.containsKey(key);
+
+  void _onKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+    final key = event.logicalKey;
+
+    if (key == LogicalKeyboardKey.backspace) {
+      _handleBackspace();
+    } else if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      _handleSubmit();
+    } else if (_digitMap.containsKey(key)) {
+      _handleNumericInput(_digitMap[key]!);
     }
   }
 
-  bool _isNumericKey(LogicalKeyboardKey key) {
-    final numericKeys = <LogicalKeyboardKey>{
-      LogicalKeyboardKey.digit0,
-      LogicalKeyboardKey.digit1,
-      LogicalKeyboardKey.digit2,
-      LogicalKeyboardKey.digit3,
-      LogicalKeyboardKey.digit4,
-      LogicalKeyboardKey.digit5,
-      LogicalKeyboardKey.digit6,
-      LogicalKeyboardKey.digit7,
-      LogicalKeyboardKey.digit8,
-      LogicalKeyboardKey.digit9,
-      LogicalKeyboardKey.numpad0,
-      LogicalKeyboardKey.numpad1,
-      LogicalKeyboardKey.numpad2,
-      LogicalKeyboardKey.numpad3,
-      LogicalKeyboardKey.numpad4,
-      LogicalKeyboardKey.numpad5,
-      LogicalKeyboardKey.numpad6,
-      LogicalKeyboardKey.numpad7,
-      LogicalKeyboardKey.numpad8,
-      LogicalKeyboardKey.numpad9,
-    };
-    return numericKeys.contains(key);
-  }
-
-  int _getDigitFromKey(LogicalKeyboardKey key) {
-    final digitMap = <LogicalKeyboardKey, int>{
-      LogicalKeyboardKey.digit0: 0,
-      LogicalKeyboardKey.digit1: 1,
-      LogicalKeyboardKey.digit2: 2,
-      LogicalKeyboardKey.digit3: 3,
-      LogicalKeyboardKey.digit4: 4,
-      LogicalKeyboardKey.digit5: 5,
-      LogicalKeyboardKey.digit6: 6,
-      LogicalKeyboardKey.digit7: 7,
-      LogicalKeyboardKey.digit8: 8,
-      LogicalKeyboardKey.digit9: 9,
-      LogicalKeyboardKey.numpad0: 0,
-      LogicalKeyboardKey.numpad1: 1,
-      LogicalKeyboardKey.numpad2: 2,
-      LogicalKeyboardKey.numpad3: 3,
-      LogicalKeyboardKey.numpad4: 4,
-      LogicalKeyboardKey.numpad5: 5,
-      LogicalKeyboardKey.numpad6: 6,
-      LogicalKeyboardKey.numpad7: 7,
-      LogicalKeyboardKey.numpad8: 8,
-      LogicalKeyboardKey.numpad9: 9,
-    };
-    return digitMap[key] ?? 0;
-  }
-
+  // ----- Saisie / suppression -----
   void _handleNumericInput(int digit) {
+    if (!mounted) return;
     final emptyIndex = _controllers.indexWhere((c) => c.text.isEmpty);
-    if (emptyIndex != -1) {
+    if (emptyIndex == -1) return;
+
+    setState(() {
       _controllers[emptyIndex].text = digit.toString();
-      _moveFocus(emptyIndex + 1);
+      // On s'arrête visuellement sur la dernière case si tout est rempli.
+      _currentIndex = (emptyIndex + 1).clamp(0, widget.length - 1);
+    });
 
-      final code = _currentCode;
-      widget.onChanged?.call(code);
+    final code = _currentCode;
+    widget.onChanged?.call(code);
 
-      if (code.length == widget.length) {
-        widget.onCompleted?.call(code);
-      }
+    if (code.length == widget.length) {
+      widget.onCompleted?.call(code);
     }
   }
 
   void _handleBackspace() {
-    final lastFilledIndex = _controllers.lastIndexWhere((c) => c.text.isNotEmpty);
-    if (lastFilledIndex != -1) {
-      _controllers[lastFilledIndex].clear();
-      _moveFocus(lastFilledIndex);
+    if (!mounted) return;
+    final lastFilledIndex = _controllers.lastIndexWhere(
+      (c) => c.text.isNotEmpty,
+    );
+    if (lastFilledIndex == -1) return;
 
-      widget.onChanged?.call(_currentCode);
-    }
+    setState(() {
+      _controllers[lastFilledIndex].clear();
+      _currentIndex = lastFilledIndex;
+    });
+
+    widget.onChanged?.call(_currentCode);
   }
 
   void _handleSubmit() {
@@ -154,27 +150,25 @@ class OTPInputState extends State<OTPInput> {
     }
   }
 
-  void _moveFocus(int index) {
-    if (index < widget.length) {
-      _focusNodes[index].requestFocus();
-    } else {
-      _hiddenFocusNode.requestFocus();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final allFilled = _currentCode.length == widget.length;
+
     return Focus(
       focusNode: _hiddenFocusNode,
       onKeyEvent: (node, event) {
-        _onKeyEvent(event);
-        return KeyEventResult.handled;
+        if (event is KeyDownEvent && _isHandledKey(event.logicalKey)) {
+          _onKeyEvent(event);
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(widget.length, (index) {
-          final isFocused = _focusNodes[index].hasFocus;
+          // Highlight sur la case active, sauf si tout est rempli.
+          final isFocused = !allFilled && index == _currentIndex;
           final hasValue = _controllers[index].text.isNotEmpty;
 
           return Container(
@@ -192,13 +186,15 @@ class OTPInputState extends State<OTPInput> {
                       color: isFocused
                           ? colors.primary
                           : hasValue
-                              ? colors.outline
-                              : colors.outlineVariant,
+                          ? colors.outline
+                          : colors.outlineVariant,
                       width: isFocused ? 2.5 : 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                      color: colors.shadow.withValues(alpha: isFocused ? 0.1 : 0.05),
+                        color: colors.shadow.withValues(
+                          alpha: isFocused ? 0.1 : 0.05,
+                        ),
                         blurRadius: isFocused ? 16 : 8,
                         offset: const Offset(0, 4),
                         spreadRadius: isFocused ? 0 : -2,
@@ -217,10 +213,8 @@ class OTPInputState extends State<OTPInput> {
                     ),
                   ),
                 ),
-                if (isFocused && !hasValue)
-                  Center(
-                    child: _BlinkingCursor(color: colors.primary),
-                  ),
+                if (isFocused)
+                  Center(child: _BlinkingCursor(color: colors.primary)),
               ],
             ),
           );

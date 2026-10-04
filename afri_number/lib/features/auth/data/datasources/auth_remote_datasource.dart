@@ -54,26 +54,30 @@ class AuthRemoteDataSource {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
-  /// Vérifie le code OTP reçu par l'utilisateur (POST /auth/verify-otp).
-  Future<Map<String, dynamic>> verifyOtp({
-    required String code,
-    String? email,
-  }) async {
-    final response = await _client.post(
-      '/auth/verify-otp',
-      data: {'code': code, 'email': email},
-    );
-    return Map<String, dynamic>.from(response.data as Map);
-  }
+// Vérification du code OTP 
+Future<Map<String, dynamic>> verifyOtp({
+  required String code,
+  required String purpose,
+  String? email,
+}) async {
+  final response = await _client.post(
+    '/auth/verify-otp',
+    data: {'code': code, 'email': email, 'purpose': purpose},
+  );
+  return Map<String, dynamic>.from(response.data as Map);
+}
 
-  /// Renvoie un nouveau code OTP (POST /auth/resend-otp).
-  Future<Map<String, dynamic>> resendOtp({String? email}) async {
-    final response = await _client.post(
-      '/auth/resend-otp',
-      data: {'email': email},
-    );
-    return Map<String, dynamic>.from(response.data as Map);
-  }
+// Renvoi du code OTP
+Future<Map<String, dynamic>> resendOtp({
+  required String purpose,
+  String? email,
+}) async {
+  final response = await _client.post(
+    '/auth/resend-otp',
+    data: {'email': email, 'purpose': purpose},
+  );
+  return Map<String, dynamic>.from(response.data as Map);
+}
 
   /// Demande de réinitialisation de mot de passe (POST /auth/forgot-password).
   Future<Map<String, dynamic>> forgotPassword({required String email}) async {
