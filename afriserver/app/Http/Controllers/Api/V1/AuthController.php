@@ -26,6 +26,7 @@ use App\Services\GeoLocationService;
 use App\Services\ObservabilityService;
 use App\Services\OtpMailService;
 use App\Services\PhoneNumberService;
+use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -279,6 +280,8 @@ class AuthController extends Controller
                         'pays_id' => $payload['pays_id'] ?? $payload['contrie_id'] ?? null,
                     ]);
 
+                    app(SubscriptionService::class)->assignFreePlan($user);
+
                 } else {
                     $user = User::query()->with('typeUser')->findOrFail($payload['user_id']);
 
@@ -290,6 +293,7 @@ class AuthController extends Controller
                 }
 
                 $user->load(['typeUser', 'pays.organisation']);
+                $user->setRelation('currentSubscription', $user->activeSubscription());
 
                 $tokens = $this->registerDeviceAndTokens($user, $payload, $request);
 
@@ -832,6 +836,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->load(['typeUser', 'pays.organisation']);
+        $user->setRelation('currentSubscription', $user->activeSubscription());
 
         return ApiResponse::success(null, [
             'user' => UserResource::make($user),
