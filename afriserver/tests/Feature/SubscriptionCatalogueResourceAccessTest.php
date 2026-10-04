@@ -3,6 +3,8 @@
 use App\Filament\Resources\Plans\PlanResource;
 use App\Filament\Resources\Services\ServiceResource;
 use App\Filament\Resources\Subscriptions\SubscriptionResource;
+use App\Filament\Resources\Transactions\TransactionResource;
+use App\Filament\Resources\TypeTransactions\TypeTransactionResource;
 use App\Models\TypeUser;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -36,11 +38,15 @@ test('super_admin can open subscription catalogue resources', function (): void 
 
     expect(ServiceResource::canViewAny())->toBeTrue()
         ->and(PlanResource::canViewAny())->toBeTrue()
-        ->and(SubscriptionResource::canViewAny())->toBeTrue();
+        ->and(SubscriptionResource::canViewAny())->toBeTrue()
+        ->and(TypeTransactionResource::canViewAny())->toBeTrue()
+        ->and(TransactionResource::canViewAny())->toBeTrue();
 
     $this->get(ServiceResource::getUrl('index'))->assertOk();
     $this->get(PlanResource::getUrl('index'))->assertOk();
     $this->get(SubscriptionResource::getUrl('index'))->assertOk();
+    $this->get(TypeTransactionResource::getUrl('index'))->assertOk();
+    $this->get(TransactionResource::getUrl('index'))->assertOk();
 });
 
 test('gestionnaire can manage subscription catalogue resources', function (): void {
@@ -54,11 +60,17 @@ test('gestionnaire can manage subscription catalogue resources', function (): vo
         ->and(PlanResource::canViewAny())->toBeTrue()
         ->and(PlanResource::canCreate())->toBeTrue()
         ->and(SubscriptionResource::canViewAny())->toBeTrue()
-        ->and(SubscriptionResource::canCreate())->toBeTrue();
+        ->and(SubscriptionResource::canCreate())->toBeTrue()
+        ->and(TypeTransactionResource::canViewAny())->toBeTrue()
+        ->and(TypeTransactionResource::canCreate())->toBeTrue()
+        ->and(TransactionResource::canViewAny())->toBeTrue()
+        ->and(TransactionResource::canCreate())->toBeTrue();
 
     $this->get(ServiceResource::getUrl('index'))->assertOk();
     $this->get(PlanResource::getUrl('index'))->assertOk();
     $this->get(SubscriptionResource::getUrl('index'))->assertOk();
+    $this->get(TypeTransactionResource::getUrl('index'))->assertOk();
+    $this->get(TransactionResource::getUrl('index'))->assertOk();
 });
 
 test('operateur cannot open subscription catalogue resources', function (): void {
@@ -69,9 +81,13 @@ test('operateur cannot open subscription catalogue resources', function (): void
 
     expect(ServiceResource::canViewAny())->toBeFalse()
         ->and(PlanResource::canViewAny())->toBeFalse()
-        ->and(SubscriptionResource::canViewAny())->toBeFalse();
+        ->and(SubscriptionResource::canViewAny())->toBeFalse()
+        ->and(TypeTransactionResource::canViewAny())->toBeFalse()
+        ->and(TransactionResource::canViewAny())->toBeFalse();
 
     $this->get(ServiceResource::getUrl('index'))->assertForbidden();
     $this->get(PlanResource::getUrl('index'))->assertForbidden();
     $this->get(SubscriptionResource::getUrl('index'))->assertForbidden();
+    $this->get(TypeTransactionResource::getUrl('index'))->assertForbidden();
+    $this->get(TransactionResource::getUrl('index'))->assertForbidden();
 });

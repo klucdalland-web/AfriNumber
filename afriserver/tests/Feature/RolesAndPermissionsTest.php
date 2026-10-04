@@ -62,6 +62,8 @@ test('gestionnaire can manage pays and organisations but not profiles', function
         ->and($admin->can(PanelPermission::SERVICES_VIEW))->toBeTrue()
         ->and($admin->can(PanelPermission::PLANS_UPDATE))->toBeTrue()
         ->and($admin->can(PanelPermission::SUBSCRIPTIONS_CREATE))->toBeTrue()
+        ->and($admin->can(PanelPermission::TYPE_TRANSACTIONS_VIEW))->toBeTrue()
+        ->and($admin->can(PanelPermission::TRANSACTIONS_UPDATE))->toBeTrue()
         ->and($admin->can(PanelPermission::OBSERVABILITY_VIEW))->toBeFalse()
         ->and($admin->can(PanelPermission::PROFILES_VIEW))->toBeFalse()
         ->and($admin->can(PanelPermission::ROLES_VIEW))->toBeFalse();
