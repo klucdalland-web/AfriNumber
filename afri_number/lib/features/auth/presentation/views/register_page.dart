@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../../../core/widgets/widgets.dart';
-import '../widgets/widgets.dart';
 import '../widgets/widgets.dart';
 
 /// Vue d'inscription : orchestre uniquement la mise en page (Scaffold +

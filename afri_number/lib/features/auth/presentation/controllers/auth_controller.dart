@@ -7,8 +7,10 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../core/constants/country_constants.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/utils/storage_service.dart';
+import '../../../../core/widgets/app_dialog.dart';
 import '../../domain/repositories/auth_repository.dart';
 
+/// Contrôleur gérant les flux d'authentification (connexion, inscription, OTP, mot de passe oublié).
 class AuthController extends GetxController {
   AuthController(this._repository, this._storage);
 
@@ -32,7 +34,7 @@ class AuthController extends GetxController {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // Register controllers
+  // Contrôleurs du formulaire d'inscription
   final lastNameController = TextEditingController();
   final firstNameController = TextEditingController();
   final emailController = TextEditingController();
@@ -70,6 +72,7 @@ class AuthController extends GetxController {
   }
 
   final errorMessage = ''.obs;
+  Timer? _errorTimer;
 
   @override
   void onInit() {
@@ -84,6 +87,8 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
+    _errorTimer?.cancel();
+    _otpTimer?.cancel();
     phoneController.dispose();
     passwordController.dispose();
     lastNameController.dispose();
@@ -97,16 +102,29 @@ class AuthController extends GetxController {
     resetCodeController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
-    _otpTimer?.cancel();
     super.onClose();
   }
 
-  void clearError() => errorMessage.value = '';
+  void setError(String msg) {
+    errorMessage.value = msg;
+    _errorTimer?.cancel();
+    AppDialog.showError(
+      message: msg,
+      autoDismissDuration: const Duration(seconds: 5),
+    );
+    _errorTimer = Timer(const Duration(seconds: 5), () {
+      errorMessage.value = '';
+    });
+  }
+
+  void clearError() {
+    _errorTimer?.cancel();
+    errorMessage.value = '';
+  }
 
   void toggleRememberMe(bool value) => rememberMe.value = value;
 
-  /// Factorise et normalise le numéro de téléphone au format international.
-  /// (ex: "0341234567" avec +261 -> "+261341234567").
+  /// Normalise le numéro de téléphone au format international.
   String getNormalizedPhone(String rawInput) {
     var text = rawInput.trim().replaceAll(' ', '').replaceAll('-', '');
     if (text.isEmpty) return '';
@@ -124,42 +142,12 @@ class AuthController extends GetxController {
       return text;
     }
 
-    if (text.startsWith('0')) text = text.substring(1);
+    if (text.startsWith('0')) {
+      text = text.substring(1);
+    }
 
     final dial = selectedCountry.value?.dialCode ?? '';
     return '$dial$text';
-  }
-
-  Future<void> login() async {
-    if (isLoading.value) return;
-    if (!(loginFormKey.currentState?.validate() ?? false)) return;
-
-    clearError();
-    isLoading.value = true;
-
-    try {
-      final identifier = phoneController.text.trim();
-      final password = passwordController.text;
-
-      await _repository.login(email: identifier, password: password);
-
-      await _fetchUserProfile();
-
-      if (rememberMe.value) {
-        await _storage.saveRememberedPhone(identifier);
-      } else {
-        await _storage.clearRememberedPhone();
-      }
-
-      isLoading.value = false;
-      Get.offAllNamed(AppRoutes.authFeedbackConnexion);
-    } on ApiException catch (e) {
-      isLoading.value = false;
-      errorMessage.value = e.message;
-    } catch (_) {
-      isLoading.value = false;
-      errorMessage.value = 'error.login_failed'.tr;
-    }
   }
 
   void startOtpTimer() {
@@ -172,7 +160,13 @@ class AuthController extends GetxController {
   }
 
   void _tickOtp() {
-    final remaining = _otpExpiresAt!.difference(DateTime.now()).inSeconds;
+    final expiresAt = _otpExpiresAt;
+    if (expiresAt == null) {
+      otpRemainingSeconds.value = 0;
+      return;
+    }
+
+    final remaining = expiresAt.difference(DateTime.now()).inSeconds;
     if (remaining <= 0) {
       otpRemainingSeconds.value = 0;
       _otpTimer?.cancel();
@@ -185,6 +179,7 @@ class AuthController extends GetxController {
     _otpTimer?.cancel();
     _otpTimer = null;
     otpRemainingSeconds.value = 0;
+    _otpExpiresAt = null;
   }
 
   Future<void> loadCountries() async {
@@ -198,19 +193,52 @@ class AuthController extends GetxController {
             list.firstWhereOrNull((c) => c.code == 'MG') ?? list.first;
       }
     } catch (_) {
-      errorMessage.value = 'error.countries_load_failed'.tr;
+      setError('error.countries_load_failed'.tr);
     } finally {
       isLoadingCountries.value = false;
     }
   }
 
+  /// Procédure de connexion de l'utilisateur.
+  Future<void> login() async {
+    if (isLoading.value) return;
+    if (!(loginFormKey.currentState?.validate() ?? false)) return;
+
+    clearError();
+    isLoading.value = true;
+
+    try {
+      final identifier = phoneController.text.trim();
+      final password = passwordController.text;
+
+      await _repository.login(email: identifier, password: password);
+      await _fetchUserProfile();
+
+      if (rememberMe.value) {
+        await _storage.saveRememberedPhone(identifier);
+      } else {
+        await _storage.clearRememberedPhone();
+      }
+
+      isLoading.value = false;
+      Get.offAllNamed(AppRoutes.authFeedbackConnexion);
+    } on ApiException catch (e) {
+      isLoading.value = false;
+      setError(e.message);
+    } catch (_) {
+      isLoading.value = false;
+      setError('error.login_failed'.tr);
+    }
+  }
+
+  /// Procédure d'inscription.
   Future<void> register() async {
     if (isLoading.value) return;
     if (!(registerFormKey.currentState?.validate() ?? false)) return;
 
     final country = selectedCountry.value;
     if (country == null) {
-      errorMessage.value = 'error.country_required'.tr;
+      setError('error.country_required'.tr);
       return;
     }
 
@@ -232,31 +260,32 @@ class AuthController extends GetxController {
         firstName: firstName,
         email: email,
         phoneNumber: phoneNumber,
-        countryId: selectedCountry.value?.id ?? country.id,
+        countryId: country.id,
         password: password,
         passwordConfirmation: passwordConfirmation,
       );
 
-      isLoading.value = false;
       otpResendCount.value = 0;
       otpController.clear();
       startOtpTimer();
+      isLoading.value = false;
       Get.offAllNamed(AppRoutes.otpVerification);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.register_failed'.tr;
+      setError('error.register_failed'.tr);
     }
   }
 
+  /// Procédure de vérification du code OTP.
   Future<void> verifyOtp() async {
     if (isLoading.value) return;
     clearError();
 
     if (isOtpExpired) {
-      errorMessage.value = 'error.code_expired'.tr;
+      setError('error.code_expired'.tr);
       return;
     }
 
@@ -264,8 +293,8 @@ class AuthController extends GetxController {
     try {
       final code = otpController.text.trim();
       if (code.length != 4) {
-        errorMessage.value = 'error.code_length'.tr;
         isLoading.value = false;
+        setError('error.code_length'.tr);
         return;
       }
 
@@ -276,25 +305,25 @@ class AuthController extends GetxController {
       );
 
       await _fetchUserProfile();
-
       stopOtpTimer();
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.authFeedbackInscription);
     } on ApiException catch (e) {
-      errorMessage.value = e.message;
       isLoading.value = false;
+      setError(e.message);
     } catch (_) {
-      errorMessage.value = 'error.code_invalid'.tr;
       isLoading.value = false;
+      setError('error.code_invalid'.tr);
     }
   }
 
+  /// Renvoie le code OTP.
   Future<void> resendOtp() async {
     if (isLoading.value) return;
     clearError();
 
     if (!canResendOtp) {
-      errorMessage.value = 'error.otp_resend_limit'.tr;
+      setError('error.otp_resend_limit'.tr);
       return;
     }
 
@@ -306,14 +335,15 @@ class AuthController extends GetxController {
       otpController.clear();
       startOtpTimer();
     } on ApiException catch (e) {
-      errorMessage.value = e.message;
+      setError(e.message);
     } catch (_) {
-      errorMessage.value = 'error.code_resend_failed'.tr;
+      setError('error.code_resend_failed'.tr);
     } finally {
       isLoading.value = false;
     }
   }
 
+  /// Envoie la demande de réinitialisation de mot de passe.
   Future<void> forgotPassword() async {
     if (isLoading.value) return;
     if (!(forgotPasswordFormKey.currentState?.validate() ?? false)) return;
@@ -329,13 +359,14 @@ class AuthController extends GetxController {
       Get.toNamed(AppRoutes.resetPassword);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.email_send_failed'.tr;
+      setError('error.email_send_failed'.tr);
     }
   }
 
+  /// Réinitialise le mot de passe.
   Future<void> resetPassword() async {
     if (isLoading.value) return;
     if (!(resetPasswordFormKey.currentState?.validate() ?? false)) return;
@@ -358,13 +389,14 @@ class AuthController extends GetxController {
       Get.offAllNamed(AppRoutes.login);
     } on ApiException catch (e) {
       isLoading.value = false;
-      errorMessage.value = e.message;
+      setError(e.message);
     } catch (_) {
       isLoading.value = false;
-      errorMessage.value = 'error.code_expired'.tr;
+      setError('error.code_expired'.tr);
     }
   }
 
+  /// Fonction récupérant les informations du profil utilisateur connecté depuis le backend.
   Future<void> _fetchUserProfile() async {
     try {
       final response = await _repository.me();
@@ -375,9 +407,14 @@ class AuthController extends GetxController {
           ? Map<String, dynamic>.from(nestedUser)
           : response;
       await _storage.saveUser(user);
-    } catch (_) {}
+    } catch (_) {
+      debugPrint(
+        '[AuthController] Impossible de récupérer le profil utilisateur.',
+      );
+    }
   }
 
+  /// Déconnecte l'utilisateur.
   Future<void> logout() async {
     try {
       await _repository.logout();

@@ -1,0 +1,32 @@
+$kind: http-request
+description: Profil de l'utilisateur connecté (access token).
+url: "{{base_url}}/auth/me"
+method: GET
+headers:
+  Accept: application/json
+  x-api-key: "{{x_api_key}}"
+  X-Device-Id: "{{device_id}}"
+auth:
+  type: bearer
+  credentials:
+    token: "{{access_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Me OK', function () {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().success).to.eql(true);
+      });
+
+      const j = pm.response.json();
+      if (j && j.data && j.data.user) {
+          const u = j.data.user.data || j.data.user;
+          if (u.id) pm.collectionVariables.set('user_id', String(u.id));
+          if (u.email) pm.collectionVariables.set('email', u.email);
+          if (u.phone_number) pm.collectionVariables.set('phone_number', u.phone_number);
+          if (u.name) pm.collectionVariables.set('user_name', u.name);
+          console.log('✅ Profil user capturé');
+      }
+    language: text/javascript
+examples: './.resources/👤 Me.resources/examples'
+order: 8000

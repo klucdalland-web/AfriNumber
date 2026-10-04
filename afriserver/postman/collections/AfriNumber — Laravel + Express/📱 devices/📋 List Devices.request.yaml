@@ -1,0 +1,30 @@
+$kind: http-request
+description: Liste les appareils **actifs** du compte.\n\n`is_current` = appareil de la requête (`X-Device-Id`).\n\n`?include_inactive=1` pour inclure les appareils déjà déconnectés.\n\nSauvegarde auto `device_db_id` (premier appareil non courant si possible).
+url: "{{base_url}}/devices"
+method: GET
+headers:
+  Accept: application/json
+  x-api-key: "{{x_api_key}}"
+  X-Device-Id: "{{device_id}}"
+auth:
+  type: bearer
+  credentials:
+    token: "{{access_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Devices list OK', function () {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().success).to.eql(true);
+      });
+
+      const j = pm.response.json();
+      const devices = (j && j.data && j.data.devices) || [];
+      const list = devices.data || devices;
+      if (Array.isArray(list) && list.length) {
+          const other = list.find(d => !d.is_current) || list[0];
+          if (other && other.id) pm.collectionVariables.set('device_db_id', String(other.id));
+          console.log('✅ device_db_id =', pm.collectionVariables.get('device_db_id'));
+      }
+    language: text/javascript
+order: 1000

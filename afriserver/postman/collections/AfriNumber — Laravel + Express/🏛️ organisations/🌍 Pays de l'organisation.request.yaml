@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/organisations/1/pays"
+method: GET
+headers:
+  Accept: application/json
+  x-api-key: "{{x_api_key}}"
+order: 3000

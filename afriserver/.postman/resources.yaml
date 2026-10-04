@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 1f6e9055-09d8-4065-84b5-91598f0c5192
+
+cloudResources:
+  collections:
+    ../postman/collections/AfriNumber — Laravel + Express: 7843da4a-96fc-4389-9088-2476b2691949
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

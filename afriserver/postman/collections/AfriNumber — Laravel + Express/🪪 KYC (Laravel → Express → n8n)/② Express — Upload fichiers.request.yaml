@@ -1,0 +1,49 @@
+$kind: http-request
+description: |-
+  Étape 2 : POST multipart vers Express (port 3000).
+  Champs obligatoires : idprofile + photopath + pieceavantpath + piecearrierepath (jpg/png/webp/heic).
+  Express compresse → Storj → POST Laravel /express/upload-complete (HMAC).
+
+  ⚠️ Dans Postman : sélectionne 3 fichiers locaux dans les champs file (src vide = à remplir).
+url: "{{express_base_url}}/files/upload"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: idprofile
+      value: "{{profile_id}}"
+      description: UUID renvoyé par /verifier/init
+    - type: file
+      key: photopath
+      src: []
+      description: Selfie / photo
+    - type: file
+      key: pieceavantpath
+      src: []
+      description: Recto pièce
+    - type: file
+      key: piecearrierepath
+      src: []
+      description: Verso pièce
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Upload Express OK', function () {
+          pm.expect([200, 201]).to.include(pm.response.code);
+          const j = pm.response.json();
+          pm.expect(j.success).to.eql(true);
+      });
+      try {
+          const j = pm.response.json();
+          if (j.data && j.data.idprofile) {
+              pm.collectionVariables.set('profile_id', j.data.idprofile);
+          }
+          console.log('✅ Express upload:', j.message || j);
+      } catch (e) {}
+    language: text/javascript
+order: 2000

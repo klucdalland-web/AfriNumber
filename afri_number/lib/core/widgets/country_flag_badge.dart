@@ -157,7 +157,7 @@ class _VectorFlagPainter extends CustomPainter {
         canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.08, fill(_yellow));
         break;
 
-      case 'CD': // RD Congo: Sky blue background + diagonal red stripe with yellow border + yellow star
+      case 'CG': // RD Congo: Sky blue background + diagonal red stripe with yellow border + yellow star
         const skyBlue = Color(0xFF00A3E0);
         canvas.drawRect(Rect.fromLTWH(0, 0, w, h), fill(skyBlue));
         final redPaint = Paint()

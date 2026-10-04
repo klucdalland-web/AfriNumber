@@ -1,0 +1,39 @@
+$kind: http-request
+description: Utilise le **refresh_token** (pas l'access). Sauvegarde auto les nouveaux tokens.
+url: "{{base_url}}/auth/refresh-token"
+method: POST
+headers:
+  Accept: application/json
+  x-api-key: "{{x_api_key}}"
+  X-Device-Id: "{{device_id}}"
+auth:
+  type: bearer
+  credentials:
+    token: "{{refresh_token}}"
+scripts:
+  - type: beforeRequest
+    code: |-
+      const refresh = pm.collectionVariables.get('refresh_token');
+      if (!refresh) {
+          console.warn('⚠️ refresh_token vide — lance Verify OTP d\'abord');
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('Refresh token OK', function () {
+          pm.response.to.have.status(200);
+          const j = pm.response.json();
+          pm.expect(j.success).to.eql(true);
+          pm.expect(j.data.access_token).to.be.a('string');
+      });
+
+      const j = pm.response.json();
+      if (j && j.data) {
+          if (j.data.access_token) pm.collectionVariables.set('access_token', j.data.access_token);
+          if (j.data.refresh_token) pm.collectionVariables.set('refresh_token', j.data.refresh_token);
+          if (j.data.access_token_expires_at) pm.collectionVariables.set('access_token_expires_at', j.data.access_token_expires_at);
+          if (j.data.refresh_token_expires_at) pm.collectionVariables.set('refresh_token_expires_at', j.data.refresh_token_expires_at);
+          console.log('✅ Nouveaux tokens sauvegardés');
+      }
+    language: text/javascript
+order: 7000
