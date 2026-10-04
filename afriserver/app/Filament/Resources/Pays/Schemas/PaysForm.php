@@ -30,6 +30,11 @@ class PaysForm
                             ->label('Indicatif')
                             ->maxLength(10)
                             ->placeholder('+229'),
+                        TextInput::make('timezone')
+                            ->label('Fuseau horaire')
+                            ->maxLength(64)
+                            ->placeholder('Africa/Abidjan')
+                            ->helperText('Identifiant IANA (ex. Indian/Antananarivo). Utilisé pour dater les e-mails.'),
                         Select::make('continent_id')
                             ->label('Continent')
                             ->relationship('continent', 'label')

@@ -24,6 +24,7 @@ class PaysFactory extends Factory
             'label' => fake()->unique()->country(),
             'code' => fake()->unique()->countryCode(),
             'indicatif' => '+'.fake()->numberBetween(1, 999),
+            'timezone' => 'Africa/Abidjan',
             'description' => fake()->optional()->sentence(),
             'actif' => true,
         ];

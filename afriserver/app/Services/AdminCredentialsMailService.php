@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\AdminCredentialsMail;
 use App\Models\User;
+use App\Support\Brand;
 use Filament\Facades\Filament;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -28,14 +29,16 @@ class AdminCredentialsMailService
         }
 
         $loginUrl = url(Filament::getPanel('afriNetAdmin')->getLoginUrl());
+        $user->loadMissing('pays');
         $mailable = new AdminCredentialsMail($user, $plainPassword, $loginUrl);
         $html = $mailable->render();
+        $appName = Brand::name();
         $text = "Bonjour {$user->first_name},\n\n"
-            ."Un compte administrateur AfriNumber a été créé pour vous.\n"
-            ."Email : {$user->email}\n"
-            ."Mot de passe temporaire : {$plainPassword}\n"
+            ."Votre compte {$appName} est prêt.\n"
+            ."Adresse e-mail : {$user->email}\n"
+            ."Mot de passe provisoire : {$plainPassword}\n"
             ."Connexion : {$loginUrl}\n\n"
-            .'Changez ce mot de passe après votre première connexion.';
+            .'Merci de modifier ce mot de passe dès votre première connexion.';
 
         try {
             Http::withHeaders([

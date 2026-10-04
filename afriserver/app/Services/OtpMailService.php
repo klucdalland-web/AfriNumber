@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Mail\OtpCodeMail;
+use App\Models\Pays;
+use App\Models\User;
+use App\Support\Brand;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -13,11 +16,19 @@ class OtpMailService
 {
     /**
      * Envoie le code OTP à l'adresse e-mail indiquée via l'API SMTP.
+     * Les dates affichées utilisent le fuseau du pays du destinataire.
      *
      * @throws Throwable Si l'envoi échoue
      */
-    public function send(string $email, string $otp, int $expiresInMinutes = 10): void
-    {
+    public function send(
+        string $email,
+        string $otp,
+        int $expiresInMinutes = 10,
+        ?User $user = null,
+        ?Pays $pays = null,
+        ?string $countryCode = null,
+        ?int $paysId = null,
+    ): void {
         $secret = config('services.mail_api.secret');
         $url = config('services.mail_api.url');
 
@@ -25,9 +36,21 @@ class OtpMailService
             throw new RuntimeException('La configuration MAIL_API_SECRET / MAIL_API_URL est manquante.');
         }
 
-        $mailable = new OtpCodeMail($otp, $expiresInMinutes);
+        $resolvedUser = $user ?? User::query()->with('pays')->where('email', $email)->first();
+
+        $mailable = new OtpCodeMail(
+            otp: $otp,
+            expiresInMinutes: $expiresInMinutes,
+            user: $resolvedUser,
+            pays: $pays,
+            countryCode: $countryCode,
+            paysId: $paysId ?? $resolvedUser?->pays_id,
+        );
         $html = $mailable->render();
-        $text = "Votre code de vérification AfriNumber : {$otp}. Valable {$expiresInMinutes} minutes.";
+        $appName = Brand::name();
+        $text = "Votre code de vérification {$appName} : {$otp}. "
+            ."Expire le {$mailable->expiresAtLabel}. "
+            ."Valable {$expiresInMinutes} minutes.";
 
         try {
             Http::withHeaders([
@@ -46,6 +69,7 @@ class OtpMailService
 
             Log::info('Code OTP envoyé par e-mail.', [
                 'email' => $email,
+                'timezone' => $mailable->recipientTimezone,
             ]);
         } catch (RequestException $e) {
             Log::error('Échec de l\'envoi du code OTP par e-mail.', [

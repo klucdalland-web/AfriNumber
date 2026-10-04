@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\AuthenticateAfriNetAdmin;
+use App\Support\Brand;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -28,9 +29,14 @@ class AfriNetAdminPanelProvider extends PanelProvider
             ->id('afriNetAdmin')
             ->path('afriNetAdmin')
             ->login(Login::class)
-            ->brandName('AfriNumber')
+            ->brandName(Brand::name())
+            ->brandLogo(Brand::logoBlackUrl())
+            ->darkModeBrandLogo(Brand::logoWhiteUrl())
+            ->brandLogoHeight('2.25rem')
+            ->favicon(Brand::logoBlackUrl())
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex(Brand::color('primary')),
+                'gray' => Color::Stone,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
