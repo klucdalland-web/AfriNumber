@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/plan_feature.dart';
@@ -13,7 +12,8 @@ class PlanFeatureRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
-    final color = feature.included ? AppColors.ink : AppColors.textMuted;
+    final colors = Theme.of(context).colorScheme;
+    final color = feature.included ? colors.onSurface : colors.onSurfaceVariant;
 
     return Padding(
       padding: EdgeInsets.only(bottom: r.space(12)),

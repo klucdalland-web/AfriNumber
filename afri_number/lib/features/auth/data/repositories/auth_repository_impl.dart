@@ -21,10 +21,6 @@ class AuthRepositoryImpl implements AuthRepository {
       () => _remote.login(email: email, password: password),
     );
 
-    final token = _extractToken(result);
-    if (token != null) {
-      await _storage.saveAccessToken(token);
-    }
     return result;
   }
 
@@ -49,10 +45,6 @@ class AuthRepositoryImpl implements AuthRepository {
         passwordConfirmation: passwordConfirmation,
       ),
     );
-    final token = _extractToken(result);
-    if (token != null) {
-      await _storage.saveAccessToken(token);
-    }
     return result;
   }
 
@@ -65,7 +57,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> verifyOtp({
+  Future<Map<String, dynamic>> verifyOtp({
     required String code,
     String? email,
     required String purpose,
@@ -73,10 +65,21 @@ class AuthRepositoryImpl implements AuthRepository {
     final result = await _request(
       () => _remote.verifyOtp(code: code, email: email, purpose: purpose),
     );
-    final token = _extractToken(result);
-    if (token != null) {
-      await _storage.saveAccessToken(token);
-    }
+    final accessToken = _extractValue(result, {
+      'access_token',
+      'accessToken',
+      'token',
+      'bearer_token',
+      'jwt',
+      'auth_token',
+    });
+    final refreshToken = _extractValue(result, {
+      'refresh_token',
+      'refreshToken',
+    });
+    if (accessToken != null) await _storage.saveAccessToken(accessToken);
+    if (refreshToken != null) await _storage.saveRefreshToken(refreshToken);
+    return result;
   }
 
   @override
@@ -132,46 +135,23 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Extraction récursive du token JWT/Bearer dans la réponse JSON backend
-  /// (compatible avec token, access_token, bearer_token, data.token, authorization.token, etc.)
-  String? _extractToken(dynamic json) {
-    if (json == null) return null;
-
-    if (json is String && json.isNotEmpty && json.length > 10) {
-      return json;
+  String? _extractValue(dynamic json, Set<String> keys) {
+    if (json is! Map) return null;
+    for (final key in keys) {
+      final value = json[key];
+      if (value is String && value.isNotEmpty) return value;
     }
-
-    if (json is Map) {
-      // 1. Clés directes courantes
-      for (final key in [
-        'token',
-        'access_token',
-        'accessToken',
-        'bearer_token',
-        'jwt',
-        'auth_token',
-      ]) {
-        final val = json[key];
-        if (val is String && val.isNotEmpty) {
-          return val;
-        }
-      }
-
-      // 2. Recherche dans les objets imbriqués
-      for (final key in [
-        'data',
-        'user',
-        'authorization',
-        'authorisation',
-        'auth',
-        'result',
-      ]) {
-        final child = json[key];
-        final extracted = _extractToken(child);
-        if (extracted != null) return extracted;
-      }
+    for (final key in [
+      'data',
+      'user',
+      'authorization',
+      'authorisation',
+      'auth',
+      'result',
+    ]) {
+      final value = _extractValue(json[key], keys);
+      if (value != null) return value;
     }
-
     return null;
   }
 }

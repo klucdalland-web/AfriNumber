@@ -5,10 +5,15 @@ use App\Models\TypeUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
+    Http::fake([
+        'serversmtp.vercel.app/api/send' => Http::response(['ok' => true], 200),
+    ]);
+
     $this->withHeader('x-api-key', (string) env('X_API_KEY_V1', 'testing-api-key'));
 
     TypeUser::query()->updateOrCreate(

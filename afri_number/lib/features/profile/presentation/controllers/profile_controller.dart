@@ -80,7 +80,12 @@ class ProfileController extends GetxController {
 
   /// Déconnecte l'utilisateur et le redirige vers l'écran d'accueil
   Future<void> signOut() async {
-    await _authRepository.logout();
-    Get.offAllNamed(AppRoutes.welcome);
+    try {
+      await _authRepository.logout();
+    } catch (error) {
+      if (kDebugMode) debugPrint('[ProfileController] Sign out failed: $error');
+    } finally {
+      Get.offAllNamed(AppRoutes.welcome);
+    }
   }
 }

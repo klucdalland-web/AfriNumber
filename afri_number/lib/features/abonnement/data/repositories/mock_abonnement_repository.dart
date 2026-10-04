@@ -2,7 +2,8 @@ import '../models/billing_period.dart';
 import '../models/plan_feature.dart';
 import '../models/abonnement_checkout_result.dart';
 import '../models/abonnement_plan.dart';
-import 'abonnement_repository.dart';
+import '../models/abonnement_history_entry.dart';
+import '../../domain/repositories/abonnement_repository.dart';
 
 class MockAbonnementRepository implements AbonnementRepository {
   String _currentPlanId = 'basique';
@@ -49,6 +50,9 @@ class MockAbonnementRepository implements AbonnementRepository {
 
   @override
   Future<String> fetchCurrentPlanId() async => _currentPlanId;
+
+  @override
+  Future<List<AbonnementHistoryEntry>> fetchHistory() async => const [];
 
   @override
   Future<AbonnementCheckoutResult> subscribe({

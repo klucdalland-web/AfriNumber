@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'profile_scale.dart';
 
@@ -17,22 +16,28 @@ class OutlineToggleIcon extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _TogglePainter(on: on)),
+      child: CustomPaint(
+        painter: _TogglePainter(
+          on: on,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
     );
   }
 }
 
 class _TogglePainter extends CustomPainter {
-  const _TogglePainter({required this.on});
+  const _TogglePainter({required this.on, required this.color});
 
   final bool on;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     // Grille de 24 : pilule de (2,6) à (22,18), rond en (16,12) ou (8,12).
     final s = size.width / 24;
     final paint = Paint()
-      ..color = AppColors.ink
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.8 * s
       ..strokeCap = StrokeCap.round
@@ -50,5 +55,6 @@ class _TogglePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _TogglePainter oldDelegate) => oldDelegate.on != on;
+  bool shouldRepaint(covariant _TogglePainter oldDelegate) =>
+      oldDelegate.on != on || oldDelegate.color != color;
 }

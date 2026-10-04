@@ -17,7 +17,7 @@ abstract class AuthRepository {
     required String passwordConfirmation,
   });
 
-  Future<void> verifyOtp({
+  Future<Map<String, dynamic>> verifyOtp({
     required String code,
     required String purpose,
     String? email,

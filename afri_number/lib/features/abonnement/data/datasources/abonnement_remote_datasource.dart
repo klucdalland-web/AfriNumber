@@ -8,16 +8,34 @@ class AbonnementRemoteDataSource {
 
   Future<List<dynamic>> fetchPlans() async {
     final response = await _client.get(ApiConstants.abonnementPlans);
-    final data = response.data;
-    final body = data is Map ? data['data'] ?? data : data;
-    return body is List ? body : const [];
+    final body = _responseData(response.data);
+    final plans = body is Map ? body['plans'] : body;
+    return plans is List ? plans : const [];
   }
 
   Future<Map<String, dynamic>> fetchCurrent() async {
     final response = await _client.get(ApiConstants.abonnementCurrent);
-    final data = response.data;
-    final body = data is Map ? data['data'] ?? data : data;
-    return body is Map ? Map<String, dynamic>.from(body) : const {};
+    final body = _responseData(response.data);
+    if (body is! Map) return const {};
+    final subscription = body['abonnement'] ?? body['subscription'];
+    return subscription is Map
+        ? Map<String, dynamic>.from(subscription)
+        : Map<String, dynamic>.from(body);
+  }
+
+  Future<List<dynamic>> fetchHistory() async {
+    final response = await _client.get(ApiConstants.abonnementsHistory);
+    final body = _responseData(response.data);
+    if (body is List) return body;
+    if (body is Map) {
+      final history =
+          body['abonnements'] ??
+          body['subscriptions'] ??
+          body['items'] ??
+          body['data'];
+      if (history is List) return history;
+    }
+    return const [];
   }
 
   Future<Map<String, dynamic>> subscribe({
@@ -31,8 +49,10 @@ class AbonnementRemoteDataSource {
         'period': period,
       },
     );
-    final data = response.data;
-    final body = data is Map ? data['data'] ?? data : data;
+    final body = _responseData(response.data);
     return body is Map ? Map<String, dynamic>.from(body) : const {};
   }
+
+  dynamic _responseData(dynamic response) =>
+      response is Map ? response['data'] ?? response : response;
 }

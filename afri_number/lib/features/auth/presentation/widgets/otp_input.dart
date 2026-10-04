@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 class OTPInput extends StatefulWidget {
   const OTPInput({
     super.key,
-    this.length = 4,
+    this.length = 6,
     this.onCompleted,
     this.onChanged,
     this.autoFocus = true,
@@ -172,9 +172,9 @@ class OTPInputState extends State<OTPInput> {
           final hasValue = _controllers[index].text.isNotEmpty;
 
           return Container(
-            width: 64,
-            height: 64,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
+            width: 48,
+            height: 56,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
             child: Stack(
               children: [
                 AnimatedContainer(

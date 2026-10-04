@@ -60,6 +60,46 @@ final class PanelPermission
 
     public const PLATFORMS_DELETE = 'platforms.delete';
 
+    public const SERVICES_VIEW = 'services.view';
+
+    public const SERVICES_CREATE = 'services.create';
+
+    public const SERVICES_UPDATE = 'services.update';
+
+    public const SERVICES_DELETE = 'services.delete';
+
+    public const PLANS_VIEW = 'plans.view';
+
+    public const PLANS_CREATE = 'plans.create';
+
+    public const PLANS_UPDATE = 'plans.update';
+
+    public const PLANS_DELETE = 'plans.delete';
+
+    public const SUBSCRIPTIONS_VIEW = 'subscriptions.view';
+
+    public const SUBSCRIPTIONS_CREATE = 'subscriptions.create';
+
+    public const SUBSCRIPTIONS_UPDATE = 'subscriptions.update';
+
+    public const SUBSCRIPTIONS_DELETE = 'subscriptions.delete';
+
+    public const TYPE_TRANSACTIONS_VIEW = 'type_transactions.view';
+
+    public const TYPE_TRANSACTIONS_CREATE = 'type_transactions.create';
+
+    public const TYPE_TRANSACTIONS_UPDATE = 'type_transactions.update';
+
+    public const TYPE_TRANSACTIONS_DELETE = 'type_transactions.delete';
+
+    public const TRANSACTIONS_VIEW = 'transactions.view';
+
+    public const TRANSACTIONS_CREATE = 'transactions.create';
+
+    public const TRANSACTIONS_UPDATE = 'transactions.update';
+
+    public const TRANSACTIONS_DELETE = 'transactions.delete';
+
     public const OBSERVABILITY_VIEW = 'observability.view';
 
     public const OBSERVABILITY_DELETE = 'observability.delete';
@@ -98,6 +138,26 @@ final class PanelPermission
             self::PLATFORMS_CREATE,
             self::PLATFORMS_UPDATE,
             self::PLATFORMS_DELETE,
+            self::SERVICES_VIEW,
+            self::SERVICES_CREATE,
+            self::SERVICES_UPDATE,
+            self::SERVICES_DELETE,
+            self::PLANS_VIEW,
+            self::PLANS_CREATE,
+            self::PLANS_UPDATE,
+            self::PLANS_DELETE,
+            self::SUBSCRIPTIONS_VIEW,
+            self::SUBSCRIPTIONS_CREATE,
+            self::SUBSCRIPTIONS_UPDATE,
+            self::SUBSCRIPTIONS_DELETE,
+            self::TYPE_TRANSACTIONS_VIEW,
+            self::TYPE_TRANSACTIONS_CREATE,
+            self::TYPE_TRANSACTIONS_UPDATE,
+            self::TYPE_TRANSACTIONS_DELETE,
+            self::TRANSACTIONS_VIEW,
+            self::TRANSACTIONS_CREATE,
+            self::TRANSACTIONS_UPDATE,
+            self::TRANSACTIONS_DELETE,
             self::OBSERVABILITY_VIEW,
             self::OBSERVABILITY_DELETE,
         ];

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
@@ -93,8 +94,10 @@ class UnreadBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        '$count non lus',
-        style: AppTypography.badge.copyWith(color: AppColors.ink),
+        'inbox.unread'.trParams({'count': '$count'}),
+        style: AppTypography.badge.copyWith(
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }

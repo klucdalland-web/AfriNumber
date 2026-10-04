@@ -17,17 +17,15 @@ class BillingPeriodToggle extends StatelessWidget {
   final BillingPeriod selected;
   final ValueChanged<BillingPeriod> onChanged;
 
-  static const _unselectedColor = Color(0xFFC0C0C0);
-  static const _selectedColor = Color(0xFF686868);
-
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
+    final colors = Theme.of(context).colorScheme;
 
     return Container(
       padding: EdgeInsets.all(r.space(6)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(r.radius(24)),
       ),
       child: Row(
@@ -43,11 +41,12 @@ class BillingPeriodToggle extends StatelessWidget {
 
   Widget _segment(BuildContext context, BillingPeriod value) {
     final r = context.responsive;
+    final colors = Theme.of(context).colorScheme;
     final isSelected = value == selected;
     final radius = BorderRadius.circular(r.radius(18));
 
     return Material(
-      color: isSelected ? _selectedColor : _unselectedColor,
+      color: isSelected ? colors.primary : colors.surfaceContainerHighest,
       borderRadius: radius,
       child: InkWell(
         onTap: () => onChanged(value),
@@ -61,7 +60,7 @@ class BillingPeriodToggle extends StatelessWidget {
             style: AppTextStyles.body(
               r.fontSize(16),
               weight: FontWeight.w500,
-              color: Colors.white,
+              color: isSelected ? colors.onPrimary : colors.onSurfaceVariant,
             ),
           ),
         ),

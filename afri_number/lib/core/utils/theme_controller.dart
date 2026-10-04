@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../constants/storage_keys.dart';
@@ -33,7 +34,11 @@ class ThemeController extends GetxController {
   Future<void> setThemeMode(ThemeMode mode) async {
     themeMode.value = mode;
     Get.changeThemeMode(mode);
-    await _storage.write(StorageKeys.themeMode, mode.name);
+    try {
+      await _storage.write(StorageKeys.themeMode, mode.name);
+    } catch (error) {
+      if (kDebugMode) debugPrint('[ThemeController] Save theme failed: $error');
+    }
   }
 
   /// Alterne light ↔ dark (ignore system pour le toggle bouton).

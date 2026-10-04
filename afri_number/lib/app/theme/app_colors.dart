@@ -8,7 +8,7 @@ abstract class AppColors {
 
   /// Cartes / surfaces.
   static const Color surface = Color(0xFFFFFFFF);
-
+  static const Color success = Color(0xFF34C759);
   /// Noir principal (textes, carte Zéro Data, chip actif, boutons).
   static const Color ink = Color(0xFF030303);
 

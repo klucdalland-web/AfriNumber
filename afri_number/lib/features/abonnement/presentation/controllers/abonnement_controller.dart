@@ -2,8 +2,9 @@ import 'package:get/get.dart';
 
 import '../../data/models/billing_period.dart';
 import '../../data/models/abonnement_checkout_result.dart';
+import '../../data/models/abonnement_history_entry.dart';
 import '../../data/models/abonnement_plan.dart';
-import '../../data/repositories/abonnement_repository.dart';
+import '../../domain/repositories/abonnement_repository.dart';
 
 class AbonnementController extends GetxController {
   AbonnementController(this._repository);
@@ -13,6 +14,7 @@ class AbonnementController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = ''.obs;
   final plans = <AbonnementPlan>[].obs;
+  final history = <AbonnementHistoryEntry>[].obs;
   final period = BillingPeriod.annual.obs;
   final currentPlanId = ''.obs;
   final processingPlanId = RxnString();
@@ -27,12 +29,26 @@ class AbonnementController extends GetxController {
     isLoading.value = true;
     errorMessage.value = '';
     try {
-      final results = await Future.wait([
-        _repository.fetchPlans(),
-        _repository.fetchCurrentPlanId(),
-      ]);
-      plans.assignAll(results[0] as List<AbonnementPlan>);
-      currentPlanId.value = results[1] as String;
+      plans.assignAll(await _repository.fetchPlans());
+      currentPlanId.value = plans
+              .firstWhereOrNull((plan) => plan.currently)
+              ?.id ??
+          '';
+
+      try {
+        final serverCurrentPlanId = await _repository.fetchCurrentPlanId();
+        if (serverCurrentPlanId.isNotEmpty) {
+          currentPlanId.value = serverCurrentPlanId;
+        }
+      } catch (_) {
+        // Le champ `currently` des plans reste utilisable si cet endpoint échoue.
+      }
+
+      try {
+        history.assignAll(await _repository.fetchHistory());
+      } catch (_) {
+        history.clear();
+      }
     } catch (_) {
       errorMessage.value = 'Impossible de charger les offres. Réessayez.';
     } finally {
@@ -53,6 +69,12 @@ class AbonnementController extends GetxController {
         currentPlanId.value = planId;
       }
       return result;
+    } catch (_) {
+      errorMessage.value = 'abonnement.retry_msg'.tr;
+      return const AbonnementCheckoutResult(
+        status: AbonnementCheckoutStatus.failed,
+        message: null,
+      );
     } finally {
       processingPlanId.value = null;
     }

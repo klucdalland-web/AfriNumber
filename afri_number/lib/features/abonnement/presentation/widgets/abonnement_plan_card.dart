@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -30,8 +29,13 @@ class AbonnementPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
-    final price =
-        period == BillingPeriod.monthly ? plan.monthlyPrice : plan.annualPrice;
+    final colors = Theme.of(context).colorScheme;
+    final price = plan.price ??
+        (period == BillingPeriod.monthly ? plan.monthlyPrice : plan.annualPrice);
+    final periodLabel = plan.durationDays > 0
+        ? 'abonnement.duration_days'
+              .trParams({'days': plan.durationDays.toString()})
+        : ' / ${period.unitKey.tr}';
 
     return Padding(
       padding: EdgeInsets.only(
@@ -45,7 +49,7 @@ class AbonnementPlanCard extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.all(r.space(20)),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(r.radius(28)),
             ),
             child: Column(
@@ -59,7 +63,7 @@ class AbonnementPlanCard extends StatelessWidget {
                       plan.name,
                       style: AppTextStyles.sectionTitle(r.fontSize(22))
                           .copyWith(
-                        color: AppColors.textMuted,
+                        color: colors.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -80,10 +84,10 @@ class AbonnementPlanCard extends StatelessWidget {
                           ),
                           TextSpan(
                             // Unité de période traduite (mois / an)
-                            text: ' / ${period.unitKey.tr}',
+                            text: periodLabel,
                             style: AppTextStyles.body(
                               r.fontSize(16),
-                              color: AppColors.textMuted,
+                              color: colors.onSurfaceVariant,
                             ),
                           ),
                         ]),
@@ -99,7 +103,7 @@ class AbonnementPlanCard extends StatelessWidget {
                   style: AppTextStyles.body(
                     r.fontSize(14),
                     weight: FontWeight.w500,
-                    color: AppColors.ink,
+                    color: colors.onSurface,
                   ),
                 ),
 

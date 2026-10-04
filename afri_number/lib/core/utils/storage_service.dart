@@ -8,9 +8,6 @@ class StorageService {
 
   final GetStorage _box;
 
-  /// Jeton d'accès de test fourni pour les appels d'API.
-  static const String testToken = '51|dLGvspTdolVArWvNgWpSOVOgNYQfl3BSK8pEu11k184ada4d';
-
   Future<void> write(String key, dynamic value) => _box.write(key, value);
 
   T? read<T>(String key) => _box.read<T>(key);
@@ -19,28 +16,39 @@ class StorageService {
 
   Future<void> clear() => _box.erase();
 
-  // ── Token helpers ──
+  // ── Token helpers ──────────────────────────────────────────────────────────
 
-  /// Retourne le jeton d'accès enregistré dans GetStorage ou le jeton de test fourni.
+  /// Retourne le jeton d'accès enregistré dans GetStorage.
+  /// Renvoie `null` si aucun token valide n'est présent (l'appelant doit
+  /// rediriger vers la page de connexion dans ce cas).
   String? get accessToken {
     final token = read<String>(StorageKeys.accessToken);
-    if (token != null && token.trim().isNotEmpty) {
-      return token;
-    }
-    // Jeton de test par défaut pour l'authentification aux endpoints /auth/user & /auth/me
-    return testToken;
+    if (token != null && token.trim().isNotEmpty) return token;
+    return null;
+  }
+
+  /// Indique si un jeton d'accès valide est présent.
+  bool get hasToken {
+    final t = accessToken;
+    return t != null && t.trim().isNotEmpty;
   }
 
   /// Sauvegarde le jeton d'accès JWT dans le stockage local.
   Future<void> saveAccessToken(String token) =>
       write(StorageKeys.accessToken, token);
 
+  Future<void> saveRefreshToken(String token) =>
+      write(StorageKeys.refreshToken, token);
+
   /// Efface les jetons et les données utilisateur du stockage local.
   Future<void> clearTokens() async {
     await remove(StorageKeys.accessToken);
     await remove(StorageKeys.refreshToken);
     await remove(StorageKeys.user);
+    await remove(StorageKeys.fcmToken);
   }
+
+  // ── User helpers ───────────────────────────────────────────────────────────
 
   /// Sauvegarde la Map des informations utilisateur dans le stockage local.
   Future<void> saveUser(Map<String, dynamic> userData) =>
@@ -53,19 +61,41 @@ class StorageService {
     return null;
   }
 
-  /// Indique si un jeton d'accès est présent.
-  bool get hasToken =>
-      accessToken != null && accessToken!.trim().isNotEmpty;
+  // ── FCM token helpers ──────────────────────────────────────────────────────
 
-  // ── Remember-me helpers ──
+  /// Sauvegarde le FCM token dans le stockage local.
+  Future<void> saveFcmToken(String token) =>
+      write(StorageKeys.fcmToken, token);
 
-  /// Récupère le numéro de téléphone mémorisé
+  /// Récupère le FCM token mis en cache.
+  String? get fcmToken => read<String>(StorageKeys.fcmToken);
+
+  // ── Remember-me helpers ────────────────────────────────────────────────────
+
+  /// Récupère le numéro de téléphone mémorisé.
   String? get rememberedPhone => read<String>(StorageKeys.rememberedPhone);
 
-  /// Enregistre le numéro de téléphone mémorisé
+  /// Enregistre le numéro de téléphone mémorisé.
   Future<void> saveRememberedPhone(String phone) =>
       write(StorageKeys.rememberedPhone, phone);
 
-  /// Efface le numéro mémorisé
+  /// Efface le numéro mémorisé.
   Future<void> clearRememberedPhone() => remove(StorageKeys.rememberedPhone);
+
+  Map<String, dynamic>? get pendingOtp {
+    final value = read(StorageKeys.pendingOtp);
+    return value is Map ? Map<String, dynamic>.from(value) : null;
+  }
+
+  Future<void> savePendingOtp({
+    required String purpose,
+    required String identifier,
+    required int expiresAtMillis,
+  }) => write(StorageKeys.pendingOtp, {
+    'purpose': purpose,
+    'identifier': identifier,
+    'expires_at': expiresAtMillis,
+  });
+
+  Future<void> clearPendingOtp() => remove(StorageKeys.pendingOtp);
 }

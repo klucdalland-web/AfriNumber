@@ -10,6 +10,11 @@ class AbonnementPlan {
     required this.currency,
     required this.features,
     this.isRecommended = false,
+    this.code = '',
+    this.price,
+    this.durationDays = 0,
+    this.maxNumbers = 0,
+    this.currently = false,
   });
 
   final String id;
@@ -20,6 +25,13 @@ class AbonnementPlan {
   final String currency;
   final List<PlanFeature> features;
   final bool isRecommended;
+  final String code;
+  final num? price;
+  final int durationDays;
+  final int maxNumbers;
+  final bool currently;
 
-  bool get isFree => monthlyPrice == 0 && annualPrice == 0;
+  bool get isFree => price != null
+      ? price == 0
+      : monthlyPrice == 0 && annualPrice == 0;
 }

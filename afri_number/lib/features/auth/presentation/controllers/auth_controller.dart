@@ -18,6 +18,7 @@ class AuthController extends GetxController {
   final StorageService _storage;
 
   final isLoading = false.obs;
+  final isVerifyingOtp = false.obs;
   final rememberMe = false.obs;
 
   // Pays
@@ -95,8 +96,40 @@ class AuthController extends GetxController {
       phoneController.text = remembered;
       rememberMe.value = true;
     }
+    _restorePendingOtp();
     loadCountries();
   }
+
+  void _restorePendingOtp() {
+    final pending = _storage.pendingOtp;
+    if (pending == null) return;
+    final purpose = pending['purpose'];
+    final identifier = pending['identifier'];
+    if ((purpose != otpPurposeLogin && purpose != otpPurposeRegister) ||
+        identifier is! String || identifier.isEmpty) {
+      _storage.clearPendingOtp();
+      return;
+    }
+
+    otpPurpose = purpose as String;
+    if (otpPurpose == otpPurposeLogin) {
+      phoneController.text = identifier;
+    } else {
+      emailController.text = identifier;
+    }
+    final expiry = pending['expires_at'];
+    final expiresAtMillis = expiry is int ? expiry : 0;
+    _otpExpiresAt = DateTime.fromMillisecondsSinceEpoch(expiresAtMillis);
+    _tickOtp();
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickOtp());
+  }
+
+  Future<void> _savePendingOtp() => _storage.savePendingOtp(
+    purpose: otpPurpose,
+    identifier: _otpIdentifier ?? '',
+    expiresAtMillis: (_otpExpiresAt ?? DateTime.now())
+        .millisecondsSinceEpoch,
+  );
 
   @override
   void onClose() {
@@ -125,7 +158,9 @@ class AuthController extends GetxController {
     AppDialog.showError(
       message: msg,
       autoDismissDuration: const Duration(seconds: 5),
-    );
+    ).catchError((Object error) {
+      debugPrint('[AuthController] Could not show error dialog: $error');
+    });
     _errorTimer = Timer(const Duration(seconds: 5), () {
       errorMessage.value = '';
     });
@@ -171,11 +206,12 @@ class AuthController extends GetxController {
     return value.isNotEmpty ? value : null;
   }
 
-  void startOtpTimer() {
+  Future<void> startOtpTimer() async {
     _otpTimer?.cancel();
     _otpExpiresAt = DateTime.now().add(
       const Duration(seconds: otpValiditySeconds),
     );
+    await _savePendingOtp();
     _tickOtp();
     _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickOtp());
   }
@@ -263,7 +299,7 @@ class AuthController extends GetxController {
       otpPurpose = otpPurposeLogin;
       otpResendCount.value = 0;
       otpController.clear();
-      startOtpTimer();
+      await startOtpTimer();
       startResendCooldown();
       isLoading.value = false;
       Get.toNamed(AppRoutes.otpVerification);
@@ -313,7 +349,7 @@ class AuthController extends GetxController {
       otpPurpose = otpPurposeRegister;
       otpResendCount.value = 0;
       otpController.clear();
-      startOtpTimer();
+      await startOtpTimer();
       startResendCooldown();
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.otpVerification);
@@ -337,6 +373,7 @@ class AuthController extends GetxController {
     }
 
     isLoading.value = true;
+    isVerifyingOtp.value = true;
     try {
       final code = otpController.text.trim();
       if (code.length != otpLength) {
@@ -345,14 +382,27 @@ class AuthController extends GetxController {
         return;
       }
 
-      await _repository.verifyOtp(
+      final response = await _repository.verifyOtp(
         code: code,
         purpose: otpPurpose,
         email: _otpIdentifier,
       );
+      if (response['success'] == false) {
+        final message = response['message'];
+        throw ApiException(
+          message: message is String && message.isNotEmpty
+              ? message
+              : 'error.code_invalid'.tr,
+        );
+      }
 
-      await _fetchUserProfile();
+      final data = response['data'];
+      final user = data is Map ? data['user'] : null;
+      if (user is Map) {
+        await _storage.saveUser(Map<String, dynamic>.from(user));
+      }
       stopOtpTimer();
+      await _storage.clearPendingOtp();
       isLoading.value = false;
       Get.offAllNamed(
         otpPurpose == otpPurposeLogin
@@ -365,6 +415,9 @@ class AuthController extends GetxController {
     } catch (_) {
       isLoading.value = false;
       setError('error.code_invalid'.tr);
+    } finally {
+      isVerifyingOtp.value = false;
+      isLoading.value = false;
     }
   }
 
@@ -384,7 +437,7 @@ class AuthController extends GetxController {
       await _repository.resendOtp(purpose: otpPurpose, email: _otpIdentifier);
       otpResendCount.value++;
       otpController.clear();
-      startOtpTimer();
+      await startOtpTimer();
       startResendCooldown();
     } on ApiException catch (e) {
       setError(e.message);
@@ -392,6 +445,21 @@ class AuthController extends GetxController {
       setError('error.code_resend_failed'.tr);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> leaveOtpFlow() async {
+    stopOtpTimer();
+    otpController.clear();
+    try {
+      await _storage.clearPendingOtp();
+      await _storage.clearTokens();
+    } catch (error) {
+      debugPrint('[AuthController] Could not clear pending OTP state: $error');
+    } finally {
+      Get.offAllNamed(
+        otpPurpose == otpPurposeLogin ? AppRoutes.login : AppRoutes.register,
+      );
     }
   }
 
@@ -448,31 +516,18 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Fonction récupérant les informations du profil utilisateur connecté depuis le backend.
-  Future<void> _fetchUserProfile() async {
-    try {
-      final response = await _repository.me();
-      if (response == null) return;
-
-      final nestedUser = response['data'];
-      final user = nestedUser is Map
-          ? Map<String, dynamic>.from(nestedUser)
-          : response;
-      await _storage.saveUser(user);
-    } catch (_) {
-      debugPrint(
-        '[AuthController] Impossible de récupérer le profil utilisateur.',
-      );
-    }
-  }
-
   /// Déconnecte l'utilisateur.
   Future<void> logout() async {
     try {
       await _repository.logout();
     } catch (_) {
-      await _storage.clearTokens();
+      try {
+        await _storage.clearTokens();
+      } catch (error) {
+        debugPrint('[AuthController] Could not clear auth tokens: $error');
+      }
+    } finally {
+      Get.offAllNamed(AppRoutes.welcome);
     }
-    Get.offAllNamed(AppRoutes.welcome);
   }
 }
