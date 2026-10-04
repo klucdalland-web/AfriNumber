@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\RequestPasswordReset;
+use App\Filament\Pages\Auth\ResetPassword;
 use App\Http\Middleware\AuthenticateAfriNetAdmin;
 use App\Support\Brand;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -29,6 +31,7 @@ class AfriNetAdminPanelProvider extends PanelProvider
             ->id('afriNetAdmin')
             ->path('afriNetAdmin')
             ->login(Login::class)
+            ->passwordReset(RequestPasswordReset::class, ResetPassword::class)
             ->brandName(Brand::name())
             ->brandLogo(Brand::logoBlackUrl())
             ->darkModeBrandLogo(Brand::logoWhiteUrl())
