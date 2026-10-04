@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PaysController;
 use App\Http\Controllers\Api\V1\PieceIdentiteController;
 use App\Http\Controllers\Api\V1\ProfileVerificationController;
+use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\TypePieceIdentiteController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -54,6 +55,7 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
 
 Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expiration'])->group(function (): void {
     Route::get('/user', [UserController::class, 'show'])->name('user.show');
+    Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
     Route::get('/abonnements', [SubscriptionController::class, 'index'])->name('abonnements.index');
     Route::get('/abonnement', [SubscriptionController::class, 'show'])->name('abonnement.show');
 

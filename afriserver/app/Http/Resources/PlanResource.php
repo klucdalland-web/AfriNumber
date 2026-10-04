@@ -25,6 +25,10 @@ class PlanResource extends JsonResource
             'currency' => $this->currency,
             'duration_days' => $this->duration_days,
             'max_numbers' => $this->max_numbers,
+            'currently' => $this->when(
+                array_key_exists('currently', $this->resource->getAttributes()),
+                fn (): bool => (bool) $this->currently,
+            ),
             'services' => $this->whenLoaded('services', function () {
                 return $this->services->map(fn ($service): array => [
                     'code' => $service->code,
