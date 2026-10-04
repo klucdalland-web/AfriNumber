@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginForm extends StatelessWidget {
   const LoginForm({super.key});
@@ -27,14 +28,15 @@ class LoginForm extends StatelessWidget {
             ),
           ),
           SizedBox(height: r.space(8)),
-          Text(
-            'login.subtitle'.tr,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-              height: 1.4,
-            ),
-          ),
+        Text(
+  'login.subtitle'.tr,
+  textAlign: TextAlign.center,
+  style: GoogleFonts.ibmPlexSans(
+    fontWeight: FontWeight.w500,
+    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+    height: 1.4,
+  ),
+),
           _ErrorBanner(controller: controller),
 
           const Spacer(),

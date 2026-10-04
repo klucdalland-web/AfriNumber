@@ -83,10 +83,11 @@ class AppTranslations extends Translations {
       'otp.expires_in': 'Expire dans',
       'otp.expired': 'Code expiré. Veuillez réessayer.',
       'otp.no_code_received': 'Code non reçu ?',
-      'otp_resends_in': 'Renvoi dans {seconds} secondes',
       'otp.resends_left': 'Renvois restants :',
       'otp.resend_limit_reached':
           'Limite de renvois atteinte. Réessayez plus tard.',
+          'otp.resend_in': 'Renvoyer le code dans @time',
+'otp.sent_to': 'Code envoyé à @target',
 
       // ── Validation ──
       'error.field_required': 'Ce champ est requis',

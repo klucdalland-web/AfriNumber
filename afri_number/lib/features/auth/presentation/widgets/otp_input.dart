@@ -4,16 +4,20 @@ import 'package:flutter/services.dart';
 class OTPInput extends StatefulWidget {
   const OTPInput({
     super.key,
-    this.length = 4,
+    this.length = 6,
     this.onCompleted,
     this.onChanged,
     this.autoFocus = true,
+    this.maxBoxSize = 60,
   });
 
   final int length;
   final ValueChanged<String>? onCompleted;
   final ValueChanged<String>? onChanged;
   final bool autoFocus;
+
+  /// Plafond de la taille d'une case (tablettes, web).
+  final double maxBoxSize;
 
   @override
   OTPInputState createState() => OTPInputState();
@@ -72,7 +76,13 @@ class OTPInputState extends State<OTPInput> {
   String get _currentCode => _controllers.map((c) => c.text).join();
 
   // ----- API publique -----
-  void addDigit(int digit) => _handleNumericInput(digit);
+
+  /// Accepte un `int` ou un `String` (ex. 5 ou '5').
+  void addDigit(dynamic digit) {
+    final value = int.tryParse(digit.toString());
+    if (value == null || value < 0 || value > 9) return;
+    _handleNumericInput(value);
+  }
 
   void deleteLastDigit() => _handleBackspace();
 
@@ -117,7 +127,6 @@ class OTPInputState extends State<OTPInput> {
 
     setState(() {
       _controllers[emptyIndex].text = digit.toString();
-      // On s'arrête visuellement sur la dernière case si tout est rempli.
       _currentIndex = (emptyIndex + 1).clamp(0, widget.length - 1);
     });
 
@@ -164,70 +173,110 @@ class OTPInputState extends State<OTPInput> {
         }
         return KeyEventResult.ignored;
       },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(widget.length, (index) {
-          // Highlight sur la case active, sauf si tout est rempli.
-          final isFocused = !allFilled && index == _currentIndex;
-          final hasValue = _controllers[index].text.isNotEmpty;
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxW = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
 
-          return Container(
-            width: 64,
-            height: 64,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            child: Stack(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    color: colors.surfaceContainerHighest,
-                    border: Border.all(
-                      color: isFocused
-                          ? colors.primary
-                          : hasValue
-                          ? colors.outline
-                          : colors.outlineVariant,
-                      width: isFocused ? 2.5 : 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.shadow.withValues(
-                          alpha: isFocused ? 0.1 : 0.05,
-                        ),
-                        blurRadius: isFocused ? 16 : 8,
-                        offset: const Offset(0, 4),
-                        spreadRadius: isFocused ? 0 : -2,
-                      ),
-                    ],
-                  ),
+          // Tout est proportionnel à la largeur disponible.
+          final gap = (maxW * 0.02).clamp(4.0, 12.0);
+          final boxW = ((maxW - gap * (widget.length - 1)) / widget.length)
+              .clamp(0.0, widget.maxBoxSize);
+          final boxH = boxW * 1.2;
+          final radius = boxW * 0.28;
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var index = 0; index < widget.length; index++) ...[
+                if (index > 0) SizedBox(width: gap),
+                _buildBox(
+                  colors: colors,
+                  index: index,
+                  width: boxW,
+                  height: boxH,
+                  radius: radius,
+                  allFilled: allFilled,
                 ),
-                Center(
-                  child: Text(
-                    _controllers[index].text,
-                    style: TextStyle(
-                      fontFamily: 'Georgia',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
-                      color: colors.onSurface,
-                    ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBox({
+    required ColorScheme colors,
+    required int index,
+    required double width,
+    required double height,
+    required double radius,
+    required bool allFilled,
+  }) {
+    final isFocused = !allFilled && index == _currentIndex;
+    final hasValue = _controllers[index].text.isNotEmpty;
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Stack(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              color: colors.surfaceContainerHighest,
+              border: Border.all(
+                color: isFocused
+                    ? colors.primary
+                    : hasValue
+                        ? colors.outline
+                        : colors.outlineVariant,
+                width: isFocused ? 2.5 : 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow.withValues(
+                    alpha: isFocused ? 0.1 : 0.05,
                   ),
+                  blurRadius: isFocused ? 12 : 6,
+                  offset: const Offset(0, 3),
+                  spreadRadius: isFocused ? 0 : -2,
                 ),
-                if (isFocused)
-                  Center(child: _BlinkingCursor(color: colors.primary)),
               ],
             ),
-          );
-        }),
+          ),
+          Center(
+            child: Text(
+              _controllers[index].text,
+              style: TextStyle(
+                fontFamily: 'Georgia',
+                fontWeight: FontWeight.w700,
+                fontSize: width * 0.5,
+                color: colors.onSurface,
+              ),
+            ),
+          ),
+          if (isFocused)
+            Center(
+              child: _BlinkingCursor(
+                color: colors.primary,
+                height: height * 0.5,
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
 class _BlinkingCursor extends StatefulWidget {
-  const _BlinkingCursor({required this.color});
+  const _BlinkingCursor({required this.color, required this.height});
 
   final Color color;
+  final double height;
 
   @override
   State<_BlinkingCursor> createState() => _BlinkingCursorState();
@@ -263,7 +312,7 @@ class _BlinkingCursorState extends State<_BlinkingCursor>
           opacity: _animation.value,
           child: Container(
             width: 2.5,
-            height: 32,
+            height: widget.height,
             decoration: BoxDecoration(
               color: widget.color,
               borderRadius: BorderRadius.circular(1.25),

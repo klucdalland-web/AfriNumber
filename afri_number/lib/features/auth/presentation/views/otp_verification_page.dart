@@ -63,6 +63,28 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   height: 1.5,
                 ),
               ),
+
+              // Adresse (masquée) où le code a été envoyé
+              Obx(
+                () => authController.otpTargetLabel.value.isEmpty
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: EdgeInsets.only(top: r.space(8)),
+                        child: Text(
+                          'otp.sent_to'.trParams({
+                            'target': authController.otpTargetLabel.value,
+                          }),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+
               Obx(
                 () => authController.errorMessage.isNotEmpty
                     ? Container(
@@ -124,10 +146,8 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
               SizedBox(height: r.space(24)),
               Obx(
                 () => CustomNumericKeypad(
-                  onDigitTap: (digit) {
-                    debugPrint('[OTP] digit tapped: $digit');
-                    _otpInputKey.currentState?.addDigit(digit);
-                  },
+                  onDigitTap: (digit) =>
+                      _otpInputKey.currentState?.addDigit(digit),
                   onBackspaceTap: () =>
                       _otpInputKey.currentState?.deleteLastDigit(),
                   enabled: !authController.isLoading.value,
@@ -170,8 +190,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   ) {
     return Obx(() {
       final limitReached = !controller.canResendOtp;
-      final cooldown = controller.resendCooldown.value;
-      final coolingDown = cooldown > 0;
+      final coolingDown = controller.resendCooldown.value > 0;
 
       return Column(
         children: [
@@ -201,7 +220,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
             limitReached
                 ? 'otp.resend_limit_reached'.tr
                 : coolingDown
-                ? 'otp.resend_in'.trParams({'seconds': '$cooldown'})
+                ? 'otp.resend_in'.trParams({
+                    'time': controller.resendCooldownLabel,
+                  })
                 : '${'otp.resends_left'.tr} ${controller.otpResendsLeft}',
             style: TextStyle(
               fontSize: r.fontSize(12),
