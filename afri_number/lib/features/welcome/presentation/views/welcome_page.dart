@@ -74,14 +74,20 @@ class _WelcomePageState extends State<WelcomePage> {
                     // Page 2: Paiement Local / Mobile Money
                     _buildPageSlide(
                       r: r,
-                      cards: WelcomePaymentCards(scale: r.scale, screenWidth: r.width),
+                      cards: WelcomePaymentCards(
+                        scale: r.scale,
+                        screenWidth: r.width,
+                      ),
                       slogan: WelcomePaymentSlogan(scale: r.scale),
                     ),
 
                     // Page 3: Connectivité + IA / Mode Zéro Data & SMS
                     _buildPageSlide(
                       r: r,
-                      cards: WelcomeConnectivityCards(scale: r.scale, screenWidth: r.width),
+                      cards: WelcomeConnectivityCards(
+                        scale: r.scale,
+                        screenWidth: r.width,
+                      ),
                       slogan: WelcomeConnectivitySlogan(scale: r.scale),
                     ),
                   ],
@@ -115,9 +121,7 @@ class _WelcomePageState extends State<WelcomePage> {
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
