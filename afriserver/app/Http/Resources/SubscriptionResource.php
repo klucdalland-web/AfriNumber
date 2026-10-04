@@ -19,6 +19,7 @@ class SubscriptionResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'is_currently_active' => $this->isCurrentlyActive(),
             'starts_at' => $this->starts_at?->toIso8601String(),
             'ends_at' => $this->ends_at?->toIso8601String(),
             'auto_renew' => (bool) $this->auto_renew,
