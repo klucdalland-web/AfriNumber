@@ -16,6 +16,10 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $subscription = $this->relationLoaded('currentSubscription')
+            ? $this->currentSubscription
+            : $this->activeSubscription();
+
         return [
             'name' => $this->name,
             'email' => $this->email,
@@ -28,6 +32,9 @@ class UserResource extends JsonResource
                 $this->relationLoaded('pays') && $this->pays?->relationLoaded('organisation'),
                 fn () => OrganisationResource::make($this->pays?->organisation)
             ),
+            'subscription' => $subscription !== null
+                ? SubscriptionResource::make($subscription)
+                : null,
         ];
     }
 }

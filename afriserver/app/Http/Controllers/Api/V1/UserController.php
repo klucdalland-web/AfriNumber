@@ -13,6 +13,7 @@ class UserController extends Controller
     public function show(Request $request): JsonResponse
     {
         $user = $request->user()->load(['typeUser', 'pays.organisation']);
+        $user->setRelation('currentSubscription', $user->activeSubscription());
 
         return ApiResponse::success(null, [
             'user' => UserResource::make($user),
