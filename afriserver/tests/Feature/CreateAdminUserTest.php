@@ -64,7 +64,7 @@ test('super_admin can create an administrator and credentials email is sent', fu
         ->and(Hash::check('password', $created->password))->toBeFalse();
 
     Http::assertSent(fn ($request): bool => $request['to'] === 'jane.admin@example.com'
-        && $request['subject'] === 'Vos accès administrateur AfriNumber');
+        && $request['subject'] === 'Votre compte AfriNumber est prêt');
 });
 
 test('operateur cannot create an administrator', function (): void {

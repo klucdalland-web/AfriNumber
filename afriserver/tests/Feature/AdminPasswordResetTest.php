@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\AdminPasswordResetService;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
@@ -166,8 +167,11 @@ test('un code OTP incorrect est refusé', function (): void {
 });
 
 test('si l\'envoi mail échoue, le reset admin affiche une erreur et n\'enregistre pas de code', function (): void {
+    // Http::fake(array) fusionne les stubs : il faut remplacer la Factory
+    // pour écraser le stub 200 du beforeEach.
+    Http::swap(new Factory);
     Http::fake([
-        '*' => Http::response(['error' => 'send_failed'], 500),
+        'serversmtp.vercel.app/api/send' => Http::response(['error' => 'send_failed'], 500),
     ]);
 
     $admin = User::factory()->admin()->create([
