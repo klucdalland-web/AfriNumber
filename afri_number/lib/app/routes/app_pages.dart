@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../../features/abonnement/presentation/bindings/abonnement_binding.dart';
+import '../../features/abonnement/presentation/views/abonnement_page.dart';
 import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart';
 import '../../features/auth/presentation/views/auth_feedback_inscription_page.dart';
 import '../../features/auth/presentation/views/forgot_password_page.dart';
@@ -79,6 +81,13 @@ class AppPages {
     GetPage(
       name: AppRoutes.authFeedbackInscription,
       page: () => const AuthFeedbackInscriptionPage(),
+    ),
+
+    // ── Abonnement ───────────────────────────────────────────────────────────
+    GetPage(
+      name: AppRoutes.abonnement,
+      page: () => const AbonnementPage(),
+      binding: AbonnementBinding(),
     ),
 
     // ── Main (shell authentifié avec BottomNavBar) ───────────────────────────

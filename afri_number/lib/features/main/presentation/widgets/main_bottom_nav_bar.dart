@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/widgets/platform_utils.dart';
 import '../controllers/main_controller.dart';
 
 class MainBottomNavBar extends StatelessWidget {
@@ -15,7 +16,7 @@ class MainBottomNavBar extends StatelessWidget {
     _NavItem(icon: Icons.person_outline, label: 'nav.profile'.tr),
   ];
 
-  // Tailles inchangées
+  // Tailles de référence
   static const double _barHeight = 64;
   static const double _activeIconSize = 20;
   static const double _inactiveIconSize = 22;
@@ -23,14 +24,13 @@ class MainBottomNavBar extends StatelessWidget {
   static const double _gap = 4;
   static const double _hPadding = 12;
 
-  // Zone tactile minimale d'un item inactif (recommandation Material : 48)
+  // Zone tactile minimale d'un item inactif
   static const double _minInactiveWidth = 48;
   // Sur tablette / paysage : la barre ne s'étire pas indéfiniment
   static const double _maxBarWidth = 640;
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<MainController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final navBgColor = isDark ? const Color(0xFF18181A) : Colors.white;
@@ -38,10 +38,46 @@ class MainBottomNavBar extends StatelessWidget {
     final activeColor = isDark ? Colors.white : const Color(0xFF030303);
     final inactiveColor = isDark ? const Color(0xFF8C9599) : const Color(0xFF505050);
 
-    // On limite le zoom du texte système pour ne pas casser la barre
     final mq = MediaQuery.of(context);
     final textScaler = mq.textScaler.clamp(maxScaleFactor: 1.2);
 
+    // Option iPhone : NavBar flottante en bas avec coins arrondis et ombre
+    if (isApplePlatform) {
+      return MediaQuery(
+        data: mq.copyWith(textScaler: textScaler),
+        child: SafeArea(
+          top: false,
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _maxBarWidth),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                height: _barHeight,
+                decoration: BoxDecoration(
+                  color: navBgColor,
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: borderColor, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: _buildBarContent(textScaler, activeColor, inactiveColor),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Option Android : NavBar ancrée en bas avec bordure supérieure
     return MediaQuery(
       data: mq.copyWith(textScaler: textScaler),
       child: DecoratedBox(
@@ -49,7 +85,6 @@ class MainBottomNavBar extends StatelessWidget {
           color: navBgColor,
           border: Border(top: BorderSide(color: borderColor, width: 1)),
         ),
-        // Gère la barre de gestes / encoche en bas
         child: SafeArea(
           top: false,
           child: Center(
@@ -58,63 +93,70 @@ class MainBottomNavBar extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: _maxBarWidth),
               child: SizedBox(
                 height: _barHeight,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final totalWidth = constraints.maxWidth;
-                    final count = _items.length;
-
-                    return Obx(() {
-                      final selected = controller.currentIndex.value;
-
-                      // Largeur réellement nécessaire pour l'item sélectionné
-                      // (padding + icône + espace + texte mesuré)
-                      final labelWidth = _measureLabel(
-                        _items[selected].label,
-                        textScaler,
-                      );
-                      final neededWidth =
-                          _hPadding * 2 + _activeIconSize + _gap + labelWidth;
-
-                      // Place maximale qu'on peut lui donner sans écraser les autres
-                      final maxSelectedWidth =
-                          totalWidth - (count - 1) * _minInactiveWidth;
-
-                      final selectedWidth = neededWidth
-                          .clamp(_minInactiveWidth, maxSelectedWidth)
-                          .toDouble();
-                      final inactiveWidth =
-                          (totalWidth - selectedWidth) / (count - 1);
-
-                      return Row(
-                        children: List.generate(count, (index) {
-                          final isSelected = selected == index;
-                          return _NavBarButton(
-                            item: _items[index],
-                            isSelected: isSelected,
-                            width: isSelected ? selectedWidth : inactiveWidth,
-                            activeColor: activeColor,
-                            inactiveColor: inactiveColor,
-                            activeIconSize: _activeIconSize,
-                            inactiveIconSize: _inactiveIconSize,
-                            labelFontSize: _labelFontSize,
-                            gap: _gap,
-                            onTap: () {
-                              if (!isSelected) {
-                                HapticFeedback.selectionClick();
-                                controller.changePage(index);
-                              }
-                            },
-                          );
-                        }),
-                      );
-                    });
-                  },
-                ),
+                child: _buildBarContent(textScaler, activeColor, inactiveColor),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBarContent(
+    TextScaler textScaler,
+    Color activeColor,
+    Color inactiveColor,
+  ) {
+    final controller = Get.find<MainController>();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalWidth = constraints.maxWidth;
+        final count = _items.length;
+
+        return Obx(() {
+          final selected = controller.currentIndex.value;
+
+          final labelWidth = _measureLabel(
+            _items[selected].label,
+            textScaler,
+          );
+          final neededWidth =
+              _hPadding * 2 + _activeIconSize + _gap + labelWidth;
+
+          final maxSelectedWidth =
+              totalWidth - (count - 1) * _minInactiveWidth;
+
+          final selectedWidth = neededWidth
+              .clamp(_minInactiveWidth, maxSelectedWidth)
+              .toDouble();
+          final inactiveWidth =
+              (totalWidth - selectedWidth) / (count - 1);
+
+          return Row(
+            children: List.generate(count, (index) {
+              final isSelected = selected == index;
+              return _NavBarButton(
+                item: _items[index],
+                isSelected: isSelected,
+                width: isSelected ? selectedWidth : inactiveWidth,
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
+                activeIconSize: _activeIconSize,
+                inactiveIconSize: _inactiveIconSize,
+                labelFontSize: _labelFontSize,
+                gap: _gap,
+                onTap: () {
+                  if (!isSelected) {
+                    HapticFeedback.selectionClick();
+                    controller.changePage(index);
+                  }
+                },
+              );
+            }),
+          );
+        });
+      },
     );
   }
 
@@ -206,19 +248,19 @@ class _NavBarButton extends StatelessWidget {
                           FadeTransition(opacity: animation, child: child),
                       child: isSelected
                           ? _SelectedContent(
-                        key: ValueKey('selected_${item.label}'),
-                        item: item,
-                        color: activeColor,
-                        iconSize: activeIconSize,
-                        fontSize: labelFontSize,
-                        gap: gap,
-                      )
+                              key: ValueKey('selected_${item.label}'),
+                              item: item,
+                              color: activeColor,
+                              iconSize: activeIconSize,
+                              fontSize: labelFontSize,
+                              gap: gap,
+                            )
                           : Icon(
-                        item.icon,
-                        key: ValueKey('idle_${item.label}'),
-                        size: inactiveIconSize,
-                        color: inactiveColor,
-                      ),
+                              item.icon,
+                              key: ValueKey('idle_${item.label}'),
+                              size: inactiveIconSize,
+                              color: inactiveColor,
+                            ),
                     ),
                   ),
                 ),
@@ -257,7 +299,6 @@ class _SelectedContent extends StatelessWidget {
         children: [
           Icon(item.icon, size: iconSize, color: color),
           SizedBox(width: gap),
-          // Filet de sécurité : seul le texte rétrécit si vraiment manque de place
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,

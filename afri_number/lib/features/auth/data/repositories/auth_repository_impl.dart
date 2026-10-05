@@ -1,9 +1,10 @@
+import 'package:afri_number/core/constants/country_constants.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/utils/storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
-import '../../../../core/utils/storage_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remote, this._storage);
@@ -12,21 +13,19 @@ class AuthRepositoryImpl implements AuthRepository {
   final StorageService _storage;
 
   @override
-  Future<void> login({
+  Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   }) async {
     final result = await _request(
       () => _remote.login(email: email, password: password),
     );
-    final token = _extractToken(result);
-    if (token != null) {
-      await _storage.saveAccessToken(token);
-    }
+
+    return result;
   }
 
   @override
-  Future<void> register({
+  Future<Map<String, dynamic>> register({
     required String name,
     required String firstName,
     required String email,
@@ -46,31 +45,49 @@ class AuthRepositoryImpl implements AuthRepository {
         passwordConfirmation: passwordConfirmation,
       ),
     );
-    final token = _extractToken(result);
-    if (token != null) {
-      await _storage.saveAccessToken(token);
-    }
+    return result;
   }
 
   @override
-  Future<void> verifyOtp({
+  Future<Map<String, dynamic>> resendOtp({
+    required String purpose,
+    String? email,
+  }) {
+    return _request(() => _remote.resendOtp(email: email, purpose: purpose));
+  }
+
+  @override
+  Future<Map<String, dynamic>> verifyOtp({
     required String code,
     String? email,
+    required String purpose,
   }) async {
     final result = await _request(
-      () => _remote.verifyOtp(code: code, email: email),
+      () => _remote.verifyOtp(code: code, email: email, purpose: purpose),
     );
-    final token = _extractToken(result);
-    if (token != null) {
-      await _storage.saveAccessToken(token);
-    }
+    final accessToken = _extractValue(result, {
+      'access_token',
+      'accessToken',
+      'token',
+      'bearer_token',
+      'jwt',
+      'auth_token',
+    });
+    final refreshToken = _extractValue(result, {
+      'refresh_token',
+      'refreshToken',
+    });
+    if (accessToken != null) await _storage.saveAccessToken(accessToken);
+    if (refreshToken != null) await _storage.saveRefreshToken(refreshToken);
+    return result;
   }
 
   @override
-  Future<void> resendOtp({
-    String? email,
-  }) async {
-    await _request(() => _remote.resendOtp(email: email));
+  Future<List<CountryData>> getCountries() async {
+    final result = await _request(_remote.getCountries);
+    return result
+        .map((e) => CountryData.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   @override
@@ -118,32 +135,23 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  String? _extractToken(Map<String, dynamic> result) {
-    if (result['token'] is String && (result['token'] as String).isNotEmpty) {
-      return result['token'] as String;
+  String? _extractValue(dynamic json, Set<String> keys) {
+    if (json is! Map) return null;
+    for (final key in keys) {
+      final value = json[key];
+      if (value is String && value.isNotEmpty) return value;
     }
-    if (result['access_token'] is String && (result['access_token'] as String).isNotEmpty) {
-      return result['access_token'] as String;
-    }
-    final data = result['data'];
-    if (data is Map) {
-      if (data['token'] is String && (data['token'] as String).isNotEmpty) {
-        return data['token'] as String;
-      }
-      if (data['access_token'] is String && (data['access_token'] as String).isNotEmpty) {
-        return data['access_token'] as String;
-      }
-    }
-    final auth = result['authorisation'] ?? result['authorization'];
-    if (auth is Map) {
-      if (auth['token'] is String && (auth['token'] as String).isNotEmpty) {
-        return auth['token'] as String;
-      }
-      if (auth['access_token'] is String && (auth['access_token'] as String).isNotEmpty) {
-        return auth['access_token'] as String;
-      }
+    for (final key in [
+      'data',
+      'user',
+      'authorization',
+      'authorisation',
+      'auth',
+      'result',
+    ]) {
+      final value = _extractValue(json[key], keys);
+      if (value != null) return value;
     }
     return null;
   }
 }
-

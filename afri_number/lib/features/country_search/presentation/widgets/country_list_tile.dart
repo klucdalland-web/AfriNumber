@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:get/get.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/models/country_item.dart';
 
+/// Tuile représentant un pays dans la liste principale.
+///
+/// Affiche :
+/// - le drapeau (emoji via [CountryFlagBadge] avec le code ISO)
+/// - le nom du pays (`country.name`)
+/// - l'indicatif téléphonique (`country.dialCode`)
 class CountryListTile extends StatelessWidget {
   const CountryListTile({
     super.key,
@@ -24,20 +29,12 @@ class CountryListTile extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark
-        ? const Color(0xFF334155)
-        : const Color(0xFFE2E8F0);
-    final textColor = isDark
-        ? const Color(0xFFF8FAFC)
-        : const Color(0xFF0F172A);
-    final subtextColor = isDark
-        ? const Color(0xFF94A3B8)
-        : const Color(0xFF64748B);
-
-    final pillBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1E7DD);
-    final pillTextColor = isDark
-        ? const Color(0xFFA7F3D0)
-        : const Color(0xFF0F5132);
+    final cardBorder =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final subtextColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return GestureDetector(
       onTap: onTap,
@@ -60,16 +57,18 @@ class CountryListTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            CountryFlagBadge(code: country.id, size: 36 * scale),
+            // Drapeau identifié par le code ISO (ex. "MG")
+            CountryFlagBadge(code: country.code, size: 36 * scale),
             SizedBox(width: r.space(12 * scale)),
 
-            // Name + Code
+            // Nom et indicatif du pays
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nom directement depuis l'API (ex. "Madagascar")
                   Text(
-                    'country.${country.id.toUpperCase()}'.tr,
+                    country.name,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(14 * scale),
                       fontWeight: FontWeight.w600,
@@ -77,8 +76,9 @@ class CountryListTile extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: r.space(2 * scale)),
+                  // Indicatif téléphonique (ex. "+261")
                   Text(
-                    country.code,
+                    country.dialCode,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: r.fontSize(12 * scale),
                       fontWeight: FontWeight.w400,
@@ -89,22 +89,26 @@ class CountryListTile extends StatelessWidget {
               ),
             ),
 
-            // Number of available numbers pill + chevron
+            // Code ISO affiché en badge (ex. "MG")
             Container(
               padding: EdgeInsets.symmetric(
                 horizontal: r.space(10 * scale),
                 vertical: r.space(5 * scale),
               ),
               decoration: BoxDecoration(
-                color: pillBg,
+                color: isDark
+                    ? const Color(0xFF064E3B)
+                    : const Color(0xFFD1E7DD),
                 borderRadius: BorderRadius.circular(r.radius(14 * scale)),
               ),
               child: Text(
-                _formatNumber(country.availableNumbers),
+                country.code,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: r.fontSize(12 * scale),
                   fontWeight: FontWeight.w700,
-                  color: pillTextColor,
+                  color: isDark
+                      ? const Color(0xFFA7F3D0)
+                      : const Color(0xFF0F5132),
                 ),
               ),
             ),
@@ -118,15 +122,5 @@ class CountryListTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatNumber(int number) {
-    if (number >= 1000) {
-      final thousands = number ~/ 1000;
-      final remainder = number % 1000;
-      final remainderStr = remainder.toString().padLeft(3, '0');
-      return '$thousands $remainderStr';
-    }
-    return number.toString();
   }
 }

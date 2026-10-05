@@ -60,7 +60,7 @@ class CountrySearchPage extends StatelessWidget {
                               onCountryTap: (country) {
                                 Get.snackbar(
                                   'country.selected'.tr,
-                                  '${'country.${country.id.toUpperCase()}'.tr} (${country.code})',
+                                  '${country.name} (${country.dialCode})',
                                   snackPosition: SnackPosition.BOTTOM,
                                 );
                               },
@@ -152,7 +152,7 @@ class CountrySearchPage extends StatelessWidget {
                               onTap: () {
                                 Get.snackbar(
                                   'country.selected'.tr,
-                                  '${'country.${country.id.toUpperCase()}'.tr} (${country.code})',
+                                  '${country.name} (${country.dialCode})',
                                   snackPosition: SnackPosition.BOTTOM,
                                 );
                               },

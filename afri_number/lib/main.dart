@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -11,13 +12,40 @@ import 'core/localization/app_translations.dart';
 import 'core/localization/localization_service.dart';
 import 'firebase_options.dart';
 
+/// Handler pour les messages FCM reçus en background (top-level requis).
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    debugPrint('[FCM Background] Message reçu: ${message.messageId}');
+  } catch (error, stackTrace) {
+    debugPrint('[FCM Background] Initialization failed: $error\n$stackTrace');
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
+  // Initialisation Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error, stackTrace) {
+    debugPrint('Firebase initialization failed: $error\n$stackTrace');
+  }
+
+  // Handler FCM background (doit être enregistré avant runApp)
+  try {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (error, stackTrace) {
+    debugPrint('FCM handler registration failed: $error\n$stackTrace');
+  }
+
   await GetStorage.init();
+
   runApp(const AfriNumberApp());
 }
 

@@ -1,11 +1,13 @@
+import 'package:afri_number/core/constants/country_constants.dart';
+
 /// Contrat du repository auth (domain).
 abstract class AuthRepository {
-  Future<void> login({
+  Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   });
 
-  Future<void> register({
+  Future<Map<String, dynamic>> register({
     required String name,
     required String firstName,
     required String email,
@@ -15,12 +17,14 @@ abstract class AuthRepository {
     required String passwordConfirmation,
   });
 
-  Future<void> verifyOtp({
+  Future<Map<String, dynamic>> verifyOtp({
     required String code,
+    required String purpose,
     String? email,
   });
 
-  Future<void> resendOtp({
+  Future<Map<String, dynamic>> resendOtp({
+    required String purpose,
     String? email,
   });
 
@@ -31,6 +35,8 @@ abstract class AuthRepository {
     required String code,
     required String newPassword,
   });
+
+  Future<List<CountryData>> getCountries();
 
   Future<void> logout();
 

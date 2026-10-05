@@ -17,8 +17,17 @@ class InitialBinding extends Bindings {
     // StorageService permanent : utilisé dès le SplashScreen, doit survivre
     // aux navigations (Get.offAllNamed efface les bindings non-permanents).
     Get.put<StorageService>(StorageService(), permanent: true);
-    Get.lazyPut<DeviceInfoService>(() => DeviceInfoService(), fenix: true);
-    Get.lazyPut<DioClient>(() => DioClient(Get.find<StorageService>()), fenix: true);
+
+    // DeviceInfoService reçoit le StorageService pour cacher le FCM token.
+    Get.lazyPut<DeviceInfoService>(
+      () => DeviceInfoService(Get.find<StorageService>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<DioClient>(
+      () => DioClient(Get.find<StorageService>()),
+      fenix: true,
+    );
     Get.lazyPut<AuthRemoteDataSource>(
       () => AuthRemoteDataSource(
         Get.find<DioClient>(),
@@ -28,7 +37,10 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
     Get.lazyPut<AuthRepository>(
-      () => AuthRepositoryImpl(Get.find<AuthRemoteDataSource>(), Get.find<StorageService>()),
+      () => AuthRepositoryImpl(
+        Get.find<AuthRemoteDataSource>(),
+        Get.find<StorageService>(),
+      ),
       fenix: true,
     );
     Get.put<LocaleController>(
@@ -36,7 +48,10 @@ class InitialBinding extends Bindings {
       permanent: true,
     );
     Get.lazyPut<AuthController>(
-      () => AuthController(Get.find<AuthRepository>(), Get.find<StorageService>()),
+      () => AuthController(
+        Get.find<AuthRepository>(),
+        Get.find<StorageService>(),
+      ),
       fenix: true,
     );
     Get.put<ThemeController>(

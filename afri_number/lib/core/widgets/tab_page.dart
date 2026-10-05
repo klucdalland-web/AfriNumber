@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../responsive/responsive.dart';
 
@@ -33,6 +32,7 @@ class TabPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
+    final colors = Theme.of(context).colorScheme;
 
     final list = ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -50,7 +50,7 @@ class TabPage extends StatelessWidget {
             subtitle!,
             style: AppTextStyles.body(
               r.fontSize(15),
-              color: AppColors.textMuted,
+              color: colors.onSurfaceVariant,
               height: 1.35,
             ),
           ),
@@ -61,13 +61,13 @@ class TabPage extends StatelessWidget {
     );
 
     return ColoredBox(
-      color: AppColors.background,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         bottom: false,
         child: onRefresh == null
             ? list
             : RefreshIndicator(
-                color: AppColors.ink,
+                color: colors.primary,
                 onRefresh: onRefresh!,
                 child: list,
               ),

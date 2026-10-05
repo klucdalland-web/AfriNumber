@@ -5,24 +5,20 @@ import 'package:get/get.dart';
 class AppTranslations extends Translations {
   static const fallbackLocale = Locale('fr', 'FR');
 
-  static const supportedLocales = [
-    Locale('fr', 'FR'),
-    Locale('en', 'US'),
-  ];
+  static const supportedLocales = [Locale('fr', 'FR'), Locale('en', 'US')];
 
   static const supportedLanguageCodes = ['fr', 'en'];
 
   /// Normalise n'importe quel code vers une locale supportée.
   /// Retourne le français par défaut si le code n'est pas reconnu.
-  static Locale localeFor(String code) =>
-      code.toLowerCase() == 'en'
-          ? const Locale('en', 'US')
-          : const Locale('fr', 'FR');
+  static Locale localeFor(String code) => code.toLowerCase() == 'en'
+      ? const Locale('en', 'US')
+      : const Locale('fr', 'FR');
 
   @override
   Map<String, Map<String, String>> get keys => {
     'fr_FR': {
-// ── Générique ──
+      // ── Générique ──
       'common.cancel': 'Annuler',
       'common.on': 'Activé',
       'common.off': 'Désactivé',
@@ -36,6 +32,7 @@ class AppTranslations extends Translations {
       'common.today': "Aujourd'hui",
       'common.yesterday': 'Hier',
       'common.minutes': 'min',
+      'inbox.unread': '{count} non lus',
 
       // ── Navigation ──
       'nav.home': 'Accueil',
@@ -49,8 +46,7 @@ class AppTranslations extends Translations {
       'auth.module_login': 'Connexion',
       'auth.module_register': 'Inscription',
       'login.title': 'De retour !',
-      'login.subtitle':
-      'Heureux de vous revoir ! Connectez-vous pour continuer là où vous vous êtes arrêté.',
+      'login.subtitle': 'Heureux de vous revoir ! Connectez-vous pour continuer là où vous vous êtes arrêté.',
       'login.phone_or_email': 'Téléphone ou e-mail',
       'login.password': 'Mot de passe',
       'login.remember_me': 'Se souvenir de moi',
@@ -68,8 +64,7 @@ class AppTranslations extends Translations {
       'register.confirm_password': 'Confirmer *',
       'register.submit': 'Continuer',
       'register.already_registered': 'Déjà inscrit ? Se connecter',
-      'register.legal':
-      "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.",
+      'register.legal': "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.",
       'forgot.send_code': 'Envoyer le code',
       'forgot.back_to_login': 'Retour à la connexion',
       'reset.code_hint': 'Code reçu par e-mail',
@@ -80,11 +75,18 @@ class AppTranslations extends Translations {
       'otp.resend': 'Renvoyer',
       'feedback.login_success_title': 'Connexion réussie !',
       'feedback.login_success_subtitle':
-      'Bienvenue à nouveau ! Vous êtes maintenant connecté à votre compte.',
+          'Bienvenue à nouveau ! Vous êtes maintenant connecté à votre compte.',
       'feedback.register_success_title': 'Inscription réussie !',
-      'feedback.register_success_subtitle':
-      'Bienvenue parmi nous ! Votre compte est prêt, vous pouvez maintenant commencer.',
+      'feedback.register_success_subtitle': 'Bienvenue parmi nous ! Votre compte est prêt, vous pouvez maintenant commencer.',
       'feedback.continue': 'Poursuivre',
+
+      // OTP
+      'otp.expires_in': 'Expire dans',
+      'otp.expired': 'Code expiré. Veuillez réessayer.',
+      'otp_resends_in': 'Renvoi dans {seconds} secondes',
+      'otp.resends_left': 'Renvois restants :',
+      'otp.resend_limit_reached':
+          'Limite de renvois atteinte. Réessayez plus tard.',
 
       // ── Validation ──
       'error.field_required': 'Ce champ est requis',
@@ -96,39 +98,36 @@ class AppTranslations extends Translations {
       'error.email_invalid': 'E-mail invalide',
       'error.phone_required': 'Le téléphone est requis',
       'error.confirm_required': 'Confirmez le mot de passe',
-      'error.password_mismatch':
-      'Les mots de passe ne correspondent pas',
+      'error.password_mismatch': 'Les mots de passe ne correspondent pas',
 
       // ── Erreurs applicatives ──
-      'error.login_failed':
-      'Erreur de connexion. Veuillez réessayer.',
+      'error.login_failed': 'Erreur de connexion. Veuillez réessayer.',
       'error.register_failed':
-      "Erreur lors de l'inscription. Veuillez réessayer.",
-      'error.code_length': 'Le code doit contenir 4 chiffres',
+          "Erreur lors de l'inscription. Veuillez réessayer.",
+      'error.code_length': 'Le code doit contenir 6 chiffres',
       'error.code_invalid': 'Code invalide. Veuillez réessayer.',
-      'error.code_resend_failed':
-      'Erreur lors du renvoi du code',
+      'error.code_resend_failed': 'Erreur lors du renvoi du code',
       'error.email_send_failed':
-      "Erreur lors de l'envoi. Vérifiez votre connexion.",
-      'error.code_expired':
-      'Code invalide ou expiré. Veuillez réessayer.',
+          "Erreur lors de l'envoi. Vérifiez votre connexion.",
+      'error.code_expired': 'Code invalide ou expiré. Veuillez réessayer.',
       'error.code_required': 'Le code est requis',
-      'error.services_load':
-      'Impossible de charger vos services. Réessayez.',
-      'error.service_update':
-      'Modification impossible pour le moment.',
+      'error.services_load': 'Impossible de charger vos services. Réessayez.',
+      'error.service_update': 'Modification impossible pour le moment.',
+      'error.countries_load_failed': 'Impossible de charger les pays. Réessayez.',
+      'error.country_required': 'Veuillez sélectionner un pays.',
+      'error.otp_resend_limit': 'La limite de renvois du code est atteinte.',
 
       // ── OTP / Mot de passe oublié ──
       'otp.title': 'Code de vérification',
+      'otp.verifying': 'Vérification du code en cours…',
       'otp.subtitle':
-      'Entrez le code à 4 chiffres envoyé à votre numéro pour continuer.',
+          'Entrez le code à 6 chiffres envoyé à votre numéro pour continuer.',
       'otp.no_code_received': "Vous n'avez pas reçu le code ?",
       'forgot.title': 'Mot de passe oublié ?',
-      'forgot.subtitle':
-      'Indiquez votre e-mail : nous vous envoyons un code pour réinitialiser votre mot de passe.',
+      'forgot.subtitle': 'Indiquez votre e-mail : nous vous envoyons un code pour réinitialiser votre mot de passe.',
       'reset.title': 'Nouveau mot de passe',
-      'reset.subtitle':
-      'Entrez le code reçu par e-mail et choisissez votre nouveau mot de passe.',
+      'otp.resend_in': 'Renvoi dans {seconds} secondes',
+      'reset.subtitle': 'Entrez le code reçu par e-mail et choisissez votre nouveau mot de passe.',
 
       // ── Welcome / Onboarding ──
       'welcome.skip': 'Passer',
@@ -147,39 +146,60 @@ class AppTranslations extends Translations {
       'welcome.translate': 'Traduire',
       'welcome.zero_data': 'Zéro Data',
       'welcome.ai_translation': 'Traduction IA',
-      'welcome.ai_translation_desc':
-      'Comprenez vos SMS instantanément.',
+      'welcome.ai_translation_desc': 'Comprenez vos SMS instantanément.',
       'welcome.zero_data_title': 'Mode Zéro Data',
-      'welcome.zero_data_desc':
-      'Continuez même avec un réseau limité.',
-      'welcome.no_bank_card':
-      "Pas besoin de carte bancaire internationale pour utiliser AfriNumber.",
-      'welcome.slogan_number':
-      'Votre numéro\ninternational\ncommence ici.',
+      'welcome.zero_data_desc': 'Continuez même avec un réseau limité.',
+      'welcome.no_bank_card': "Pas besoin de carte bancaire internationale pour utiliser AfriNumber.",
+      'welcome.slogan_number': 'Votre numéro\ninternational\ncommence ici.',
       'welcome.slogan_number_sub':
-      "Votre avenir n'a plus de frontières,\navec AfriNumber",
-      'welcome.slogan_payment':
-      'Votre paiement\nlocal\ndevient mondial.',
-      'welcome.slogan_payment_sub':
-      'Achetez vos services internationaux avec vos moyens de paiement locaux.',
-      'welcome.slogan_conn':
-      'Restez\nconnecté.\nMême au-delà du réseau.',
-      'welcome.slogan_conn_sub':
-      'Gérez vos SMS et vos communications avec des outils pensés pour une connectivité parfois limitée.',
+          "Votre avenir n'a plus de frontières,\navec AfriNumber",
+      'welcome.slogan_payment': 'Votre paiement\nlocal\ndevient mondial.',
+      'welcome.slogan_payment_sub': 'Achetez vos services internationaux avec vos moyens de paiement locaux.',
+      'welcome.slogan_conn': 'Restez\nconnecté.\nMême au-delà du réseau.',
+      'welcome.slogan_conn_sub': 'Gérez vos SMS et vos communications avec des outils pensés pour une connectivité parfois limitée.',
+
+      // ── Vérification d'identité ──
+      'kyc.title': 'Vérification d’identité',
+      'kyc.choose.title': 'Choisissez une pièce d’identité',
+      'kyc.choose.subtitle': 'Sélectionnez le document à utiliser pour vérifier votre identité.',
+      'kyc.doc.id_card': 'Carte d’identité',
+      'kyc.doc.passport': 'Passeport',
+      'kyc.doc.driver_license': 'Permis de conduire',
+      'kyc.empty': 'Aucun document n’est disponible pour le moment.',
+      'kyc.front.title': 'Photographiez le recto',
+      'kyc.front.subtitle': 'Placez le recto de votre document dans le cadre.',
+      'kyc.back.title': 'Photographiez le verso',
+      'kyc.back.subtitle': 'Placez le verso de votre document dans le cadre.',
+      'kyc.face.title': 'Prenez un selfie',
+      'kyc.face.subtitle': 'Votre visage doit être bien éclairé et entièrement visible.',
+      'kyc.continue': 'Continuer',
+      'kyc.take_photo': 'Prendre la photo',
+      'kyc.start_scan': 'Lancer la vérification',
+      'kyc.verifying.title': 'Vérification en cours',
+      'kyc.verifying.body': 'Vos documents ont été envoyés. Nous vous informerons dès que la vérification sera terminée.',
+      'kyc.verifying.home': 'Retour à l’accueil',
+      'kyc.verified.title': 'Identité vérifiée',
+      'kyc.verified.body': 'Votre identité a été confirmée. Vous pouvez continuer.',
+      'kyc.verified.buy': 'Acheter un numéro',
+      'kyc.rejected': 'La vérification a échoué. Vous pouvez réessayer.',
+      'kyc.err': 'Une erreur est survenue pendant la vérification.',
+      'kyc.camera_denied': 'L’accès à la caméra est nécessaire pour continuer.',
+      'kyc.camera_err': 'Impossible d’ouvrir la caméra. Réessayez.',
+      'kyc.info.title': 'Vérification d’identité',
+      'kyc.info.body': 'Prenez des photos nettes et lisibles de vos documents. Ces informations servent à confirmer votre identité.',
+      'kyc.info.close': 'Compris',
 
       // ── Dashboard ──
       'dashboard.notifications': 'Notifications',
       'dashboard.no_notifications':
-      'Aucune nouvelle notification pour le moment.',
-      'dashboard.profile_opened':
-      'Ouverture de votre profil utilisateur.',
+          'Aucune nouvelle notification pour le moment.',
+      'dashboard.profile_opened': 'Ouverture de votre profil utilisateur.',
       'dashboard.quick_actions_subtitle':
-      'Gérez vos numéros virtuels et vos transactions en un clic.',
+          'Gérez vos numéros virtuels et vos transactions en un clic.',
       'dashboard.buy_number': 'Acheter un numéro',
       'dashboard.recharge': 'Recharger',
       'dashboard.sms': 'SMS',
-      'dashboard.view_all_transactions':
-      'Voir plus',
+      'dashboard.view_all_transactions': 'Voir plus',
       'dashboard.view_all_offers': 'Voir plus',
       'dashboard.load_error': 'Impossible de charger le tableau de bord.',
       'dashboard.buy_offer': 'Acheter une offre',
@@ -191,7 +211,7 @@ class AppTranslations extends Translations {
 
       // ── Historique ──
       'history.subtitle':
-      "Consultez l'historique de vos transactions, SMS et recharges.",
+          "Consultez l'historique de vos transactions, SMS et recharges.",
       'history.empty': 'Aucune activité pour ce filtre.',
       'history.filter_all': 'Tous',
       'history.filter_transactions': 'Transactions',
@@ -199,7 +219,7 @@ class AppTranslations extends Translations {
 
       // ── Connectivité ──
       'connectivity.subtitle':
-      'Gérez vos services de connectivité et restez joignable partout.',
+          'Gérez vos services de connectivité et restez joignable partout.',
       'connectivity.my_services': 'Mes services actifs',
       'connectivity.available_plans': 'Forfaits disponibles',
       'connectivity.plan_selected': 'Forfait sélectionné',
@@ -207,11 +227,9 @@ class AppTranslations extends Translations {
       'connectivity.service_call_forwarding': "Renvoi d'appel",
       'connectivity.service_sms_notification': 'Notification SMS',
       'connectivity.plan_1': '1 Go / mois',
-      'connectivity.plan_1_desc':
-      'Idéal pour les communications quotidiennes',
+      'connectivity.plan_1_desc': 'Idéal pour les communications quotidiennes',
       'connectivity.plan_5': '5 Go / mois',
-      'connectivity.plan_5_desc':
-      'Pour les entrepreneurs actifs',
+      'connectivity.plan_5_desc': 'Pour les entrepreneurs actifs',
       'connectivity.plan_20': '20 Go / mois',
       'connectivity.plan_20_desc': 'Pour les usages intensifs',
 
@@ -221,8 +239,7 @@ class AppTranslations extends Translations {
       'country.empty': 'Aucun pays trouvé',
       'country.load_error': 'Impossible de charger les pays. Réessayez.',
       'country.selected': 'Pays sélectionné',
-      'country.search_hint':
-      'Rechercher un pays ou un indicatif...',
+      'country.search_hint': 'Rechercher un pays ou un indicatif...',
       'country.US': 'États-Unis',
       'country.UK': 'Royaume-Uni',
       'country.FR': 'France',
@@ -244,11 +261,41 @@ class AppTranslations extends Translations {
       'profile.logout': 'Se déconnecter',
       'profile.logout_title': 'Se déconnecter ?',
       'profile.logout_body':
-      'Vous devrez vous reconnecter pour accéder à vos numéros virtuels.',
+          'Vous devrez vous reconnecter pour accéder à vos numéros virtuels.',
       'profile.active_numbers': 'Numéros actifs',
       'profile.default_member': 'Membre AfriNumber',
       'profile.plan_pro': 'Offre Pro',
       'profile.fallback_email': 'support@afrinumber.com',
+      // Section en-tête
+      'profile.personal_info': 'Informations personnelles',
+      'profile.account_section': 'Compte & Organisation',
+      'profile.account_name': 'Nom de compte',
+      'profile.user_type': "Type d'utilisateur",
+      'profile.organisation': 'Organisation',
+      'profile.account_status': 'Statut du compte',
+      'profile.validation': 'Validation',
+      'profile.manage_subscription': 'Gérer mon abonnement',
+      'profile.countries_linked': 'Pays rattachés',
+
+      // ── Abonnement ──
+      'abonnement.title': 'Abonnement',
+      'abonnement.choose': "Choisissez l'offre qui vous convient.",
+      'abonnement.change_anytime': 'Changez de formule à tout moment.',
+      'abonnement.retry': 'Réessayer',
+      'abonnement.free': 'Gratuit',
+      'abonnement.recommended': 'Recommandé',
+      'abonnement.current_plan': 'Abonnement actuel',
+      'abonnement.subscribe': 'Passer @plan',
+      'abonnement.activated': 'Abonnement activé',
+      'abonnement.action_required': 'Action requise',
+      'abonnement.activated_msg': 'Vous êtes maintenant sur l\'offre @plan.',
+      'abonnement.retry_msg': 'Veuillez réessayer.',
+      'abonnement.period_monthly': 'Mensuel',
+      'abonnement.period_annual': 'Annuel',
+      'abonnement.duration_days': ' / {days} jours',
+      'abonnement.history_title': 'Historique des abonnements',
+      'abonnement.unit_month': 'mois',
+      'abonnement.unit_year': 'an',
     },
 
     'en_US': {
@@ -266,6 +313,7 @@ class AppTranslations extends Translations {
       'common.today': 'Today',
       'common.yesterday': 'Yesterday',
       'common.minutes': 'min',
+      'inbox.unread': '{count} unread',
 
       // ── Navigation ──
       'nav.home': 'Home',
@@ -280,7 +328,7 @@ class AppTranslations extends Translations {
       'auth.module_register': 'Sign up',
       'login.title': 'Welcome back!',
       'login.subtitle':
-      'Glad to see you again! Log in to continue where you left off.',
+          'Glad to see you again! Log in to continue where you left off.',
       'login.phone_or_email': 'Phone or email',
       'login.password': 'Password',
       'login.remember_me': 'Remember me',
@@ -298,8 +346,7 @@ class AppTranslations extends Translations {
       'register.confirm_password': 'Confirm *',
       'register.submit': 'Continue',
       'register.already_registered': 'Already registered? Log in',
-      'register.legal':
-      'By continuing, you agree to our Terms of Service and Privacy Policy.',
+      'register.legal': 'By continuing, you agree to our Terms of Service and Privacy Policy.',
       'forgot.send_code': 'Send code',
       'forgot.back_to_login': 'Back to login',
       'reset.code_hint': 'Code received by email',
@@ -310,10 +357,10 @@ class AppTranslations extends Translations {
       'otp.resend': 'Resend',
       'feedback.login_success_title': 'Login successful!',
       'feedback.login_success_subtitle':
-      'Welcome back! You are now logged in to your account.',
+          'Welcome back! You are now logged in to your account.',
       'feedback.register_success_title': 'Registration successful!',
       'feedback.register_success_subtitle':
-      'Welcome aboard! Your account is ready, you can start now.',
+          'Welcome aboard! Your account is ready, you can start now.',
       'feedback.continue': 'Continue',
 
       // ── Validation ──
@@ -329,35 +376,30 @@ class AppTranslations extends Translations {
       'error.password_mismatch': 'Passwords do not match',
 
       // ── Application errors ──
-      'error.login_failed':
-      'Login error. Please try again.',
-      'error.register_failed':
-      'Registration error. Please try again.',
-      'error.code_length': 'The code must contain 4 digits',
+      'error.login_failed': 'Login error. Please try again.',
+      'error.register_failed': 'Registration error. Please try again.',
+      'error.code_length': 'The code must contain 6 digits',
       'error.code_invalid': 'Invalid code. Please try again.',
-      'error.code_resend_failed':
-      'Error resending the code',
-      'error.email_send_failed':
-      'Error while sending. Check your connection.',
-      'error.code_expired':
-      'Invalid or expired code. Please try again.',
+      'error.code_resend_failed': 'Error resending the code',
+      'error.email_send_failed': 'Error while sending. Check your connection.',
+      'error.code_expired': 'Invalid or expired code. Please try again.',
       'error.code_required': 'Code is required',
-      'error.services_load':
-      'Unable to load your services. Please try again.',
-      'error.service_update':
-      'Unable to make the change at the moment.',
+      'error.services_load': 'Unable to load your services. Please try again.',
+      'error.service_update': 'Unable to make the change at the moment.',
+      'error.countries_load_failed': 'Unable to load countries. Please try again.',
+      'error.country_required': 'Please select a country.',
+      'error.otp_resend_limit': 'The OTP resend limit has been reached.',
 
       // ── OTP / Forgot password ──
       'otp.title': 'Verification code',
-      'otp.subtitle':
-      'Enter the 4-digit code sent to your phone to continue.',
+      'otp.verifying': 'Verifying your code…',
+      'otp.subtitle': 'Enter the 6-digit code sent to your phone to continue.',
       'otp.no_code_received': "Didn't receive the code?",
       'forgot.title': 'Forgot password?',
-      'forgot.subtitle':
-      'Enter your email and we will send you a code to reset your password.',
+      'forgot.subtitle': 'Enter your email and we will send you a code to reset your password.',
       'reset.title': 'New password',
       'reset.subtitle':
-      'Enter the code received by email and choose your new password.',
+          'Enter the code received by email and choose your new password.',
 
       // ── Welcome / Onboarding ──
       'welcome.skip': 'Skip',
@@ -376,39 +418,61 @@ class AppTranslations extends Translations {
       'welcome.translate': 'Translate',
       'welcome.zero_data': 'Zero Data',
       'welcome.ai_translation': 'AI Translation',
-      'welcome.ai_translation_desc':
-      'Understand your SMS instantly.',
+      'welcome.ai_translation_desc': 'Understand your SMS instantly.',
       'welcome.zero_data_title': 'Zero Data Mode',
-      'welcome.zero_data_desc':
-      'Keep going even with a limited network.',
+      'welcome.zero_data_desc': 'Keep going even with a limited network.',
       'welcome.no_bank_card':
-      'No international bank card needed to use AfriNumber.',
-      'welcome.slogan_number':
-      'Your international\nnumber\nstarts here.',
+          'No international bank card needed to use AfriNumber.',
+      'welcome.slogan_number': 'Your international\nnumber\nstarts here.',
       'welcome.slogan_number_sub':
-      'Your future has no borders,\nwith AfriNumber',
-      'welcome.slogan_payment':
-      'Your local\npayment\ngoes global.',
+          'Your future has no borders,\nwith AfriNumber',
+      'welcome.slogan_payment': 'Your local\npayment\ngoes global.',
       'welcome.slogan_payment_sub':
-      'Buy international services with your local payment methods.',
-      'welcome.slogan_conn':
-      'Stay\nconnected.\nEven beyond the network.',
-      'welcome.slogan_conn_sub':
-      'Manage your SMS and communications with tools designed for limited connectivity.',
+          'Buy international services with your local payment methods.',
+      'welcome.slogan_conn': 'Stay\nconnected.\nEven beyond the network.',
+      'welcome.slogan_conn_sub': 'Manage your SMS and communications with tools designed for limited connectivity.',
+
+      // ── Identity verification ──
+      'kyc.title': 'Identity verification',
+      'kyc.choose.title': 'Choose an identity document',
+      'kyc.choose.subtitle': 'Select the document you want to use to verify your identity.',
+      'kyc.doc.id_card': 'Identity card',
+      'kyc.doc.passport': 'Passport',
+      'kyc.doc.driver_license': 'Driver’s license',
+      'kyc.empty': 'No documents are available right now.',
+      'kyc.front.title': 'Photograph the front',
+      'kyc.front.subtitle': 'Place the front of your document inside the frame.',
+      'kyc.back.title': 'Photograph the back',
+      'kyc.back.subtitle': 'Place the back of your document inside the frame.',
+      'kyc.face.title': 'Take a selfie',
+      'kyc.face.subtitle': 'Make sure your face is well lit and fully visible.',
+      'kyc.continue': 'Continue',
+      'kyc.take_photo': 'Take photo',
+      'kyc.start_scan': 'Start verification',
+      'kyc.verifying.title': 'Verification in progress',
+      'kyc.verifying.body': 'Your documents have been submitted. We’ll notify you when verification is complete.',
+      'kyc.verifying.home': 'Back to home',
+      'kyc.verified.title': 'Identity verified',
+      'kyc.verified.body': 'Your identity has been confirmed. You can continue.',
+      'kyc.verified.buy': 'Buy a number',
+      'kyc.rejected': 'Verification failed. You can try again.',
+      'kyc.err': 'An error occurred during verification.',
+      'kyc.camera_denied': 'Camera access is required to continue.',
+      'kyc.camera_err': 'Unable to open the camera. Please try again.',
+      'kyc.info.title': 'Identity verification',
+      'kyc.info.body': 'Take clear, readable photos of your documents. This information is used to confirm your identity.',
+      'kyc.info.close': 'Got it',
 
       // ── Dashboard ──
       'dashboard.notifications': 'Notifications',
-      'dashboard.no_notifications':
-      'No new notifications at the moment.',
-      'dashboard.profile_opened':
-      'Opening your user profile.',
+      'dashboard.no_notifications': 'No new notifications at the moment.',
+      'dashboard.profile_opened': 'Opening your user profile.',
       'dashboard.quick_actions_subtitle':
-      'Manage your virtual numbers and transactions in one click.',
+          'Manage your virtual numbers and transactions in one click.',
       'dashboard.buy_number': 'Buy a number',
       'dashboard.recharge': 'Top up',
       'dashboard.sms': 'SMS',
-      'dashboard.view_all_transactions':
-      'See more',
+      'dashboard.view_all_transactions': 'See more',
       'dashboard.view_all_offers': 'See more',
       'dashboard.load_error': 'Could not load the dashboard.',
       'dashboard.buy_offer': 'Buy an offer',
@@ -419,8 +483,7 @@ class AppTranslations extends Translations {
       'dashboard.greeting': 'Hello',
 
       // ── History ──
-      'history.subtitle':
-      'Review your transaction, SMS, and top-up history.',
+      'history.subtitle': 'Review your transaction, SMS, and top-up history.',
       'history.empty': 'No activity for this filter.',
       'history.filter_all': 'All',
       'history.filter_transactions': 'Transactions',
@@ -428,7 +491,7 @@ class AppTranslations extends Translations {
 
       // ── Connectivity ──
       'connectivity.subtitle':
-      'Manage your connectivity services and stay reachable anywhere.',
+          'Manage your connectivity services and stay reachable anywhere.',
       'connectivity.my_services': 'My active services',
       'connectivity.available_plans': 'Available plans',
       'connectivity.plan_selected': 'Selected plan',
@@ -436,11 +499,9 @@ class AppTranslations extends Translations {
       'connectivity.service_call_forwarding': 'Call forwarding',
       'connectivity.service_sms_notification': 'SMS notification',
       'connectivity.plan_1': '1 GB / month',
-      'connectivity.plan_1_desc':
-      'Ideal for everyday communication',
+      'connectivity.plan_1_desc': 'Ideal for everyday communication',
       'connectivity.plan_5': '5 GB / month',
-      'connectivity.plan_5_desc':
-      'For active entrepreneurs',
+      'connectivity.plan_5_desc': 'For active entrepreneurs',
       'connectivity.plan_20': '20 GB / month',
       'connectivity.plan_20_desc': 'For intensive use',
 
@@ -450,8 +511,7 @@ class AppTranslations extends Translations {
       'country.empty': 'No country found',
       'country.load_error': 'Could not load countries. Please try again.',
       'country.selected': 'Selected country',
-      'country.search_hint':
-      'Search for a country or dialing code...',
+      'country.search_hint': 'Search for a country or dialing code...',
       'country.US': 'United States',
       'country.UK': 'United Kingdom',
       'country.FR': 'France',
@@ -473,12 +533,41 @@ class AppTranslations extends Translations {
       'profile.logout': 'Log out',
       'profile.logout_title': 'Log out?',
       'profile.logout_body':
-      'You will need to log in again to access your virtual numbers.',
+          'You will need to log in again to access your virtual numbers.',
       'profile.active_numbers': 'Active numbers',
       'profile.default_member': 'AfriNumber member',
       'profile.plan_pro': 'Pro plan',
       'profile.fallback_email': 'support@afrinumber.com',
+      // Header sections
+      'profile.personal_info': 'Personal information',
+      'profile.account_section': 'Account & Organisation',
+      'profile.account_name': 'Account name',
+      'profile.user_type': 'User type',
+      'profile.organisation': 'Organisation',
+      'profile.account_status': 'Account status',
+      'profile.validation': 'Validation',
+      'profile.manage_subscription': 'Manage my subscription',
+      'profile.countries_linked': 'Linked countries',
+
+      // ── Subscription ──
+      'abonnement.title': 'Subscription',
+      'abonnement.choose': 'Choose the plan that suits you.',
+      'abonnement.change_anytime': 'Switch plans at any time.',
+      'abonnement.retry': 'Retry',
+      'abonnement.free': 'Free',
+      'abonnement.recommended': 'Recommended',
+      'abonnement.current_plan': 'Current plan',
+      'abonnement.subscribe': 'Switch to @plan',
+      'abonnement.activated': 'Subscription activated',
+      'abonnement.action_required': 'Action required',
+      'abonnement.activated_msg': 'You are now on the @plan plan.',
+      'abonnement.retry_msg': 'Please try again.',
+      'abonnement.period_monthly': 'Monthly',
+      'abonnement.period_annual': 'Annual',
+      'abonnement.duration_days': ' / {days} days',
+      'abonnement.history_title': 'Subscription history',
+      'abonnement.unit_month': 'month',
+      'abonnement.unit_year': 'year',
     },
   };
-
 }

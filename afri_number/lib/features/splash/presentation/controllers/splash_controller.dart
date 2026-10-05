@@ -21,14 +21,31 @@ class SplashController extends GetxController {
 
     await Future.delayed(const Duration(seconds: 2));
 
-    if (_storage.hasToken) {
-      if (kDebugMode) {
-        print("_checkAuthentication: Token trouvé -> Redirection vers Main");
+    try {
+      final pendingOtp = _storage.pendingOtp;
+      if (pendingOtp != null &&
+          (pendingOtp['purpose'] == 'login' ||
+              pendingOtp['purpose'] == 'register') &&
+          pendingOtp['identifier'] is String &&
+          (pendingOtp['identifier'] as String).isNotEmpty) {
+        Get.offAllNamed(AppRoutes.otpVerification);
+        return;
       }
-      Get.offAllNamed(AppRoutes.main);
-    } else {
+
+      if (_storage.hasToken) {
+        if (kDebugMode) {
+          print("_checkAuthentication: Token trouvé -> Redirection vers Main");
+        }
+        Get.offAllNamed(AppRoutes.main);
+      } else {
+        if (kDebugMode) {
+          print("_checkAuthentication: Aucun token -> Redirection vers Welcome");
+        }
+        Get.offAllNamed(AppRoutes.welcome);
+      }
+    } catch (error, stackTrace) {
       if (kDebugMode) {
-        print("_checkAuthentication: Aucun token -> Redirection vers Welcome");
+        debugPrint('Splash auth check failed: $error\n$stackTrace');
       }
       Get.offAllNamed(AppRoutes.welcome);
     }

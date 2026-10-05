@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_colors.dart';
 import '../responsive/responsive.dart';
 
 /// Carte blanche arrondie des maquettes.
@@ -26,7 +25,7 @@ class AppCard extends StatelessWidget {
     return Padding(
       padding: margin ?? EdgeInsets.only(bottom: r.space(12)),
       child: Material(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: radius,
         child: InkWell(
           onTap: onTap,

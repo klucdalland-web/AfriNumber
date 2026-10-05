@@ -10,7 +10,7 @@ abstract class AppRoutes {
   static const String resetPassword = '/reset-password';
   static const String messages = '/messages';
   static const String notifications = '/notifications';
+  static const String abonnement = '/abonnement';
   static const String dashboard = '/dashboard';
   static const String main = '/main';
 }
-

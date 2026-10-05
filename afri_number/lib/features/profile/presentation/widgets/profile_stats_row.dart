@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 
+import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
 
 /// Rangée de statistiques du profil (Numéros actifs, Forfait, Pays).
+/// Le bloc "Offre" est cliquable et navigue vers la page d'abonnement.
 class ProfileStatsRow extends StatelessWidget {
   const ProfileStatsRow({
     super.key,
@@ -35,8 +37,8 @@ class ProfileStatsRow extends StatelessWidget {
         ? const Color(0xFF334155)
         : const Color(0xFFE2E8F0);
 
-    Widget item(String value, String label) {
-      return Column(
+    Widget stat(String value, String label, {VoidCallback? onTap}) {
+      final content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
@@ -58,6 +60,14 @@ class ProfileStatsRow extends StatelessWidget {
           ),
         ],
       );
+
+      if (onTap == null) return content;
+
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      );
     }
 
     return Container(
@@ -66,17 +76,19 @@ class ProfileStatsRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Expanded(
-            child: item(_two(activeNumbers), 'profile.active_numbers'.tr),
+            child: stat(_two(activeNumbers), 'profile.active_numbers'.tr),
           ),
           Container(height: r.heightOf(24), width: 1, color: dividerColor),
+          // Bloc "Offre" cliquable → navigue vers la page Abonnement
           Expanded(
-            child: item(
+            child: stat(
               planName == 'Offre Pro' ? 'profile.plan_pro'.tr : planName,
               'Offre',
+              onTap: () => Get.toNamed(AppRoutes.abonnement),
             ),
           ),
           Container(height: r.heightOf(24), width: 1, color: dividerColor),
-          Expanded(child: item(_two(countriesCount), 'Pays rattachés')),
+          Expanded(child: stat(_two(countriesCount), 'profile.countries_linked'.tr)),
         ],
       ),
     );

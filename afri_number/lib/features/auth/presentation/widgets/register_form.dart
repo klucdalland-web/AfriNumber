@@ -76,7 +76,8 @@ class RegisterForm extends StatelessWidget {
               if (value == null || value.trim().isEmpty) {
                 return 'error.email_required'.tr;
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                  .hasMatch(value)) {
                 return 'error.email_invalid'.tr;
               }
               return null;
@@ -165,23 +166,46 @@ class _PhoneWithCountryPicker extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final borderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Dropdown pour sélectionner le pays / indicatif
-        Obx(
-          () => Container(
+        Obx(() {
+          if (controller.isLoadingCountries.value) {
+            return SizedBox(
+              height: r.heightOf(50),
+              width: r.space(110),
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+
+          if (controller.countries.isEmpty) {
+            return SizedBox(
+              height: r.heightOf(50),
+              child: IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: controller.loadCountries,
+              ),
+            );
+          }
+
+          return Container(
             height: r.heightOf(50),
             padding: EdgeInsets.symmetric(horizontal: r.space(12)),
             decoration: BoxDecoration(
               color: fieldBg,
               borderRadius: BorderRadius.circular(r.radius(28)),
-              border: Border.all(
-                color: borderColor,
-                width: 1.0,
-              ),
+              border: Border.all(color: borderColor, width: 1.0),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<CountryData>(
@@ -197,7 +221,7 @@ class _PhoneWithCountryPicker extends StatelessWidget {
                     controller.selectedCountry.value = country;
                   }
                 },
-                items: kCountries.map((country) {
+                items: controller.countries.map((country) {
                   return DropdownMenuItem<CountryData>(
                     value: country,
                     child: Row(
@@ -219,8 +243,8 @@ class _PhoneWithCountryPicker extends StatelessWidget {
                 }).toList(),
               ),
             ),
-          ),
-        ),
+          );
+        }),
         SizedBox(width: r.space(10)),
 
         // Champ du numéro de téléphone

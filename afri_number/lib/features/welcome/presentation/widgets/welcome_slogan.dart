@@ -58,7 +58,7 @@ class WelcomeSlogan extends StatelessWidget {
             Text(
               'welcome.slogan_number_sub'.tr,
               style: GoogleFonts.ibmPlexSans(
-                fontSize: r.fontSize(14 * scale),
+                fontSize: r.fontSize(16 * scale),
                 fontWeight: FontWeight.w400,
                 color: subtitleColor,
                 height: 1.35,
@@ -69,17 +69,19 @@ class WelcomeSlogan extends StatelessWidget {
 
         // Bottom squiggly loop doodle positioned to the right
         Positioned(
-          right: 0,
-          bottom: -r.heightOf(10 * scale),
+          right: -r.widthOf(100 * scale),
+          bottom: -r.heightOf(50 * scale),
           width: r.widthOf(110 * scale),
           height: r.heightOf(60 * scale),
-          child: Transform.rotate(
-            angle: 0.15,
-            child: CustomPaint(
-              painter: LoopPainter(
-                color: isDark
-                    ? const Color(0xFF94A3B8)
-                    : const Color(0xFF0F172A),
+          child: IgnorePointer(
+            child: Transform.rotate(
+              angle: 0.15,
+              child: CustomPaint(
+                painter: LoopPainter(
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF0F172A),
+                ),
               ),
             ),
           ),
