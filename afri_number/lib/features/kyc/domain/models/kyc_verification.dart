@@ -13,7 +13,7 @@ class KycVerification {
     final String raw = (json['status'] ?? json['statut'] ?? '').toString();
     return KycVerification(
       status: _normalize(raw),
-      reference: (json['reference'] ?? '').toString(),
+      reference: (json['reference'] ?? json['profile_id'] ?? '').toString(),
     );
   }
 
@@ -36,6 +36,7 @@ class KycVerification {
     switch (raw.toLowerCase()) {
       case 'approved':
       case 'verified':
+      case 'approuve':
       case 'valide':
       case 'validé':
       case 'verifie':
@@ -47,6 +48,11 @@ class KycVerification {
       case 'refuse':
       case 'refusé':
         return 'rejected';
+      case 'manual_review':
+      case 'en_cours_de_verification':
+      case 'en_attente_d_upload':
+      case 'pending':
+        return 'pending';
       default:
         return 'pending';
     }

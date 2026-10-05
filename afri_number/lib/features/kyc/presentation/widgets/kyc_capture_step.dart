@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/responsive/responsive.dart';
+import '../../data/services/kyc_photo_quality_checker.dart';
 import '../../domain/models/kyc_side.dart';
 
 /// Étape de capture KYC avec aperçu caméra intégré dans l'application.
@@ -15,6 +16,7 @@ class KycCaptureStep extends StatefulWidget {
     required this.subtitle,
     required this.side,
     required this.onCaptured,
+    required this.onQualityResult,
     this.errorMessage,
     this.isBusy = false,
   });
@@ -23,6 +25,7 @@ class KycCaptureStep extends StatefulWidget {
   final String subtitle;
   final KycSide side;
   final Future<void> Function(String path) onCaptured;
+  final void Function(bool accepted, String? messageKey) onQualityResult;
   final String? errorMessage;
   final bool isBusy;
 
@@ -39,12 +42,13 @@ class _KycCaptureStepState extends State<KycCaptureStep>
   bool _takingPicture = false;
   bool _cameraShouldBeOpen = true;
   String? _cameraError;
+  final KycPhotoQualityChecker _qualityChecker = KycPhotoQualityChecker();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeCamera();
+    unawaited(_initializeCamera());
   }
 
   @override
@@ -68,7 +72,9 @@ class _KycCaptureStepState extends State<KycCaptureStep>
     _cameraShouldBeOpen = state == AppLifecycleState.resumed;
     final camera = _camera;
     if (camera == null) {
-      if (_cameraShouldBeOpen) _initializeCamera(description: _description);
+      if (_cameraShouldBeOpen) {
+        unawaited(_initializeCamera(description: _description));
+      }
       return;
     }
 
@@ -76,7 +82,7 @@ class _KycCaptureStepState extends State<KycCaptureStep>
       _camera = null;
       unawaited(_replaceCamera(camera));
     } else {
-      _initializeCamera(description: _description);
+      unawaited(_initializeCamera(description: _description));
     }
   }
 
@@ -95,7 +101,8 @@ class _KycCaptureStepState extends State<KycCaptureStep>
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-throw CameraException('CameraNotFound', 'No camera available');      }
+        throw CameraException('CameraNotFound', 'No camera available');
+      }
       final requestedDirection = widget.side == KycSide.face
           ? CameraLensDirection.front
           : CameraLensDirection.back;
@@ -136,7 +143,7 @@ throw CameraException('CameraNotFound', 'No camera available');      }
 
   void _initializeAfterCurrentAttempt() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _initializeCamera();
+      if (mounted) unawaited(_initializeCamera());
     });
   }
 
@@ -164,6 +171,14 @@ throw CameraException('CameraNotFound', 'No camera available');      }
     setState(() => _takingPicture = true);
     try {
       final image = await camera.takePicture();
+      final bytes = await image.readAsBytes();
+      final quality = await _qualityChecker.check(
+        bytes,
+        isFace: widget.side == KycSide.face,
+      );
+      if (!mounted) return;
+      widget.onQualityResult(quality.accepted, quality.messageKey);
+      if (!quality.accepted) return;
       await widget.onCaptured(image.path);
     } on CameraException catch (error) {
       if (mounted) setState(() => _cameraError = _messageFor(error));
@@ -189,156 +204,170 @@ throw CameraException('CameraNotFound', 'No camera available');      }
     final colors = Theme.of(context).colorScheme;
     final camera = _camera;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: r.space(16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: r.fontSize(15),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: r.space(2)),
-          Text(
-            widget.subtitle,
-            style: TextStyle(
-              fontSize: r.fontSize(12),
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: _initializing
-                  ? CircularProgressIndicator(color: colors.primary)
-                  : _cameraError != null
-                  ? _CameraErrorView(
-                      message: _cameraError!,
-                      onRetry: _initializeCamera,
-                    )
-                  : camera == null || !camera.value.isInitialized
-                  ? _CameraErrorView(
-                      message: 'kyc.camera_err'.tr,
-                      onRetry: _initializeCamera,
-                    )
-                  : _buildPreview(camera, r),
-            ),
-          ),
-          if (widget.errorMessage != null)
-            Padding(
-              padding: EdgeInsets.only(bottom: r.space(8)),
-              child: Center(
-                child: Text(
-                  widget.errorMessage!,
-                  textAlign: TextAlign.center,
+    const textShadow = [Shadow(color: Colors.black54, blurRadius: 6)];
+
+    Widget background;
+    if (_initializing) {
+      background = Center(
+        child: CircularProgressIndicator(color: colors.primary),
+      );
+    } else if (_cameraError != null) {
+      background = Center(
+        child: _CameraErrorView(
+          message: _cameraError!,
+          onRetry: () => unawaited(_initializeCamera()),
+        ),
+      );
+    } else if (camera == null || !camera.value.isInitialized) {
+      background = Center(
+        child: _CameraErrorView(
+          message: 'kyc.camera_err'.tr,
+          onRetry: () => unawaited(_initializeCamera()),
+        ),
+      );
+    } else {
+      background = _buildPreview(context, camera, r);
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Aperçu plein écran
+        Positioned.fill(child: background),
+
+        // Interface par-dessus l'aperçu
+        SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: r.space(16)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: r.space(8)),
+                Text(
+                  widget.title,
                   style: TextStyle(
-                    fontSize: r.fontSize(12),
-                    color: colors.error,
+                    fontSize: r.fontSize(15),
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    shadows: textShadow,
                   ),
                 ),
-              ),
-            ),
-          SizedBox(height: r.space(12)),
-          SizedBox(
-            width: double.infinity,
-            height: r.heightOf(54),
-            child: FilledButton.icon(
-              onPressed:
-                  camera?.value.isInitialized == true &&
-                      !_takingPicture &&
-                      !widget.isBusy
-                  ? _takePicture
-                  : null,
-              icon: _takingPicture || widget.isBusy
-                  ? SizedBox(
-                      width: r.iconSize(18),
-                      height: r.iconSize(18),
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+                SizedBox(height: r.space(2)),
+                Text(
+                  widget.subtitle,
+                  style: TextStyle(
+                    fontSize: r.fontSize(12),
+                    color: Colors.white70,
+                    shadows: textShadow,
+                  ),
+                ),
+                const Spacer(),
+                if (widget.errorMessage != null)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: r.space(8)),
+                    child: Center(
+                      child: Text(
+                        widget.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: r.fontSize(12),
+                          color: colors.error,
+                          fontWeight: FontWeight.w600,
+                          shadows: textShadow,
+                        ),
                       ),
-                    )
-                  : const Icon(Icons.camera_alt_rounded),
-              label: Text('kyc.take_photo'.tr),
+                    ),
+                  ),
+                SizedBox(
+                  width: double.infinity,
+                  height: r.heightOf(54),
+                  child: FilledButton.icon(
+                    onPressed:
+                        camera?.value.isInitialized == true &&
+                            !_takingPicture &&
+                            !widget.isBusy
+                        ? () => unawaited(_takePicture())
+                        : null,
+                    icon: _takingPicture || widget.isBusy
+                        ? SizedBox(
+                            width: r.iconSize(18),
+                            height: r.iconSize(18),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.camera_alt_rounded),
+                    label: Text('kyc.take_photo'.tr),
+                  ),
+                ),
+                SizedBox(height: r.space(12)),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildPreview(CameraController camera, Responsive r) {
-    return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(r.radius(24)),
-        child: AspectRatio(
-          aspectRatio: camera.value.aspectRatio,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CameraPreview(camera),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.20),
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.18),
-                    ],
-                  ),
-                ),
-              ),
-              Center(
-                child: widget.side == KycSide.face
-                    ? Container(
-                        width: r.space(220),
-                        height: r.space(280),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2.5),
-                          borderRadius: BorderRadius.circular(r.space(140)),
-                        ),
-                      )
-                    : FractionallySizedBox(
-                        widthFactor: 0.88,
-                        child: AspectRatio(
-                          aspectRatio: 1.58,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2.5,
-                              ),
-                              borderRadius: BorderRadius.circular(r.radius(14)),
-                            ),
-                          ),
-                        ),
-                      ),
-              ),
-              Positioned(
-                left: r.space(12),
-                right: r.space(12),
-                bottom: r.space(12),
-                child: Text(
-                  widget.subtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: r.fontSize(12),
-                    fontWeight: FontWeight.w600,
-                    shadows: const [
-                      Shadow(color: Colors.black54, blurRadius: 6),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+  Widget _buildPreview(
+    BuildContext context,
+    CameraController camera,
+    Responsive r,
+  ) {
+    final previewSize = camera.value.previewSize!;
+    final isPortrait =
+        MediaQuery.orientationOf(context) == Orientation.portrait;
+
+    // previewSize est fourni en paysage : on l'inverse en portrait.
+    final previewWidth = isPortrait ? previewSize.height : previewSize.width;
+    final previewHeight = isPortrait ? previewSize.width : previewSize.height;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Plein écran, ratio conservé (rogné au lieu d'étiré)
+        ClipRect(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: previewWidth,
+              height: previewHeight,
+              child: CameraPreview(camera),
+            ),
           ),
         ),
-      ),
+
+        // Masque sombre + cadre blanc de référence
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final size = constraints.biggest;
+            final center = size.center(Offset.zero);
+
+            final RRect frame;
+            if (widget.side == KycSide.face) {
+              final w = r.space(220);
+              final h = r.space(280);
+              frame = RRect.fromRectAndRadius(
+                Rect.fromCenter(center: center, width: w, height: h),
+                Radius.circular(w / 2),
+              );
+            } else {
+              final w = size.width * 0.88;
+              final h = w / 1.58;
+              frame = RRect.fromRectAndRadius(
+                Rect.fromCenter(center: center, width: w, height: h),
+                Radius.circular(r.radius(14)),
+              );
+            }
+
+            return CustomPaint(
+              size: size,
+              painter: _FrameMaskPainter(frame: frame),
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -372,4 +401,33 @@ class _CameraErrorView extends StatelessWidget {
       ],
     );
   }
+}
+
+class _FrameMaskPainter extends CustomPainter {
+  _FrameMaskPainter({required this.frame});
+
+  final RRect frame;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Zone assombrie autour du cadre
+    final mask = Path.combine(
+      PathOperation.difference,
+      Path()..addRect(Offset.zero & size),
+      Path()..addRRect(frame),
+    );
+    canvas.drawPath(mask, Paint()..color = Colors.black.withOpacity(0.45));
+
+    // Cadre blanc
+    canvas.drawRRect(
+      frame,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _FrameMaskPainter old) => old.frame != frame;
 }

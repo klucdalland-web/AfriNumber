@@ -109,26 +109,42 @@ class AbonnementPage extends GetView<AbonnementController> {
                     constraints: const BoxConstraints(),
                   ),
                   SizedBox(width: r.space(4)),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'abonnement.title'.tr,
-                          style: AppTextStyles.screenTitle(r.fontSize(28)),
-                        ),
-                        if (currentPlanName?.trim().isNotEmpty == true)
-                          Text(
-                            currentPlanName!,
-                            style: AppTextStyles.body(
-                              r.fontSize(16),
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                Expanded(
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'abonnement.title'.tr,
+        style: AppTextStyles.screenTitle(r.fontSize(28)),
+      ),
+
+      // ── Skeleton pendant le chargement du plan courant ──
+      if (controller.isLoading.value && plans.isEmpty)
+        Padding(
+          padding: EdgeInsets.only(top: r.space(6)),
+          child: SkeletonShimmer(
+            child: Container(
+              width: r.space(120),
+              height: r.space(14),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(r.radius(6)),
+              ),
+            ),
+          ),
+        )
+      else if (currentPlanName?.trim().isNotEmpty == true)
+        Text(
+          currentPlanName!,
+          style: AppTextStyles.body(
+            r.fontSize(16),
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+    ],
+  ),
+),
                   _InfoButton(),
                 ],
               ),

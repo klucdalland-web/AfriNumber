@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../domain/models/kyc_document_type.dart';
 import '../../domain/models/kyc_profile.dart';
+import '../../domain/models/kyc_progress_status.dart';
 import '../../domain/models/kyc_verification.dart';
 import '../../domain/repositories/kyc_repository.dart';
 
@@ -62,6 +63,10 @@ class KycController extends GetxController {
   /// Étape courante.
   final Rx<KycStep> step = KycStep.choose.obs;
 
+  /// Résultat du contrôle qualité de chaque capture (recto, verso, selfie).
+  final RxMap<KycStep, KycProgressStatus> _photoQuality =
+      <KycStep, KycProgressStatus>{}.obs;
+
   /// Chemin de la photo du recto.
   final RxnString frontPath = RxnString();
 
@@ -80,19 +85,27 @@ class KycController extends GetxController {
     load();
   }
 
-  /// Index (0..2) du segment actif dans l'indicateur de progression.
-  int get progressIndex {
-    switch (step.value) {
-      case KycStep.choose:
-        return 0;
-      case KycStep.front:
-      case KycStep.back:
-        return 1;
-      case KycStep.face:
-      case KycStep.verifying:
-      case KycStep.verified:
-        return 2;
-    }
+  /// Couleur logique de chaque segment : choix, scans requis, puis selfie.
+  List<KycProgressStatus> get progressStatuses {
+    final stages = <KycStep>[
+      KycStep.choose,
+      KycStep.front,
+      if (selectedType.value?.requiresBack == true) KycStep.back,
+      KycStep.face,
+    ];
+    return stages
+        .map((stage) {
+          if (stage == step.value && errorMessage.value != null) {
+            return KycProgressStatus.failed;
+          }
+          if (stage == KycStep.choose) {
+            return step.value == KycStep.choose
+                ? KycProgressStatus.pending
+                : KycProgressStatus.passed;
+          }
+          return _photoQuality[stage] ?? KycProgressStatus.pending;
+        })
+        .toList(growable: false);
   }
 
   /// Indique si l'indicateur de progression doit être visible.
@@ -117,8 +130,27 @@ class KycController extends GetxController {
 
   /// Sélectionne une pièce (le verso déjà pris est oublié si la pièce change).
   void selectType(KycDocumentType type) {
-    if (selectedType.value?.id != type.id) backPath.value = null;
+    if (selectedType.value?.id != type.id) {
+      frontPath.value = null;
+      backPath.value = null;
+      facePath.value = null;
+      _photoQuality.clear();
+    }
     selectedType.value = type;
+  }
+
+  /// Enregistre le résultat du contrôle qualité de l'étape caméra active.
+  void onPhotoQualityResult(bool accepted, String? messageKey) {
+    final currentStep = step.value;
+    if (currentStep != KycStep.front &&
+        currentStep != KycStep.back &&
+        currentStep != KycStep.face) {
+      return;
+    }
+    _photoQuality[currentStep] = accepted
+        ? KycProgressStatus.passed
+        : KycProgressStatus.failed;
+    errorMessage.value = accepted ? null : messageKey?.tr ?? 'kyc.err'.tr;
   }
 
   /// Action du bouton principal selon l'étape courante.
@@ -128,6 +160,7 @@ class KycController extends GetxController {
     switch (step.value) {
       case KycStep.choose:
         errorMessage.value = null;
+        _photoQuality[KycStep.choose] = KycProgressStatus.passed;
         step.value = KycStep.front;
         return;
       case KycStep.front:
@@ -236,8 +269,9 @@ class KycController extends GetxController {
     if (profileId == null) return;
     _isPolling = true;
     try {
-      final KycVerification result =
-      await _repository.getVerificationStatus(profileId: profileId);
+      final KycVerification result = await _repository.getVerificationStatus(
+        profileId: profileId,
+      );
       verification.value = result;
       if (result.isApproved) {
         _pollTimer?.cancel();
@@ -258,6 +292,7 @@ class KycController extends GetxController {
     frontPath.value = null;
     backPath.value = null;
     facePath.value = null;
+    _photoQuality.clear();
     verification.value = null;
     selectedType.value = null;
     _profileId = null;

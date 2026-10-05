@@ -14,15 +14,16 @@ class KycRemoteDataSource {
   /// Un [Dio] Express peut être injecté pour les tests ; par défaut il est
   /// créé sans token ni clé API (service interne).
   KycRemoteDataSource(this._client, {Dio? expressDio})
-      : _express = expressDio ??
-      Dio(
-        BaseOptions(
-          baseUrl: ApiConstants.expressBaseUrl,
-          connectTimeout: const Duration(seconds: 15),
-          sendTimeout: const Duration(seconds: 60),
-          receiveTimeout: const Duration(seconds: 60),
-        ),
-      );
+    : _express =
+          expressDio ??
+          Dio(
+            BaseOptions(
+              baseUrl: ApiConstants.expressBaseUrl,
+              connectTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 60),
+              receiveTimeout: const Duration(seconds: 60),
+            ),
+          );
 
   final DioClient _client;
   final Dio _express;
@@ -31,10 +32,11 @@ class KycRemoteDataSource {
   /// POST `/verifier/init` : `{ statut, profile_id, message }`.
   Future<KycProfile> initVerification() async {
     final res = await _laravel(
-          () => _client.post<Map<String, dynamic>>(ApiConstants.kycInit),
+      () => _client.post<Map<String, dynamic>>(ApiConstants.kycInit),
     );
     return KycProfile.fromJson(res.data ?? <String, dynamic>{});
   }
+
   Future<Response<T>> _laravel<T>(Future<Response<T>> Function() call) async {
     try {
       return await call();
@@ -44,10 +46,14 @@ class KycRemoteDataSource {
       throw KycException(message: _serverMessage(e));
     }
   }
+
   String? _serverMessage(DioException e) {
     final dynamic body = e.response?.data;
-    return body is Map ? body['message']?.toString() : null;
+    if (body is! Map) return null;
+    final dynamic message = body['message'] ?? body['erreur'] ?? body['error'];
+    return message?.toString();
   }
+
   /// POST multipart `/files/upload` vers Express (réponse 201).
   ///
   /// Champs : `idprofile`, `photopath`, `pieceavantpath`, `piecearrierepath`.
@@ -73,17 +79,19 @@ class KycRemoteDataSource {
       throw KycException(message: _serverMessage(e));
     }
   }
+
   /// GET du statut (endpoint à confirmer).
   Future<KycVerification> fetchStatus({required String profileId}) async {
     final res = await _laravel(
-          () => _client.get<Map<String, dynamic>>(
+      () => _client.get<Map<String, dynamic>>(
         '${ApiConstants.kycStatus}/$profileId',
       ),
     );
     final Map<String, dynamic> body = res.data ?? <String, dynamic>{};
     final dynamic inner = body['data'];
-    final Map<String, dynamic> json =
-    inner is Map<String, dynamic> ? inner : body;
+    final Map<String, dynamic> json = inner is Map<String, dynamic>
+        ? inner
+        : body;
     return KycVerification.fromJson(<String, dynamic>{
       ...json,
       'reference': profileId,

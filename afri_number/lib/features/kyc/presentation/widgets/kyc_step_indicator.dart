@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/responsive/responsive.dart';
+import '../../domain/models/kyc_progress_status.dart';
 
-/// Indicateur de progression à 3 segments.
+/// Indicateur de progression avec un état visuel pour chaque étape.
 class KycStepIndicator extends StatelessWidget {
-  /// Crée l'indicateur ; [current] est l'index (0..2) du segment actif.
-  const KycStepIndicator({super.key, required this.current});
+  /// Crée l'indicateur à partir de l'état de chaque étape.
+  const KycStepIndicator({super.key, required this.statuses});
 
-  /// Segment actif.
-  final int current;
+  /// Statuts ordonnés des segments.
+  final List<KycProgressStatus> statuses;
 
   @override
   Widget build(BuildContext context) {
@@ -18,15 +19,23 @@ class KycStepIndicator extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: r.space(16)),
       child: Row(
-        children: List<Widget>.generate(3, (int i) {
+        children: List<Widget>.generate(statuses.length, (int i) {
+          final status = statuses[i];
           return Expanded(
             child: Container(
               height: r.space(3),
-              margin: EdgeInsets.only(right: i < 2 ? r.space(4) : 0),
+              margin: EdgeInsets.only(
+                right: i < statuses.length - 1 ? r.space(4) : 0,
+              ),
               decoration: BoxDecoration(
-                color: i == current
-                    ? scheme.onSurface
-                    : scheme.outlineVariant,
+                color: switch (status) {
+                  KycProgressStatus.pending => Colors.white,
+                  KycProgressStatus.passed => const Color(0xFF2EAD66),
+                  KycProgressStatus.failed => scheme.error,
+                },
+                border: status == KycProgressStatus.pending
+                    ? Border.all(color: scheme.outlineVariant)
+                    : null,
                 borderRadius: BorderRadius.circular(r.space(2)),
               ),
             ),

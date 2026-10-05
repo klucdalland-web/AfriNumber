@@ -25,13 +25,10 @@ class KycPage extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: <Widget>[
-              KycHeader(
-                onBack: c.goBack,
-                onInfo: () => _showInfo(context),
-              ),
+              KycHeader(onBack: c.goBack, onInfo: () => _showInfo(context)),
               Obx(
-                    () => c.showProgress
-                    ? KycStepIndicator(current: c.progressIndex)
+                () => c.showProgress
+                    ? KycStepIndicator(statuses: c.progressStatuses)
                     : SizedBox(height: r.space(3)),
               ),
               SizedBox(height: r.space(16)),
@@ -57,6 +54,7 @@ class KycPage extends StatelessWidget {
           subtitle: 'kyc.front.subtitle'.tr,
           side: KycSide.front,
           onCaptured: c.onPhotoCaptured,
+          onQualityResult: c.onPhotoQualityResult,
           isBusy: c.isBusy.value,
           errorMessage: c.errorMessage.value,
         );
@@ -66,6 +64,7 @@ class KycPage extends StatelessWidget {
           subtitle: 'kyc.back.subtitle'.tr,
           side: KycSide.back,
           onCaptured: c.onPhotoCaptured,
+          onQualityResult: c.onPhotoQualityResult,
           isBusy: c.isBusy.value,
           errorMessage: c.errorMessage.value,
         );
@@ -75,6 +74,7 @@ class KycPage extends StatelessWidget {
           subtitle: 'kyc.face.subtitle'.tr,
           side: KycSide.face,
           onCaptured: c.onPhotoCaptured,
+          onQualityResult: c.onPhotoQualityResult,
           isBusy: c.isBusy.value,
           errorMessage: c.errorMessage.value,
         );
@@ -98,15 +98,14 @@ class KycPage extends StatelessWidget {
       case KycStep.choose:
         return AppButton(
           label: 'kyc.continue'.tr,
-          onPressed:
-          c.selectedType.value == null ? null : c.onPrimaryPressed,
+          onPressed: c.selectedType.value == null ? null : c.onPrimaryPressed,
         );
       case KycStep.front:
       case KycStep.back:
       case KycStep.face:
         return const SizedBox.shrink();
       case KycStep.verifying:
-      // Grisé tant que la vérification n'est pas terminée (comme la maquette).
+        // Grisé tant que la vérification n'est pas terminée (comme la maquette).
         return AppButton(label: 'kyc.verifying.home'.tr, onPressed: null);
       case KycStep.verified:
         return AppButton(

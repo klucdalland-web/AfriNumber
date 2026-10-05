@@ -24,20 +24,68 @@ class AbonnementPlanCard extends StatelessWidget {
   final bool isProcessing;
   final VoidCallback onSubscribe;
 
-  static const _neutralButtonColor = Color(0xFF686868);
-
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final highlighted = plan.isRecommended || isCurrent;
 
     final price = plan.price ??
-        (period == BillingPeriod.monthly ? plan.monthlyPrice : plan.annualPrice);
+        (period == BillingPeriod.monthly
+            ? plan.monthlyPrice
+            : plan.annualPrice);
     final periodLabel = plan.durationDays > 0
         ? 'abonnement.duration_days'
             .trParams({'days': plan.durationDays.toString()})
         : '/ ${period.unitKey.tr}';
+
+    // ── Fond de carte : on part d'un container légèrement élevé
+    final baseSurface = isDark
+        ? Color.alphaBlend(
+            colors.surfaceTint.withOpacity(0.04),
+            colors.surfaceContainerLow,
+          )
+        : colors.surface;
+
+    // ── Fond surligné : teinte primaire subtile
+    final highlightedSurface = Color.alphaBlend(
+      colors.primary.withOpacity(isDark ? 0.14 : 0.07),
+      baseSurface,
+    );
+
+    // ── Bordure : plus visible en sombre
+    final borderColor = highlighted
+        ? colors.primary.withOpacity(isDark ? 0.85 : 0.7)
+        : colors.outlineVariant.withOpacity(isDark ? 0.5 : 0.6);
+
+    // ── Ombre : adaptée au thème
+    final shadowColor = highlighted
+        ? colors.primary.withOpacity(isDark ? 0.22 : 0.14)
+        : Colors.black.withOpacity(isDark ? 0.35 : 0.05);
+
+    // ── Couleurs du bouton selon l'état et le thème ──
+    final Color buttonBackground;
+    final Color buttonForeground;
+
+    if (isCurrent) {
+      // Plan actuel : bouton désactivé, discret
+      buttonBackground = isDark
+          ? colors.surfaceContainerHighest
+          : colors.surfaceContainerHigh;
+      buttonForeground = colors.onSurfaceVariant;
+    } else if (plan.isRecommended) {
+      // Plan recommandé : couleur primaire
+      buttonBackground = colors.primary;
+      buttonForeground = colors.onPrimary;
+    } else {
+      // Plan standard : neutre, adapté au thème
+      buttonBackground = isDark
+          ? const Color(0xFF3A3A3A)
+          : const Color(0xFF6B6B6B);
+      buttonForeground = Colors.white;
+    }
 
     return Padding(
       padding: EdgeInsets.only(
@@ -58,27 +106,25 @@ class AbonnementPlanCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  colors.surface,
+                  highlighted ? highlightedSurface : baseSurface,
                   highlighted
                       ? Color.alphaBlend(
-                          colors.primary.withOpacity(0.08),
-                          colors.surface,
+                          colors.primary.withOpacity(isDark ? 0.06 : 0.03),
+                          baseSurface,
                         )
-                      : colors.surface,
+                      : baseSurface,
                 ],
               ),
               border: Border.all(
-                color: highlighted
-                    ? colors.primary.withOpacity(0.7)
-                    : colors.outlineVariant.withOpacity(0.4),
+                color: borderColor,
                 width: highlighted ? 1.5 : 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (highlighted ? colors.primary : Colors.black)
-                      .withOpacity(highlighted ? 0.12 : 0.05),
-                  blurRadius: r.space(highlighted ? 24 : 14),
-                  offset: Offset(0, r.space(8)),
+                  color: shadowColor,
+                  blurRadius: r.space(highlighted ? 26 : 16),
+                  offset: Offset(0, r.space(highlighted ? 10 : 6)),
+                  spreadRadius: highlighted ? r.space(0.5) : 0,
                 ),
               ],
             ),
@@ -96,7 +142,10 @@ class AbonnementPlanCard extends StatelessWidget {
                           Text(
                             plan.name,
                             style: AppTextStyles.sectionTitle(r.fontSize(22))
-                                .copyWith(fontWeight: FontWeight.w700),
+                                .copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.onSurface,
+                            ),
                           ),
                           if (plan.tagline.trim().isNotEmpty) ...[
                             SizedBox(height: r.space(4)),
@@ -125,7 +174,8 @@ class AbonnementPlanCard extends StatelessWidget {
                 SizedBox(height: r.space(16)),
                 Divider(
                   height: 1,
-                  color: colors.outlineVariant.withOpacity(0.5),
+                  color:
+                      colors.outlineVariant.withOpacity(isDark ? 0.4 : 0.5),
                 ),
                 SizedBox(height: r.space(16)),
 
@@ -142,9 +192,8 @@ class AbonnementPlanCard extends StatelessWidget {
                       : 'abonnement.subscribe'.trParams({'plan': plan.name}),
                   isLoading: isProcessing,
                   onPressed: isCurrent ? null : onSubscribe,
-                  backgroundColor:
-                      plan.isRecommended ? colors.primary : _neutralButtonColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor: buttonBackground,
+                  foregroundColor: buttonForeground,
                   radius: r.radius(28),
                   height: r.heightOf(56),
                 ),
@@ -180,14 +229,21 @@ class _PriceBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = context.responsive;
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final priceColor = isDark
+        ? Color.alphaBlend(Colors.white.withOpacity(0.15), colors.primary)
+        : colors.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
           amountLabel,
-          style: AppTextStyles.sectionTitle(r.fontSize(24))
-              .copyWith(fontWeight: FontWeight.w800, color: colors.primary),
+          style: AppTextStyles.sectionTitle(r.fontSize(24)).copyWith(
+            fontWeight: FontWeight.w800,
+            color: priceColor,
+          ),
         ),
         if (periodLabel != null)
           Text(

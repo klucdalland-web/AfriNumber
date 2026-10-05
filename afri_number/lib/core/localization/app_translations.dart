@@ -113,7 +113,8 @@ class AppTranslations extends Translations {
       'error.code_required': 'Le code est requis',
       'error.services_load': 'Impossible de charger vos services. Réessayez.',
       'error.service_update': 'Modification impossible pour le moment.',
-      'error.countries_load_failed': 'Impossible de charger les pays. Réessayez.',
+      'error.countries_load_failed':
+          'Impossible de charger les pays. Réessayez.',
       'error.country_required': 'Veuillez sélectionner un pays.',
       'error.otp_resend_limit': 'La limite de renvois du code est atteinte.',
 
@@ -161,7 +162,8 @@ class AppTranslations extends Translations {
       // ── Vérification d'identité ──
       'kyc.title': 'Vérification d’identité',
       'kyc.choose.title': 'Choisissez une pièce d’identité',
-      'kyc.choose.subtitle': 'Sélectionnez le document à utiliser pour vérifier votre identité.',
+      'kyc.choose.subtitle':
+          'Sélectionnez le document à utiliser pour vérifier votre identité.',
       'kyc.doc.id_card': 'Carte d’identité',
       'kyc.doc.passport': 'Passeport',
       'kyc.doc.driver_license': 'Permis de conduire',
@@ -171,7 +173,8 @@ class AppTranslations extends Translations {
       'kyc.back.title': 'Photographiez le verso',
       'kyc.back.subtitle': 'Placez le verso de votre document dans le cadre.',
       'kyc.face.title': 'Prenez un selfie',
-      'kyc.face.subtitle': 'Votre visage doit être bien éclairé et entièrement visible.',
+      'kyc.face.subtitle':
+          'Votre visage doit être bien éclairé et entièrement visible.',
       'kyc.continue': 'Continuer',
       'kyc.take_photo': 'Prendre la photo',
       'kyc.start_scan': 'Lancer la vérification',
@@ -179,12 +182,22 @@ class AppTranslations extends Translations {
       'kyc.verifying.body': 'Vos documents ont été envoyés. Nous vous informerons dès que la vérification sera terminée.',
       'kyc.verifying.home': 'Retour à l’accueil',
       'kyc.verified.title': 'Identité vérifiée',
-      'kyc.verified.body': 'Votre identité a été confirmée. Vous pouvez continuer.',
+      'kyc.verified.body':
+          'Votre identité a été confirmée. Vous pouvez continuer.',
       'kyc.verified.buy': 'Acheter un numéro',
       'kyc.rejected': 'La vérification a échoué. Vous pouvez réessayer.',
       'kyc.err': 'Une erreur est survenue pendant la vérification.',
       'kyc.camera_denied': 'L’accès à la caméra est nécessaire pour continuer.',
       'kyc.camera_err': 'Impossible d’ouvrir la caméra. Réessayez.',
+      'kyc.quality.unreadable': 'La photo n’a pas pu être vérifiée. Réessayez.',
+      'kyc.quality.low_resolution':
+          'La photo est trop petite. Rapprochez le document et réessayez.',
+      'kyc.quality.too_dark':
+          'La photo est trop sombre. Ajoutez de la lumière et réessayez.',
+      'kyc.quality.too_bright': 'La photo est trop claire ou comporte un reflet. Réduisez la lumière et réessayez.',
+      'kyc.quality.blurry':
+          'La photo semble floue. Stabilisez le téléphone et réessayez.',
+      'kyc.quality.content_unclear': 'Le contenu semble difficile à lire. Cadrez le document et réessayez.',
       'kyc.info.title': 'Vérification d’identité',
       'kyc.info.body': 'Prenez des photos nettes et lisibles de vos documents. Ces informations servent à confirmer votre identité.',
       'kyc.info.close': 'Compris',
@@ -296,7 +309,12 @@ class AppTranslations extends Translations {
       'abonnement.history_title': 'Historique des abonnements',
       'abonnement.unit_month': 'mois',
       'abonnement.unit_year': 'an',
-      'abonnement.load_error': 'Impossible de charger les offres. Réessayez.'
+      'abonnement.load_error': 'Impossible de charger les offres. Réessayez.',
+      'abonnement.pay.title': 'Paiement de l\'abonnement',
+      'abonnement.pay.phone': 'Numéro de téléphone',
+      'abonnement.pay.operator': 'Opérateur',
+      'abonnement.pay.hint': 'Sélectionnez votre opérateur',
+      'abonnement.pay.confirm_amount': 'Confirmez le montant',
     },
 
     'en_US': {
@@ -387,7 +405,8 @@ class AppTranslations extends Translations {
       'error.code_required': 'Code is required',
       'error.services_load': 'Unable to load your services. Please try again.',
       'error.service_update': 'Unable to make the change at the moment.',
-      'error.countries_load_failed': 'Unable to load countries. Please try again.',
+      'error.countries_load_failed':
+          'Unable to load countries. Please try again.',
       'error.country_required': 'Please select a country.',
       'error.otp_resend_limit': 'The OTP resend limit has been reached.',
 
@@ -436,13 +455,15 @@ class AppTranslations extends Translations {
       // ── Identity verification ──
       'kyc.title': 'Identity verification',
       'kyc.choose.title': 'Choose an identity document',
-      'kyc.choose.subtitle': 'Select the document you want to use to verify your identity.',
+      'kyc.choose.subtitle':
+          'Select the document you want to use to verify your identity.',
       'kyc.doc.id_card': 'Identity card',
       'kyc.doc.passport': 'Passport',
       'kyc.doc.driver_license': 'Driver’s license',
       'kyc.empty': 'No documents are available right now.',
       'kyc.front.title': 'Photograph the front',
-      'kyc.front.subtitle': 'Place the front of your document inside the frame.',
+      'kyc.front.subtitle':
+          'Place the front of your document inside the frame.',
       'kyc.back.title': 'Photograph the back',
       'kyc.back.subtitle': 'Place the back of your document inside the frame.',
       'kyc.face.title': 'Take a selfie',
@@ -454,12 +475,23 @@ class AppTranslations extends Translations {
       'kyc.verifying.body': 'Your documents have been submitted. We’ll notify you when verification is complete.',
       'kyc.verifying.home': 'Back to home',
       'kyc.verified.title': 'Identity verified',
-      'kyc.verified.body': 'Your identity has been confirmed. You can continue.',
+      'kyc.verified.body':
+          'Your identity has been confirmed. You can continue.',
       'kyc.verified.buy': 'Buy a number',
       'kyc.rejected': 'Verification failed. You can try again.',
       'kyc.err': 'An error occurred during verification.',
       'kyc.camera_denied': 'Camera access is required to continue.',
       'kyc.camera_err': 'Unable to open the camera. Please try again.',
+      'kyc.quality.unreadable':
+          'The photo could not be checked. Please try again.',
+      'kyc.quality.low_resolution':
+          'The photo is too small. Move closer to the document and try again.',
+      'kyc.quality.too_dark':
+          'The photo is too dark. Add more light and try again.',
+      'kyc.quality.too_bright': 'The photo is too bright or has glare. Reduce the light and try again.',
+      'kyc.quality.blurry':
+          'The photo looks blurry. Hold the phone steady and try again.',
+      'kyc.quality.content_unclear': 'The content may be hard to read. Reframe the document and try again.',
       'kyc.info.title': 'Identity verification',
       'kyc.info.body': 'Take clear, readable photos of your documents. This information is used to confirm your identity.',
       'kyc.info.close': 'Got it',

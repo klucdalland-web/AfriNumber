@@ -21,7 +21,7 @@ class KycProfile {
     return KycProfile(
       profileId: (json['profile_id'] ?? '').toString(),
       status: (json['statut'] ?? '').toString(),
-      message: (json['message'] ?? '').toString(),
+      message: (json['message'] ?? json['erreur'] ?? '').toString(),
     );
   }
 
