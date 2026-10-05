@@ -2,26 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/abonnement_controller.dart';
-import '../widgets/billing_period_toggle.dart';
+import '../widgets/mobile_money_payment_sheet.dart';
 import '../widgets/abonnement_plan_card.dart';
 import '../../data/models/abonnement_checkout_result.dart';
 import '../../data/models/abonnement_plan.dart';
+import '../widgets/abonnement_plan_card_skeleton.dart';
+import '../widgets/skeleton.dart';
 
 class AbonnementPage extends GetView<AbonnementController> {
   const AbonnementPage({super.key});
 
   Future<void> _handleSubscribe(
     BuildContext context,
-    String planId,
-    String planName,
+    AbonnementPlan plan,
   ) async {
-    final result = await controller.subscribe(planId);
+    final AbonnementCheckoutResult? result;
+    if (plan.isFree) {
+      result = await controller.subscribe(plan.id);
+    } else {
+      final amount = plan.price ?? plan.annualPrice;
+      final amountLabel = Formatters.amount(amount, currency: plan.currency);
+      result = await showMobileMoneyPaymentSheet(
+        context,
+        countryCode: controller.countryCode,
+        planName: plan.name,
+        amountLabel: amountLabel,
+        onPay: (request) => controller.subscribe(
+          plan.id,
+          countryCode: request.countryCode,
+          operator: request.operator.id,
+          phone: request.phone,
+        ),
+      );
+    }
+    if (result == null) return;
+    final checkoutResult = result;
     if (!context.mounted) return;
     final colors = Theme.of(context).colorScheme;
 
-    final isSuccess = result.status == AbonnementCheckoutStatus.success;
+    final isSuccess =
+        checkoutResult.status == AbonnementCheckoutStatus.success;
 
     showDialog<void>(
       context: context,
@@ -34,10 +57,10 @@ class AbonnementPage extends GetView<AbonnementController> {
               : 'abonnement.action_required'.tr,
         ),
         content: Text(
-          result.message ??
+          checkoutResult.message ??
               (isSuccess
                   // Message avec interpolation du nom du plan
-                  ? 'abonnement.activated_msg'.trParams({'plan': planName})
+                  ? 'abonnement.activated_msg'.trParams({'plan': plan.name})
                   : 'abonnement.retry_msg'.tr),
         ),
         actions: [
@@ -72,51 +95,44 @@ class AbonnementPage extends GetView<AbonnementController> {
               r.space(40),
             ),
             children: [
-              // ── En-tête avec bouton retour et titre traduit ──
               Row(
-  crossAxisAlignment: CrossAxisAlignment.center,
-  children: [
-    IconButton(
-      onPressed: () => Get.back(),
-      icon: Icon(
-        Icons.chevron_left,
-        size: r.iconSize(28),
-        color: colors.onSurface,
-      ),
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
-    ),
-
-    SizedBox(width: r.space(4)),
-
-    Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'abonnement.title'.tr,
-            style: AppTextStyles.screenTitle(r.fontSize(28)),
-          ),
-
-          if (currentPlanName?.trim().isNotEmpty == true)
-            Text(
-              currentPlanName!,
-              style: AppTextStyles.body(
-                r.fontSize(16),
-                color: colors.onSurfaceVariant,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      size: r.iconSize(28),
+                      color: colors.onSurface,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  SizedBox(width: r.space(4)),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'abonnement.title'.tr,
+                          style: AppTextStyles.screenTitle(r.fontSize(28)),
+                        ),
+                        if (currentPlanName?.trim().isNotEmpty == true)
+                          Text(
+                            currentPlanName!,
+                            style: AppTextStyles.body(
+                              r.fontSize(16),
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  _InfoButton(),
+                ],
               ),
-            ),
-        ],
-      ),
-    ),
-
-    _InfoButton(),
-  ],
-),
               SizedBox(height: r.space(20)),
-
-              // ── Sous-titre invitant au choix d'offre ──
               Text(
                 'abonnement.choose'.tr,
                 style: AppTextStyles.sectionTitle(r.fontSize(19)),
@@ -131,24 +147,18 @@ class AbonnementPage extends GetView<AbonnementController> {
               ),
               SizedBox(height: r.space(20)),
 
-              // ── Sélecteur de période de facturation ──
-              if (!plans.any((plan) => plan.durationDays > 0)) ...[
-                BillingPeriodToggle(
-                  selected: controller.period.value,
-                  onChanged: controller.selectPeriod,
-                ),
-                SizedBox(height: r.space(8)),
-              ],
-
               // ── États : chargement / erreur / liste des plans ──
-              if (controller.isLoading.value && plans.isEmpty)
-                Padding(
-                  padding: EdgeInsets.only(top: r.space(60)),
-                  child: Center(
-                    child: CircularProgressIndicator(color: colors.primary),
-                  ),
-                )
-              else if (controller.errorMessage.isNotEmpty && plans.isEmpty)
+             if (controller.isLoading.value && plans.isEmpty)
+  const SkeletonShimmer(
+    child: Column(
+      children: [
+        AbonnementPlanCardSkeleton(),
+        AbonnementPlanCardSkeleton(),
+        AbonnementPlanCardSkeleton(),
+      ],
+    ),
+  )
+else if (controller.errorMessage.isNotEmpty && plans.isEmpty)
                 Center(
                   child: Column(
                     children: [
@@ -171,8 +181,7 @@ class AbonnementPage extends GetView<AbonnementController> {
                         ? plan.id == currentPlanId
                         : plan.currently,
                     isProcessing: controller.processingPlanId.value == plan.id,
-                    onSubscribe: () =>
-                        _handleSubscribe(context, plan.id, plan.name),
+                    onSubscribe: () => _handleSubscribe(context, plan),
                   ),
               if (controller.history.isNotEmpty) ...[
                 SizedBox(height: r.space(12)),
@@ -245,7 +254,6 @@ class _InfoButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
-
     final colors = Theme.of(context).colorScheme;
 
     return Material(

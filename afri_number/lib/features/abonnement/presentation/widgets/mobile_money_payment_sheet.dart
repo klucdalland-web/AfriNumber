@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/constants/mobile_money_constants.dart';
 import '../../data/models/abonnement_checkout_result.dart';
-import 'mobile_money_registry.dart';
 
 /// Requête envoyée à l'API.
 class MobileMoneyPaymentRequest {

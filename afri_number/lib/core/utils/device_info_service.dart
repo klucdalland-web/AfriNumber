@@ -163,4 +163,11 @@ class DeviceInfoService {
 
     return {..._cachedDeviceInfo!, 'fcm_token': fcmToken};
   }
+
+  /// Retourne le même identifiant stable que celui envoyé à l'authentification.
+  Future<String?> getDeviceId() async {
+    final deviceInfo = _cachedDeviceInfo ?? await collect();
+    final deviceId = deviceInfo['device_id']?.trim();
+    return deviceId == null || deviceId.isEmpty ? null : deviceId;
+  }
 }

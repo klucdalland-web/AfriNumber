@@ -13,5 +13,8 @@ abstract class AbonnementRepository {
   Future<AbonnementCheckoutResult> subscribe({
     required String planId,
     required BillingPeriod period,
+    String? countryCode,
+    String? operator,
+    String? phone,
   });
 }

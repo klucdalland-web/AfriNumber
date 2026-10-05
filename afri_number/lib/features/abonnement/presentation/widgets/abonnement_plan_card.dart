@@ -24,108 +24,126 @@ class AbonnementPlanCard extends StatelessWidget {
   final bool isProcessing;
   final VoidCallback onSubscribe;
 
-  static const _buttonColor = Color(0xFF686868);
+  static const _neutralButtonColor = Color(0xFF686868);
 
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
     final colors = Theme.of(context).colorScheme;
+    final highlighted = plan.isRecommended || isCurrent;
+
     final price = plan.price ??
         (period == BillingPeriod.monthly ? plan.monthlyPrice : plan.annualPrice);
     final periodLabel = plan.durationDays > 0
         ? 'abonnement.duration_days'
-              .trParams({'days': plan.durationDays.toString()})
-        : ' / ${period.unitKey.tr}';
+            .trParams({'days': plan.durationDays.toString()})
+        : '/ ${period.unitKey.tr}';
 
     return Padding(
       padding: EdgeInsets.only(
-        top: plan.isRecommended ? r.space(18) : 0,
-        bottom: r.space(16),
+        top: plan.isRecommended ? r.space(14) : 0,
+        bottom: r.space(18),
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
             width: double.infinity,
             padding: EdgeInsets.all(r.space(20)),
             decoration: BoxDecoration(
-              color: colors.surface,
               borderRadius: BorderRadius.circular(r.radius(28)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colors.surface,
+                  highlighted
+                      ? Color.alphaBlend(
+                          colors.primary.withOpacity(0.08),
+                          colors.surface,
+                        )
+                      : colors.surface,
+                ],
+              ),
+              border: Border.all(
+                color: highlighted
+                    ? colors.primary.withOpacity(0.7)
+                    : colors.outlineVariant.withOpacity(0.4),
+                width: highlighted ? 1.5 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (highlighted ? colors.primary : Colors.black)
+                      .withOpacity(highlighted ? 0.12 : 0.05),
+                  blurRadius: r.space(highlighted ? 24 : 14),
+                  offset: Offset(0, r.space(8)),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Nom du plan et prix ──
+                // ── En-tête : nom + tagline / prix ──
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      plan.name,
-                      style: AppTextStyles.sectionTitle(r.fontSize(22))
-                          .copyWith(
-                        color: colors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plan.name,
+                            style: AppTextStyles.sectionTitle(r.fontSize(22))
+                                .copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          if (plan.tagline.trim().isNotEmpty) ...[
+                            SizedBox(height: r.space(4)),
+                            Text(
+                              plan.tagline,
+                              style: AppTextStyles.body(
+                                r.fontSize(14),
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    // Affichage "Gratuit" ou prix avec période traduite
-                    if (plan.isFree)
-                      Text(
-                        'abonnement.free'.tr,
-                        style: AppTextStyles.sectionTitle(r.fontSize(22)),
-                      )
-                    else
-                      RichText(
-                        text: TextSpan(children: [
-                          TextSpan(
-                            text: Formatters.amount(price,
-                                currency: plan.currency),
-                            style: AppTextStyles.sectionTitle(r.fontSize(22)),
-                          ),
-                          TextSpan(
-                            // Unité de période traduite (mois / an)
-                            text: periodLabel,
-                            style: AppTextStyles.body(
-                              r.fontSize(16),
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ]),
-                      ),
+                    SizedBox(width: r.space(12)),
+                    _PriceBlock(
+                      isFree: plan.isFree,
+                      amountLabel: plan.isFree
+                          ? 'abonnement.free'.tr
+                          : Formatters.amount(price, currency: plan.currency),
+                      periodLabel: plan.isFree ? null : periodLabel,
+                    ),
                   ],
                 ),
 
-                SizedBox(height: r.space(4)),
-
-                // ── Tagline du plan ──
-                Text(
-                  plan.tagline,
-                  style: AppTextStyles.body(
-                    r.fontSize(14),
-                    weight: FontWeight.w500,
-                    color: colors.onSurface,
-                  ),
+                SizedBox(height: r.space(16)),
+                Divider(
+                  height: 1,
+                  color: colors.outlineVariant.withOpacity(0.5),
                 ),
+                SizedBox(height: r.space(16)),
 
-                SizedBox(height: r.space(18)),
-
-                // ── Liste des fonctionnalités ──
+                // ── Fonctionnalités ──
                 for (final feature in plan.features)
                   PlanFeatureRow(feature: feature),
 
-                SizedBox(height: r.space(8)),
+                SizedBox(height: r.space(12)),
 
-                // ── Bouton d'action traduit ──
+                // ── Bouton d'action ──
                 AppButton.primary(
                   label: isCurrent
-                      // Plan déjà souscrit
                       ? 'abonnement.current_plan'.tr
-                      // Invite à souscrire avec interpolation du nom
-                      : 'abonnement.subscribe'
-                          .trParams({'plan': plan.name}),
+                      : 'abonnement.subscribe'.trParams({'plan': plan.name}),
                   isLoading: isProcessing,
                   onPressed: isCurrent ? null : onSubscribe,
-                  backgroundColor: _buttonColor,
+                  backgroundColor:
+                      plan.isRecommended ? colors.primary : _neutralButtonColor,
                   foregroundColor: Colors.white,
                   radius: r.radius(28),
                   height: r.heightOf(56),
@@ -134,15 +152,52 @@ class AbonnementPlanCard extends StatelessWidget {
             ),
           ),
 
-          // ── Badge "Recommandé" traduit ──
+          // ── Badge recommandé ──
           if (plan.isRecommended)
             Positioned(
-              top: -r.space(8),
-              right: r.space(18),
+              top: -r.space(12),
+              right: r.space(20),
               child: StatusBadge.success('abonnement.recommended'.tr),
             ),
         ],
       ),
+    );
+  }
+}
+
+class _PriceBlock extends StatelessWidget {
+  const _PriceBlock({
+    required this.isFree,
+    required this.amountLabel,
+    required this.periodLabel,
+  });
+
+  final bool isFree;
+  final String amountLabel;
+  final String? periodLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = context.responsive;
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          amountLabel,
+          style: AppTextStyles.sectionTitle(r.fontSize(24))
+              .copyWith(fontWeight: FontWeight.w800, color: colors.primary),
+        ),
+        if (periodLabel != null)
+          Text(
+            periodLabel!,
+            style: AppTextStyles.body(
+              r.fontSize(13),
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+      ],
     );
   }
 }

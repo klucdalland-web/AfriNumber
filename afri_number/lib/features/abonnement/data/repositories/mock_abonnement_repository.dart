@@ -58,6 +58,9 @@ class MockAbonnementRepository implements AbonnementRepository {
   Future<AbonnementCheckoutResult> subscribe({
     required String planId,
     required BillingPeriod period,
+    String? countryCode,
+    String? operator,
+    String? phone,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     _currentPlanId = planId;

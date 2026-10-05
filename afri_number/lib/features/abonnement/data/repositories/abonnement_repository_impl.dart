@@ -45,11 +45,17 @@ class AbonnementRepositoryImpl implements AbonnementRepository {
   Future<AbonnementCheckoutResult> subscribe({
     required String planId,
     required BillingPeriod period,
+    String? countryCode,
+    String? operator,
+    String? phone,
   }) async {
     try {
       final json = await _remote.subscribe(
         planId: planId,
         period: period.name,
+        countryCode: countryCode,
+        operator: operator,
+        phone: phone,
       );
       final statusText = json['status'] as String?;
       return AbonnementCheckoutResult(

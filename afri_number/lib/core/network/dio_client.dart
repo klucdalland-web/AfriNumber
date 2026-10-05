@@ -3,13 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../constants/api_constants.dart';
+import '../utils/device_info_service.dart';
 import '../utils/storage_service.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
 
 /// Client HTTP centralisé (Dio) avec intercepteurs.
 class DioClient {
-  DioClient(this._storage) {
+  DioClient(this._storage, this._deviceInfo) {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -24,7 +25,7 @@ class DioClient {
     );
 
     _dio.interceptors.addAll([
-      AuthInterceptor(_storage, _dio),
+      AuthInterceptor(_storage, _dio, _deviceInfo),
       ErrorInterceptor(),
       if (kDebugMode)
         PrettyDioLogger(
@@ -40,6 +41,7 @@ class DioClient {
   }
 
   final StorageService _storage;
+  final DeviceInfoService _deviceInfo;
   late final Dio _dio;
 
   Dio get dio => _dio;

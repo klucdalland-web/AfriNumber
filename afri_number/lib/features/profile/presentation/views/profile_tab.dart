@@ -279,6 +279,11 @@ class ProfileTab extends StatelessWidget {
                           icon: Icons.check_circle_outline_rounded,
                           label: 'profile.validation'.tr,
                           value: profile.validationStatus ?? 'non_valide',
+                          trailing: ProfileRow.chevron(context),
+                          onTap: () async {
+                            await Get.toNamed(AppRoutes.kyc);
+                            await ctrl.refreshProfile();
+                          },
                         ),
                       ],
                     ),

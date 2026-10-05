@@ -5,10 +5,8 @@ import 'package:get/get.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../domain/models/kyc_document_type.dart';
 import '../../domain/models/kyc_profile.dart';
-import '../../domain/models/kyc_side.dart';
 import '../../domain/models/kyc_verification.dart';
 import '../../domain/repositories/kyc_repository.dart';
-import '../../domain/services/kyc_camera_service.dart';
 
 /// Étapes du parcours KYC.
 enum KycStep {
@@ -34,12 +32,11 @@ enum KycStep {
 /// Contrôleur du parcours KYC.
 class KycController extends GetxController {
   /// Crée le contrôleur avec son [KycRepository] et son [KycCameraService].
-  KycController(this._repository, this._camera);
+  KycController(this._repository);
 
   static const Duration _pollInterval = Duration(seconds: 2);
 
   final KycRepository _repository;
-  final KycCameraService _camera;
 
   Timer? _pollTimer;
   bool _isPolling = false;
@@ -134,29 +131,32 @@ class KycController extends GetxController {
         step.value = KycStep.front;
         return;
       case KycStep.front:
-        await _run(() async {
-          final String? path = await _camera.capture(KycSide.front);
-          if (path == null) return; // Annulé par l'utilisateur.
-          frontPath.value = path;
-          step.value = type.requiresBack ? KycStep.back : KycStep.face;
-        });
-        return;
       case KycStep.back:
-        await _run(() async {
-          final String? path = await _camera.capture(KycSide.back);
-          if (path == null) return;
-          backPath.value = path;
-          step.value = KycStep.face;
-        });
-        return;
       case KycStep.face:
-        await _run(() async {
-          final String? path = await _camera.capture(KycSide.face);
-          if (path == null) return;
-          facePath.value = path;
-          await _submit(type);
-        });
+        // La capture est pilotée directement par l'aperçu caméra de la vue.
         return;
+      case KycStep.verifying:
+      case KycStep.verified:
+        return;
+    }
+  }
+
+  /// Traite la photo prise depuis l'aperçu caméra intégré.
+  Future<void> onPhotoCaptured(String path) async {
+    final type = selectedType.value;
+    if (type == null) return;
+
+    switch (step.value) {
+      case KycStep.front:
+        frontPath.value = path;
+        step.value = type.requiresBack ? KycStep.back : KycStep.face;
+      case KycStep.back:
+        backPath.value = path;
+        step.value = KycStep.face;
+      case KycStep.face:
+        facePath.value = path;
+        await _run(() => _submit(type));
+      case KycStep.choose:
       case KycStep.verifying:
       case KycStep.verified:
         return;
@@ -271,9 +271,6 @@ class KycController extends GetxController {
     errorMessage.value = null;
     try {
       await action();
-    } on KycCameraException catch (e) {
-      errorMessage.value =
-      e.denied ? 'kyc.camera_denied'.tr : 'kyc.camera_err'.tr;
     } on KycException catch (e) {
       errorMessage.value = e.message ?? 'kyc.err'.tr;
     } on ApiException catch (e) {

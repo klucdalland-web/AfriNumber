@@ -11,6 +11,7 @@ abstract class AppRoutes {
   static const String messages = '/messages';
   static const String notifications = '/notifications';
   static const String abonnement = '/abonnement';
+  static const String kyc = '/kyc';
   static const String dashboard = '/dashboard';
   static const String main = '/main';
 }

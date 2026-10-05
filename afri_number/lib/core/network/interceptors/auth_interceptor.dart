@@ -4,11 +4,12 @@ import 'package:get/get.dart' hide Response;
 
 import '../../../app/routes/app_routes.dart';
 import '../../constants/api_constants.dart';
+import '../../utils/device_info_service.dart';
 import '../../utils/storage_service.dart';
 
 /// Ajoute le Bearer token et le renouvelle quand une requête reçoit un 401.
 class AuthInterceptor extends Interceptor {
-  AuthInterceptor(this._storage, this._dio)
+  AuthInterceptor(this._storage, this._dio, this._deviceInfo)
     : _refreshDio = Dio(
         BaseOptions(
           baseUrl: ApiConstants.baseUrl,
@@ -24,6 +25,7 @@ class AuthInterceptor extends Interceptor {
 
   final StorageService _storage;
   final Dio _dio;
+  final DeviceInfoService _deviceInfo;
   final Dio _refreshDio;
 
   Future<String?>? _refreshFuture;
@@ -42,10 +44,18 @@ class AuthInterceptor extends Interceptor {
   };
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    options.headers['x-api-key'] = ApiConstants.apiKey;
     final token = _storage.accessToken;
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    final deviceId = await _deviceInfo.getDeviceId();
+    if (deviceId != null) {
+      options.headers['X-Device-Id'] = deviceId;
     }
     options.headers['Accept'] = 'application/json';
     options.headers['Content-Type'] = 'application/json';
@@ -55,6 +65,11 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final request = err.requestOptions;
+    if (_isUnidentifiedDeviceError(err)) {
+      await _expireSession();
+      handler.next(err);
+      return;
+    }
     if (err.response?.statusCode != 401 ||
         request.extra[_retriedKey] == true ||
         _isPublicAuthRequest(request)) {
@@ -96,6 +111,18 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
+  bool _isUnidentifiedDeviceError(DioException error) {
+    if (error.response?.statusCode != 403) return false;
+    final body = error.response?.data;
+    final message = body is Map
+        ? body['message']?.toString()
+        : body?.toString();
+    if (message == null) return false;
+    final normalized = message.toLowerCase();
+    return normalized.contains('appareil') &&
+        (normalized.contains('identifi') || normalized.contains('reconnect'));
+  }
+
   bool _isPublicAuthRequest(RequestOptions request) {
     final path = request.path.split('?').first;
     return _publicAuthPaths.any(
@@ -113,10 +140,20 @@ class AuthInterceptor extends Interceptor {
   Future<String?> _refreshAccessToken() async {
     final refreshToken = _storage.refreshToken;
     if (refreshToken == null) return null;
+    final deviceId = await _deviceInfo.getDeviceId();
+    if (deviceId == null) {
+      throw StateError('No device ID is available for token refresh');
+    }
 
     final response = await _refreshDio.post<dynamic>(
       ApiConstants.refresh,
       data: {'refresh_token': refreshToken},
+      options: Options(
+        headers: {
+          'x-api-key': ApiConstants.apiKey,
+          'X-Device-Id': deviceId,
+        },
+      ),
     );
     final accessToken = _extractToken(response.data, {
       'access_token',

@@ -25,7 +25,10 @@ class InitialBinding extends Bindings {
     );
 
     Get.lazyPut<DioClient>(
-      () => DioClient(Get.find<StorageService>()),
+      () => DioClient(
+        Get.find<StorageService>(),
+        Get.find<DeviceInfoService>(),
+      ),
       fenix: true,
     );
     Get.lazyPut<AuthRemoteDataSource>(

@@ -1,13 +1,32 @@
+import 'package:dio/dio.dart';
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/utils/device_info_service.dart';
 
 class AbonnementRemoteDataSource {
-  AbonnementRemoteDataSource(this._client);
+  AbonnementRemoteDataSource(this._client, this._deviceInfo);
 
   final DioClient _client;
+  final DeviceInfoService _deviceInfo;
 
   Future<List<dynamic>> fetchPlans() async {
-    final response = await _client.get(ApiConstants.abonnementPlans);
+    final deviceId = await _deviceInfo.getDeviceId();
+    if (deviceId == null) {
+      throw StateError(
+        'No device ID is available to fetch subscription plans',
+      );
+    }
+
+    final response = await _client.get(
+      ApiConstants.abonnementPlans,
+      options: Options(
+        headers: {
+          'x-api-key': ApiConstants.apiKey,
+          'X-Device-Id': deviceId,
+        },
+      ),
+    );
     final body = _responseData(response.data);
     final plans = body is Map ? body['plans'] : body;
     return plans is List ? plans : const [];
@@ -41,12 +60,21 @@ class AbonnementRemoteDataSource {
   Future<Map<String, dynamic>> subscribe({
     required String planId,
     required String period,
+    String? countryCode,
+    String? operator,
+    String? phone,
   }) async {
     final response = await _client.post(
       ApiConstants.abonnementSubscribe,
       data: {
         'plan_id': planId,
         'period': period,
+        if (countryCode != null && operator != null && phone != null) ...{
+          'payment_method': 'mobile_money',
+          'country_code': countryCode,
+          'operator': operator,
+          'phone_number': phone,
+        },
       },
     );
     final body = _responseData(response.data);

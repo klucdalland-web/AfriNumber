@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../features/abonnement/presentation/bindings/abonnement_binding.dart';
 import '../../features/abonnement/presentation/views/abonnement_page.dart';
+import '../../features/kyc/kyc.dart';
 import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart';
 import '../../features/auth/presentation/views/auth_feedback_inscription_page.dart';
 import '../../features/auth/presentation/views/forgot_password_page.dart';
@@ -88,6 +89,13 @@ class AppPages {
       name: AppRoutes.abonnement,
       page: () => const AbonnementPage(),
       binding: AbonnementBinding(),
+    ),
+
+    // ── Vérification d'identité ─────────────────────────────────────────────
+    GetPage(
+      name: AppRoutes.kyc,
+      page: () => const KycPage(),
+      binding: KycBinding(),
     ),
 
     // ── Main (shell authentifié avec BottomNavBar) ───────────────────────────

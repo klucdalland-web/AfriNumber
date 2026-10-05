@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../../../core/utils/storage_service.dart';
 import '../../data/models/billing_period.dart';
 import '../../data/models/abonnement_checkout_result.dart';
 import '../../data/models/abonnement_history_entry.dart';
@@ -7,9 +8,17 @@ import '../../data/models/abonnement_plan.dart';
 import '../../domain/repositories/abonnement_repository.dart';
 
 class AbonnementController extends GetxController {
-  AbonnementController(this._repository);
+  AbonnementController(this._repository, this._storage);
 
   final AbonnementRepository _repository;
+  final StorageService _storage;
+
+  String get countryCode {
+    final user = _storage.user;
+    final country = user?['pays'] ?? user?['country'];
+    final code = country is Map ? country['code']?.toString().trim() : null;
+    return code == null || code.isEmpty ? 'MG' : code.toUpperCase();
+  }
 
   final isLoading = false.obs;
   final errorMessage = ''.obs;
@@ -56,14 +65,20 @@ class AbonnementController extends GetxController {
     }
   }
 
-  void selectPeriod(BillingPeriod value) => period.value = value;
-
-  Future<AbonnementCheckoutResult> subscribe(String planId) async {
+  Future<AbonnementCheckoutResult> subscribe(
+    String planId, {
+    String? countryCode,
+    String? operator,
+    String? phone,
+  }) async {
     processingPlanId.value = planId;
     try {
       final result = await _repository.subscribe(
         planId: planId,
         period: period.value,
+        countryCode: countryCode,
+        operator: operator,
+        phone: phone,
       );
       if (result.status == AbonnementCheckoutStatus.success) {
         currentPlanId.value = planId;

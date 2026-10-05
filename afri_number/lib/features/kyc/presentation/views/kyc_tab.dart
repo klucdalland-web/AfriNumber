@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/kyc_controller.dart';
 import '../widgets/widgets.dart';
+import '../../domain/models/kyc_side.dart';
 
 /// Page du parcours KYC (pièce, recto/verso, visage, vérification, validation).
 class KycPage extends StatelessWidget {
@@ -54,21 +55,27 @@ class KycPage extends StatelessWidget {
         return KycCaptureStep(
           title: 'kyc.front.title'.tr,
           subtitle: 'kyc.front.subtitle'.tr,
-          icon: Icons.photo_camera_outlined,
+          side: KycSide.front,
+          onCaptured: c.onPhotoCaptured,
+          isBusy: c.isBusy.value,
           errorMessage: c.errorMessage.value,
         );
       case KycStep.back:
         return KycCaptureStep(
           title: 'kyc.back.title'.tr,
           subtitle: 'kyc.back.subtitle'.tr,
-          icon: Icons.photo_camera_outlined,
+          side: KycSide.back,
+          onCaptured: c.onPhotoCaptured,
+          isBusy: c.isBusy.value,
           errorMessage: c.errorMessage.value,
         );
       case KycStep.face:
         return KycCaptureStep(
           title: 'kyc.face.title'.tr,
           subtitle: 'kyc.face.subtitle'.tr,
-          icon: Icons.person_outline,
+          side: KycSide.face,
+          onCaptured: c.onPhotoCaptured,
+          isBusy: c.isBusy.value,
           errorMessage: c.errorMessage.value,
         );
       case KycStep.verifying:
@@ -96,17 +103,8 @@ class KycPage extends StatelessWidget {
         );
       case KycStep.front:
       case KycStep.back:
-        return AppButton(
-          label: 'kyc.take_photo'.tr,
-          isLoading: c.isBusy.value,
-          onPressed: c.onPrimaryPressed,
-        );
       case KycStep.face:
-        return AppButton(
-          label: 'kyc.start_scan'.tr,
-          isLoading: c.isBusy.value,
-          onPressed: c.onPrimaryPressed,
-        );
+        return const SizedBox.shrink();
       case KycStep.verifying:
       // Grisé tant que la vérification n'est pas terminée (comme la maquette).
         return AppButton(label: 'kyc.verifying.home'.tr, onPressed: null);
