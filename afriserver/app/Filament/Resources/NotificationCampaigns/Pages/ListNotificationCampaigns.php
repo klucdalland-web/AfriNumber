@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\NotificationCampaigns\Pages;
 
 use App\Filament\Resources\NotificationCampaigns\NotificationCampaignResource;
+use App\Filament\Resources\NotificationCampaigns\Widgets\NotificationCampaignsStatsOverview;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
@@ -14,6 +15,13 @@ class ListNotificationCampaigns extends ListRecords
     {
         return [
             CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            NotificationCampaignsStatsOverview::class,
         ];
     }
 }

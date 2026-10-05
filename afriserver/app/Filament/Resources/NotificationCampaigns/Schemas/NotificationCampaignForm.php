@@ -99,7 +99,6 @@ class NotificationCampaignForm
                             )
                             ->searchable(['name', 'first_name', 'email'])
                             ->multiple()
-                            ->preload()
                             ->required()
                             ->visible(fn (Get $get): bool => $get('audience_type') === NotificationCampaign::AUDIENCE_SELECTED_USERS)
                             ->columnSpanFull(),
@@ -155,7 +154,6 @@ class NotificationCampaignForm
                             })
                             ->searchable(['identifier', 'name', 'model'])
                             ->multiple()
-                            ->preload()
                             ->required()
                             ->visible(fn (Get $get): bool => $get('device_scope') === NotificationCampaign::DEVICE_SCOPE_SELECTED)
                             ->columnSpanFull(),
