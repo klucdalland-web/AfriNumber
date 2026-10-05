@@ -296,6 +296,7 @@ class AppTranslations extends Translations {
       'abonnement.history_title': 'Historique des abonnements',
       'abonnement.unit_month': 'mois',
       'abonnement.unit_year': 'an',
+      'abonnement.load_error': 'Impossible de charger les offres. Réessayez.'
     },
 
     'en_US': {

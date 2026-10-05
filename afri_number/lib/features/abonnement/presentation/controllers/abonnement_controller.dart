@@ -50,7 +50,7 @@ class AbonnementController extends GetxController {
         history.clear();
       }
     } catch (_) {
-      errorMessage.value = 'Impossible de charger les offres. Réessayez.';
+      errorMessage.value = 'abonnement.load_error'.tr;
     } finally {
       isLoading.value = false;
     }
