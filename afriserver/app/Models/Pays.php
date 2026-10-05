@@ -22,6 +22,7 @@ class Pays extends Model
         'label',
         'code',
         'indicatif',
+        'timezone',
         'description',
         'actif',
     ];

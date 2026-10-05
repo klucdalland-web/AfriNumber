@@ -29,6 +29,10 @@ class PaysTable
                 TextColumn::make('indicatif')
                     ->label('Indicatif')
                     ->toggleable(),
+                TextColumn::make('timezone')
+                    ->label('Fuseau')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('continent.label')
                     ->label('Continent')
                     ->sortable()

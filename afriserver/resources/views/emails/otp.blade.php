@@ -15,92 +15,99 @@
     </noscript>
     <![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#eef2ee;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
-    {{-- Préheader : texte vu dans la boîte mail (évite les "...") --}}
+@php
+    $bg = \App\Support\Brand::color('background', '#F6F4EF');
+    $fg = \App\Support\Brand::color('foreground', '#1C1A17');
+    $card = \App\Support\Brand::color('card', '#FCFAF7');
+    $muted = \App\Support\Brand::color('muted', '#EDE9E1');
+    $mutedFg = \App\Support\Brand::color('muted_foreground', '#6B655C');
+    $border = \App\Support\Brand::color('border', '#D4CFC4');
+    $primary = \App\Support\Brand::color('primary', '#1C1A17');
+    $primaryFg = \App\Support\Brand::color('primary_foreground', '#F6F4EF');
+    $warning = \App\Support\Brand::color('warning', '#8A6A28');
+    $warningBg = \App\Support\Brand::color('warning_bg', '#F4EBD8');
+    $warningBorder = \App\Support\Brand::color('warning_border', '#D9C48A');
+    $logoWhite = $logoWhiteUrl ?? \App\Support\Brand::logoWhiteUrl();
+@endphp
+<body style="margin:0;padding:0;background-color:{{ $bg }};font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
     <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">
         Votre code {{ $appName }} : {{ $otp }} — expire le {{ $expiresAtLabel }}.
     </div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef2ee;padding:40px 16px;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:{{ $bg }};padding:40px 16px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:520px;background-color:#ffffff;border-radius:4px;overflow:hidden;border:1px solid #d5e0d5;">
-                    {{-- Header --}}
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:520px;background-color:{{ $card }};border-radius:12px;overflow:hidden;border:1px solid {{ $border }};">
                     <tr>
-                        <td style="background:linear-gradient(135deg,#1a2e1a 0%,#2d4a2d 100%);background-color:#1a2e1a;padding:36px 40px 28px;text-align:center;">
-                            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:700;letter-spacing:0.06em;color:#f0c14b;">
+                        <td style="background-color:{{ $primary }};padding:32px 40px 28px;text-align:center;">
+                            <img src="{{ $logoWhite }}" alt="{{ $appName }}" width="56" height="56" style="display:block;margin:0 auto 14px;width:56px;height:56px;object-fit:contain;border:0;">
+                            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:{{ $primaryFg }};">
                                 {{ $appName }}
                             </p>
-                            <p style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#a8c5a8;">
+                            <p style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:{{ $border }};">
                                 Vérification de sécurité
                             </p>
                         </td>
                     </tr>
 
-                    {{-- Body --}}
                     <tr>
-                        <td style="padding:40px 40px 16px;">
-                            <h1 style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;color:#152415;line-height:1.3;">
+                        <td style="padding:36px 40px 16px;">
+                            <h1 style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;color:{{ $fg }};line-height:1.3;letter-spacing:-0.02em;">
                                 Voici votre code
                             </h1>
-                            <p style="margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#4a5a4a;">
+                            <p style="margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:{{ $mutedFg }};">
                                 Utilisez ce code pour finaliser votre authentification.
                             </p>
 
-                            {{-- OTP box --}}
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                 <tr>
-                                    <td align="center" style="background-color:#f5f8f5;border:2px dashed #c9a227;border-radius:8px;padding:28px 20px;">
-                                        <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:40px;font-weight:700;letter-spacing:0.35em;color:#1a2e1a;line-height:1;">
+                                    <td align="center" style="background-color:{{ $muted }};border:1px solid {{ $border }};border-radius:12px;padding:28px 20px;">
+                                        <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:40px;font-weight:700;letter-spacing:0.35em;color:{{ $fg }};line-height:1;">
                                             {{ $otp }}
                                         </p>
                                     </td>
                                 </tr>
                             </table>
 
-                            {{-- Expiration --}}
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:20px;">
                                 <tr>
-                                    <td align="center" style="background-color:#fff8e6;border:1px solid #e6c86a;border-radius:8px;padding:16px 20px;">
-                                        <p style="margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#8a7010;">
+                                    <td align="center" style="background-color:{{ $warningBg }};border:1px solid {{ $warningBorder }};border-radius:12px;padding:16px 20px;">
+                                        <p style="margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:{{ $warning }};">
                                             Validité du code
                                         </p>
-                                        <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a2e1a;">
+                                        <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:{{ $fg }};">
                                             Expire le {{ $expiresAtLabel }}
                                         </p>
-                                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#5a6a5a;">
+                                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:{{ $mutedFg }};">
                                             Valable {{ $expiresInMinutes }}&nbsp;minutes à partir de l’envoi.<br>
-                                            Après cette heure, le code sera <strong style="color:#b45309;">expiré</strong> — demandez-en un nouveau.
+                                            Après cette heure, le code sera <strong style="color:{{ $warning }};">expiré</strong> — demandez-en un nouveau.
                                         </p>
                                     </td>
                                 </tr>
                             </table>
 
-                            <p style="margin:28px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#4a5a4a;">
+                            <p style="margin:28px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:{{ $mutedFg }};">
                                 Si vous n’avez pas demandé ce code, ignorez cet e-mail. Votre compte reste sécurisé.
                             </p>
                         </td>
                     </tr>
 
-                    {{-- Divider --}}
                     <tr>
                         <td style="padding:8px 40px 0;">
-                            <div style="height:1px;background-color:#d5e0d5;line-height:1px;font-size:1px;">&nbsp;</div>
+                            <div style="height:1px;background-color:{{ $border }};line-height:1px;font-size:1px;">&nbsp;</div>
                         </td>
                     </tr>
 
-                    {{-- Footer --}}
                     <tr>
                         <td style="padding:24px 40px 36px;text-align:center;">
-                            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#7a8a7a;">
-                                Cet e-mail a été envoyé automatiquement par {{ $appName }}.<br>
-                                Merci de ne pas y répondre.
+                            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:{{ $mutedFg }};">
+                                Message envoyé par {{ $appName }}. Merci de ne pas y répondre.
                             </p>
                         </td>
                     </tr>
                 </table>
 
-                <p style="margin:24px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#8a9a8a;">
-                    &copy; {{ date('Y') }} {{ $appName }}. Tous droits réservés.
+                <p style="margin:24px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:{{ $mutedFg }};">
+                    &copy; {{ $copyrightYear ?? date('Y') }} {{ $appName }}. Tous droits réservés.
                 </p>
             </td>
         </tr>

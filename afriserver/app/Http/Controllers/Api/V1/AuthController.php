@@ -587,7 +587,17 @@ class AuthController extends Controller
 
         if ($email) {
             try {
-                app(OtpMailService::class)->send($email, (string) $code, 10);
+                $recipientUser = isset($payload['user_id'])
+                    ? User::query()->with('pays')->find($payload['user_id'])
+                    : null;
+
+                app(OtpMailService::class)->send(
+                    email: $email,
+                    otp: (string) $code,
+                    expiresInMinutes: 10,
+                    user: $recipientUser,
+                    paysId: isset($payload['pays_id']) ? (int) $payload['pays_id'] : $recipientUser?->pays_id,
+                );
             } catch (Throwable $e) {
                 Log::error('Envoi e-mail OTP échoué (flux non bloqué).', [
                     'email' => $email,
@@ -1201,7 +1211,24 @@ class AuthController extends Controller
 
         if ($email) {
             try {
-                app(OtpMailService::class)->send($email, (string) $code, 15);
+                $recipientUser = User::query()
+                    ->with('pays')
+                    ->where(function ($query) use ($email, $phoneNumber): void {
+                        $query->where('email', $email);
+
+                        if ($phoneNumber) {
+                            $query->orWhere('phone_number', $phoneNumber);
+                        }
+                    })
+                    ->first();
+
+                app(OtpMailService::class)->send(
+                    email: $email,
+                    otp: (string) $code,
+                    expiresInMinutes: 15,
+                    user: $recipientUser,
+                    paysId: $recipientUser?->pays_id,
+                );
             } catch (Throwable $e) {
                 Log::error('Envoi e-mail reset échoué (flux non bloqué).', [
                     'email' => $email,
