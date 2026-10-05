@@ -5,6 +5,7 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/abonnement_controller.dart';
+import 'abonnement_history_page.dart';
 import '../widgets/mobile_money_payment_sheet.dart';
 import '../widgets/abonnement_plan_card.dart';
 import '../../data/models/abonnement_checkout_result.dart';
@@ -145,7 +146,12 @@ class AbonnementPage extends GetView<AbonnementController> {
     ],
   ),
 ),
-                  _InfoButton(),
+                  _InfoButton(
+                    onTap: () {
+                      controller.loadHistory();
+                      Get.to<void>(() => const AbonnementHistoryPage());
+                    },
+                  ),
                 ],
               ),
               SizedBox(height: r.space(20)),
@@ -199,52 +205,6 @@ else if (controller.errorMessage.isNotEmpty && plans.isEmpty)
                     isProcessing: controller.processingPlanId.value == plan.id,
                     onSubscribe: () => _handleSubscribe(context, plan),
                   ),
-              if (controller.history.isNotEmpty) ...[
-                SizedBox(height: r.space(12)),
-                Text(
-                  'abonnement.history_title'.tr,
-                  style: AppTextStyles.sectionTitle(r.fontSize(19)),
-                ),
-                SizedBox(height: r.space(10)),
-                for (final entry in controller.history)
-                  Container(
-                    margin: EdgeInsets.only(bottom: r.space(10)),
-                    padding: EdgeInsets.all(r.space(16)),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(r.radius(18)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.planName.isEmpty
-                              ? 'abonnement.title'.tr
-                              : entry.planName,
-                          style: AppTextStyles.body(
-                            r.fontSize(16),
-                            weight: FontWeight.w600,
-                            color: colors.onSurface,
-                          ),
-                        ),
-                        SizedBox(height: r.space(4)),
-                        Text(
-                          [
-                            entry.status,
-                            if (entry.startsAt != null)
-                              _formatDate(entry.startsAt!),
-                            if (entry.endsAt != null)
-                              _formatDate(entry.endsAt!),
-                          ].where((value) => value.isNotEmpty).join(' · '),
-                          style: AppTextStyles.body(
-                            r.fontSize(13),
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
             ],
           );
         }),
@@ -261,12 +221,12 @@ String? _planNameOf(List<AbonnementPlan> plans, String id) {
   return null;
 }
 
-String _formatDate(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/'
-    '${date.month.toString().padLeft(2, '0')}/${date.year}';
-
 /// Bouton d'information circulaire en haut à droite de l'écran.
 class _InfoButton extends StatelessWidget {
+  const _InfoButton({required this.onTap});
+
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
@@ -277,7 +237,7 @@ class _InfoButton extends StatelessWidget {
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () {},
+        onTap: onTap,
         child: SizedBox(
           width: r.iconSize(44),
           height: r.iconSize(44),

@@ -6,6 +6,8 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../core/localization/language_selector_sheet.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../abonnement/presentation/controllers/abonnement_controller.dart';
+import '../../../abonnement/presentation/widgets/skeleton.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/country_flag.dart';
 import '../widgets/outline_toggle_icon.dart';
@@ -76,6 +78,7 @@ class ProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ProfileController>();
+    final abonnementController = Get.find<AbonnementController>();
     final localeController = Get.find<LocaleController>();
     final r = context.responsive;
     final theme = Theme.of(context);
@@ -90,6 +93,11 @@ class ProfileTab extends StatelessWidget {
           init: controller,
           builder: (ctrl) {
             return Obx(() {
+              if (ctrl.isRefreshing.value ||
+                  abonnementController.isLoading.value) {
+                return const _ProfilePageSkeleton();
+              }
+
               final profile = ctrl.profile.value;
               final notifications = ctrl.notificationsEnabled.value;
               final isDarkMode = ctrl.isDark;
@@ -184,10 +192,12 @@ class ProfileTab extends StatelessWidget {
                     SizedBox(height: r.space(20)),
 
                     // ── Rangée de statistiques visuelles ──
-                    ProfileStatsRow(
-                      activeNumbers: 1,
-                      planName: profile.userTypeLabel,
-                      countriesCount: 1,
+                    Obx(
+                      () => ProfileStatsRow(
+                        activeNumbers: 1,
+                        planName: _currentPlanLabel(abonnementController),
+                        countriesCount: 1,
+                      ),
                     ),
 
                     SizedBox(height: r.space(24)),
@@ -259,6 +269,13 @@ class ProfileTab extends StatelessWidget {
                           value: '',
                           trailing: ProfileRow.chevron(context),
                           onTap: () => Get.toNamed(AppRoutes.abonnement),
+                        ),
+                        Obx(
+                          () => ProfileRow(
+                            icon: Icons.workspace_premium_outlined,
+                            label: 'profile.current_plan'.tr,
+                            value: _currentPlanLabel(abonnementController),
+                          ),
                         ),
                         ProfileRow(
                           icon: Icons.badge_outlined,
@@ -346,6 +363,170 @@ class ProfileTab extends StatelessWidget {
               );
             });
           },
+        ),
+      ),
+    );
+  }
+}
+
+String _currentPlanLabel(AbonnementController controller) {
+  final planId = controller.currentPlanId.value;
+  for (final plan in controller.plans) {
+    if (plan.id == planId) return plan.name;
+  }
+  return controller.isLoading.value
+      ? 'abonnement.loading_plan'.tr
+      : 'abonnement.no_plan'.tr;
+}
+
+class _ProfilePageSkeleton extends StatelessWidget {
+  const _ProfilePageSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final r = context.responsive;
+
+    Widget sectionTitle() => SkeletonBox(
+      width: r.space(150),
+      height: r.space(20),
+      radius: r.radius(6),
+    );
+
+    Widget card(int rows) => Container(
+      padding: EdgeInsets.all(r.space(14)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(r.radius(18)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Column(
+        children: List.generate(rows, (index) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: r.space(9)),
+            child: Row(
+              children: [
+                SkeletonBox(
+                  width: r.space(26),
+                  height: r.space(26),
+                  radius: r.radius(13),
+                ),
+                SizedBox(width: r.space(12)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(
+                        width: r.space(index.isEven ? 112 : 82),
+                        height: r.space(12),
+                        radius: r.radius(5),
+                      ),
+                      SizedBox(height: r.space(6)),
+                      SkeletonBox(
+                        width: r.space(index.isEven ? 88 : 126),
+                        height: r.space(10),
+                        radius: r.radius(5),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+
+    return SkeletonShimmer(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(
+          horizontal: r.space(20),
+          vertical: r.space(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(
+                  width: r.space(40),
+                  height: r.space(40),
+                  radius: r.radius(20),
+                ),
+                Column(
+                  children: [
+                    SkeletonBox(
+                      width: r.space(96),
+                      height: r.space(96),
+                      radius: r.radius(48),
+                    ),
+                    SizedBox(height: r.space(12)),
+                    SkeletonBox(
+                      width: r.space(150),
+                      height: r.space(22),
+                      radius: r.radius(6),
+                    ),
+                    SizedBox(height: r.space(7)),
+                    SkeletonBox(
+                      width: r.space(110),
+                      height: r.space(14),
+                      radius: r.radius(5),
+                    ),
+                    SizedBox(height: r.space(10)),
+                    SkeletonBox(
+                      width: r.space(120),
+                      height: r.space(24),
+                      radius: r.radius(14),
+                    ),
+                  ],
+                ),
+                SkeletonBox(
+                  width: r.space(40),
+                  height: r.space(40),
+                  radius: r.radius(20),
+                ),
+              ],
+            ),
+            SizedBox(height: r.space(24)),
+            Row(
+              children: List.generate(3, (index) {
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: r.space(8)),
+                    child: Column(
+                      children: [
+                        SkeletonBox(
+                          width: r.space(68),
+                          height: r.space(20),
+                          radius: r.radius(5),
+                        ),
+                        SizedBox(height: r.space(7)),
+                        SkeletonBox(
+                          width: r.space(52),
+                          height: r.space(12),
+                          radius: r.radius(5),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+            SizedBox(height: r.space(28)),
+            sectionTitle(),
+            SizedBox(height: r.space(12)),
+            card(4),
+            SizedBox(height: r.space(24)),
+            sectionTitle(),
+            SizedBox(height: r.space(12)),
+            card(6),
+            SizedBox(height: r.space(24)),
+            sectionTitle(),
+            SizedBox(height: r.space(12)),
+            card(3),
+            SizedBox(height: r.space(32)),
+          ],
         ),
       ),
     );

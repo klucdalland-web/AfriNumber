@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 
-import '../../features/abonnement/presentation/bindings/abonnement_binding.dart';
 import '../../features/abonnement/presentation/views/abonnement_page.dart';
 import '../../features/kyc/kyc.dart';
 import '../../features/auth/presentation/views/auth_feedback_connexion_page.dart';
@@ -88,7 +87,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.abonnement,
       page: () => const AbonnementPage(),
-      binding: AbonnementBinding(),
     ),
 
     // ── Vérification d'identité ─────────────────────────────────────────────

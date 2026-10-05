@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
 
-/// Rangée de statistiques du profil (Numéros actifs, Forfait, Pays).
-/// Le bloc "Offre" est cliquable et navigue vers la page d'abonnement.
+/// Rangée de statistiques du profil (Numéros actifs, plan, pays).
+/// Le bloc du plan ouvre la page de gestion des abonnements.
 class ProfileStatsRow extends StatelessWidget {
   const ProfileStatsRow({
     super.key,
@@ -43,6 +43,9 @@ class ProfileStatsRow extends StatelessWidget {
         children: [
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: GoogleFonts.zillaSlab(
               fontSize: r.fontSize(18),
               fontWeight: FontWeight.w700,
@@ -79,11 +82,11 @@ class ProfileStatsRow extends StatelessWidget {
             child: stat(_two(activeNumbers), 'profile.active_numbers'.tr),
           ),
           Container(height: r.heightOf(24), width: 1, color: dividerColor),
-          // Bloc "Offre" cliquable → navigue vers la page Abonnement
+          // Bloc du plan actuel cliquable → ouvre la gestion des abonnements.
           Expanded(
             child: stat(
-              planName == 'Offre Pro' ? 'profile.plan_pro'.tr : planName,
-              'Offre',
+              planName,
+              'profile.plan'.tr,
               onTap: () => Get.toNamed(AppRoutes.abonnement),
             ),
           ),

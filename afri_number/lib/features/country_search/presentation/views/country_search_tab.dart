@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/widgets/widgets.dart';
+import '../../domain/models/country_item.dart';
+import 'number_purchase_page.dart';
 import '../controllers/country_search_controller.dart';
 import '../widgets/widgets.dart';
 
@@ -15,6 +17,15 @@ class CountrySearchPage extends StatelessWidget {
     final r = context.responsive;
     final theme = Theme.of(context);
     final subtextColor = theme.colorScheme.onSurfaceVariant;
+
+    void openPurchasePage(CountryItem country) {
+      Get.to<void>(
+        () => NumberPurchasePage(
+          initialCountry: country,
+          countries: controller.allCountries.toList(),
+        ),
+      );
+    }
 
     return AppScaffold(
       body: SafeArea(
@@ -57,13 +68,7 @@ class CountrySearchPage extends StatelessWidget {
                             PopularCountriesSection(
                               scale: r.scale,
                               countries: controller.popularCountries,
-                              onCountryTap: (country) {
-                                Get.snackbar(
-                                  'country.selected'.tr,
-                                  '${country.name} (${country.dialCode})',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                              },
+                              onCountryTap: openPurchasePage,
                             ),
                             SizedBox(height: r.space(24)),
                           ],
@@ -149,13 +154,7 @@ class CountrySearchPage extends StatelessWidget {
                             return CountryListTile(
                               scale: r.scale,
                               country: country,
-                              onTap: () {
-                                Get.snackbar(
-                                  'country.selected'.tr,
-                                  '${country.name} (${country.dialCode})',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                              },
+                              onTap: () => openPurchasePage(country),
                             );
                           },
                         );

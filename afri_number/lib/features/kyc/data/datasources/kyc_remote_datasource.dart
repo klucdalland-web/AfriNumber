@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/api_exception.dart';
@@ -71,13 +72,41 @@ class KycRemoteDataSource {
         'pieceavantpath': await _file(frontPath),
         if (backPath != null) 'piecearrierepath': await _file(backPath),
       });
-      await _express.post<Map<String, dynamic>>(
+      final response = await _express.post<Map<String, dynamic>>(
         ApiConstants.kycUpload,
         data: form,
       );
+      if (kDebugMode) {
+        debugPrint(
+          '[KycRemoteDataSource] Express upload accepted: '
+          'status=${response.statusCode}, url=${response.requestOptions.uri}',
+        );
+      }
     } on DioException catch (e) {
-      throw KycException(message: _serverMessage(e));
+      final uri = e.requestOptions.uri;
+      if (kDebugMode) {
+        debugPrint(
+          '[KycRemoteDataSource] Express upload failed: '
+          'url=${uri.origin}${uri.path}, type=${e.type}, '
+          'status=${e.response?.statusCode}',
+        );
+      }
+      throw KycException(
+        message: _serverMessage(e),
+        messageKey: _expressErrorMessageKey(e),
+      );
     }
+  }
+
+  String? _expressErrorMessageKey(DioException error) {
+    if (error.response != null) return null;
+    return switch (error.type) {
+      DioExceptionType.connectionError ||
+      DioExceptionType.connectionTimeout => 'kyc.express.unreachable',
+      DioExceptionType.sendTimeout ||
+      DioExceptionType.receiveTimeout => 'kyc.express.timeout',
+      _ => 'kyc.err',
+    };
   }
 
   /// GET du statut (endpoint à confirmer).

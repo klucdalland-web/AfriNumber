@@ -307,7 +307,7 @@ class KycController extends GetxController {
     try {
       await action();
     } on KycException catch (e) {
-      errorMessage.value = e.message ?? 'kyc.err'.tr;
+      errorMessage.value = e.message ?? e.messageKey?.tr ?? 'kyc.err'.tr;
     } on ApiException catch (e) {
       errorMessage.value = e.message;
     } catch (_) {

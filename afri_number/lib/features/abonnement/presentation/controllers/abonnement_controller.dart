@@ -21,7 +21,9 @@ class AbonnementController extends GetxController {
   }
 
   final isLoading = false.obs;
+  final isHistoryLoading = false.obs;
   final errorMessage = ''.obs;
+  final historyErrorMessage = ''.obs;
   final plans = <AbonnementPlan>[].obs;
   final history = <AbonnementHistoryEntry>[].obs;
   final period = BillingPeriod.annual.obs;
@@ -53,15 +55,23 @@ class AbonnementController extends GetxController {
         // Le champ `currently` des plans reste utilisable si cet endpoint échoue.
       }
 
-      try {
-        history.assignAll(await _repository.fetchHistory());
-      } catch (_) {
-        history.clear();
-      }
     } catch (_) {
       errorMessage.value = 'abonnement.load_error'.tr;
     } finally {
       isLoading.value = false;
+    }
+    await loadHistory();
+  }
+
+  Future<void> loadHistory() async {
+    isHistoryLoading.value = true;
+    historyErrorMessage.value = '';
+    try {
+      history.assignAll(await _repository.fetchHistory());
+    } catch (_) {
+      historyErrorMessage.value = 'abonnement.history_error'.tr;
+    } finally {
+      isHistoryLoading.value = false;
     }
   }
 

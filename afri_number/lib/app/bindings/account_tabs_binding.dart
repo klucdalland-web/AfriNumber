@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../features/abonnement/abonnement.dart';
 import '../../features/connectivity/connectivity.dart';
 import '../../features/country_search/country_search.dart';
 import '../../features/dashboard/dashboard.dart';
@@ -23,6 +24,7 @@ import '../../features/profile/profile.dart';
 class AccountTabsBinding extends Bindings {
   @override
   void dependencies() {
+    AbonnementBinding().dependencies();
     DashboardBindings().dependencies();
     CountrySearchBinding().dependencies();
     ConnectivityBinding().dependencies();

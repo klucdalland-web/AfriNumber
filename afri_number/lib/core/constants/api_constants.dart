@@ -15,7 +15,8 @@ class ApiConstants {
   /// URL de base du service Express (upload de fichiers).
   static const String expressBaseUrl = String.fromEnvironment(
     'EXPRESS_BASE_URL',
-    defaultValue: 'http://localhost:3000',
+    // Development Express service hosted on the PC's local network address.
+    defaultValue: 'http://192.168.5.121:3000',
   );
 
   /// Upload multipart des documents (Express).
