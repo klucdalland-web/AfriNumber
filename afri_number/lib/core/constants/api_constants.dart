@@ -40,6 +40,7 @@ class ApiConstants {
   static const String register = '/auth/register';
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
+  static const String refresh = '/auth/refresh';
 
   // OTP endpoints
   static const String verifyOtp = '/auth/verify-otp';

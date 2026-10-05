@@ -24,7 +24,7 @@ class DioClient {
     );
 
     _dio.interceptors.addAll([
-      AuthInterceptor(_storage),
+      AuthInterceptor(_storage, _dio),
       ErrorInterceptor(),
       if (kDebugMode)
         PrettyDioLogger(

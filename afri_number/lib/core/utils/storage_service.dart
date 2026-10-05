@@ -27,6 +27,13 @@ class StorageService {
     return null;
   }
 
+  /// Retourne le jeton de renouvellement enregistré, s'il est présent.
+  String? get refreshToken {
+    final token = read<String>(StorageKeys.refreshToken);
+    if (token != null && token.trim().isNotEmpty) return token;
+    return null;
+  }
+
   /// Indique si un jeton d'accès valide est présent.
   bool get hasToken {
     final t = accessToken;
