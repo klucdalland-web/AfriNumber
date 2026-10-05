@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Profile;
+use App\Models\TypeNotification;
+use App\Models\User;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -11,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 // 🚀 Pour suivre les erreurs dans les logs de Render
 
@@ -305,27 +309,18 @@ class ProfileVerificationController extends Controller
                 $this->supprimerDocuments($profil);
             }
 
-            // 📢 4. Traitement des Notifications (Selon le statut)
-            switch ($request->kyc_status) {
-                case 'approved':
-                    // TODO: Déclencher l'envoi du mail de succès ou notification Push
-                    Log::info("🟢 Profil {$profil->id} approuvé automatiquement par n8n.");
-                    break;
+            // 📢 4. Notifications push utilisateur (FCM)
+            $this->notifierVerdictKyc(
+                $profil,
+                (string) $request->kyc_status,
+                $request->input('title'),
+                $request->input('message'),
+                $request->input('reason'),
+            );
 
-                case 'rejected':
-                    // TODO: Envoyer la notification de rejet avec le motif précis ($request->message)
-                    Log::warning("🔴 Profil {$profil->id} rejeté par n8n. Motif : ".$request->reason);
-                    break;
-
-                case 'manual_review':
-                    // Si la règle "Alerter l'équipe" est déclenchée
-                    if ($request->has('url_selfie')) {
-                        Log::info("🟡 ALERTE ÉQUIPE - Profil {$profil->id} soumis à vérification humaine. Motif : ".$request->reason);
-                        // TODO: Envoyer un e-mail à l'administration ou un webhook vers ton outil interne
-                    } else {
-                        Log::info("🟡 Profil {$profil->id} placé en file d'attente de revue manuelle.");
-                    }
-                    break;
+            if ($request->kyc_status === 'manual_review' && $request->has('url_selfie')) {
+                Log::info("🟡 ALERTE ÉQUIPE - Profil {$profil->id} soumis à vérification humaine. Motif : ".$request->reason);
+                // TODO: Envoyer un e-mail à l'administration ou un webhook vers ton outil interne
             }
 
             return response()->json([
@@ -346,6 +341,72 @@ class ProfileVerificationController extends Controller
                 'statut' => 'erreur',
                 'erreur' => 'Erreur interne lors du traitement du verdict.',
             ], 500);
+        }
+    }
+
+    /**
+     * Envoie une notification push à l'utilisateur selon le verdict KYC.
+     * L'échec FCM ne doit jamais faire échouer le verdict déjà persisté.
+     */
+    private function notifierVerdictKyc(
+        Profile $profil,
+        string $kycStatus,
+        ?string $title,
+        ?string $message,
+        ?string $reason,
+    ): void {
+        $payloads = [
+            'approved' => [
+                'type' => TypeNotification::CODE_KYC_APPROVED,
+                'title' => $title ?: 'Identité vérifiée',
+                'body' => $message ?: 'Votre vérification d\'identité a été approuvée.',
+            ],
+            'rejected' => [
+                'type' => TypeNotification::CODE_KYC_REJECTED,
+                'title' => $title ?: 'Vérification refusée',
+                'body' => $message ?: ($reason ?: 'Votre vérification d\'identité a été refusée.'),
+            ],
+            'manual_review' => [
+                'type' => TypeNotification::CODE_KYC_MANUAL_REVIEW,
+                'title' => $title ?: 'Vérification en cours',
+                'body' => $message ?: 'Votre dossier est en cours d\'examen par notre équipe.',
+            ],
+        ];
+
+        if (! isset($payloads[$kycStatus])) {
+            return;
+        }
+
+        $user = $profil->user;
+        if (! $user instanceof User) {
+            Log::warning('Impossible d\'envoyer la notif KYC : utilisateur introuvable.', [
+                'profile_id' => $profil->id,
+            ]);
+
+            return;
+        }
+
+        $payload = $payloads[$kycStatus];
+
+        try {
+            app(FcmNotificationService::class)->sendToUser(
+                $user,
+                $payload['title'],
+                $payload['body'],
+                [
+                    'type' => $payload['type'],
+                    'profile_id' => $profil->id,
+                    'kyc_status' => $kycStatus,
+                    'reason' => $reason,
+                ],
+            );
+        } catch (Throwable $e) {
+            Log::error('Échec notification FCM après verdict KYC', [
+                'profile_id' => $profil->id,
+                'user_id' => $user->id,
+                'kyc_status' => $kycStatus,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

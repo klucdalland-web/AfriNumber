@@ -1,6 +1,14 @@
 <?php
 
+use App\Models\Continent;
+use App\Models\Device;
+use App\Models\Organisation;
+use App\Models\OtpVerification;
 use App\Models\PasswordResetCode;
+use App\Models\Pays;
+use App\Models\Plan;
+use App\Models\Platform;
+use App\Models\SessionUser;
 use App\Models\TypeUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,19 +41,83 @@ beforeEach(function (): void {
             'actif' => true,
         ],
     );
+
+    Platform::query()->firstOrCreate(
+        ['label' => 'Android'],
+        ['description' => 'Android', 'actif' => true],
+    );
+
+    Platform::query()->firstOrCreate(
+        ['label' => 'iOS'],
+        ['description' => 'iOS', 'actif' => true],
+    );
+
+    $organisation = Organisation::query()->create([
+        'label' => 'AfriNumber Test',
+        'description' => 'Org test',
+        'actif' => true,
+    ]);
+
+    $continent = Continent::factory()->create();
+
+    $this->pays = Pays::query()->create([
+        'continent_id' => $continent->id,
+        'organisation_id' => $organisation->id,
+        'label' => 'Côte d\'Ivoire',
+        'code' => 'CI',
+        'indicatif' => '+225',
+        'actif' => true,
+    ]);
+
+    Plan::query()->firstOrCreate(
+        ['code' => Plan::CODE_FREE],
+        [
+            'label' => 'Free',
+            'description' => 'Essai gratuit',
+            'price' => 0,
+            'currency' => 'XOF',
+            'duration_days' => 14,
+            'max_numbers' => 1,
+            'is_active' => true,
+            'sort_order' => 0,
+        ],
+    );
 });
 
 /**
  * @return array<string, mixed>
  */
-function apiLoginDevicePayload(string $email, string $password): array
+function apiRegisterPayload(array $overrides = []): array
+{
+    return array_merge([
+        'contrie_id' => test()->pays->id,
+        'name' => 'Dupont',
+        'first_name' => 'Jean',
+        'email' => 'jean@example.com',
+        'phone_number' => '0700000001',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'platform' => 'android',
+        'device_id' => 'device-auth-001',
+        'device_name' => 'Pixel',
+        'device_model' => 'Pixel 8',
+        'os_version' => '14',
+        'app_version' => '1.0.0',
+        'fcm_token' => 'fcm-auth-token',
+    ], $overrides);
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function apiLoginDevicePayload(string $email, string $password, string $deviceId = 'device-test-001'): array
 {
     return [
         'email' => $email,
         'password' => $password,
         'device_name' => 'test-device',
         'platform' => 'android',
-        'device_id' => 'device-test-001',
+        'device_id' => $deviceId,
         'device_model' => 'Pixel',
         'os_version' => '14',
         'app_version' => '1.0.0',
@@ -53,17 +125,62 @@ function apiLoginDevicePayload(string $email, string $password): array
     ];
 }
 
-test('a user can register via the v1 api', function (): void {
-    $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Jean Dupont',
-        'email' => 'jean@example.com',
-        'phone_number' => '+22990000001',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-        'device_name' => 'iphone',
+/**
+ * @return array{0: User, 1: string}
+ */
+function authUserWithAccessToken(array $userAttributes = []): array
+{
+    $user = User::factory()->create(array_merge([
+        'phone_number' => '+2250700000099',
+        'statut' => 'actif',
+        'password' => Hash::make('password123'),
+    ], $userAttributes));
+
+    $platform = Platform::query()->whereRaw('LOWER(label) = ?', ['android'])->firstOrFail();
+
+    $device = Device::query()->create([
+        'user_id' => $user->id,
+        'platform_id' => $platform->id,
+        'identifier' => 'device-auth-session',
+        'name' => 'Test phone',
+        'model' => 'Pixel',
+        'os_version' => '14',
+        'actif' => true,
+        'last_used_at' => now(),
     ]);
 
-    $response->assertCreated()
+    SessionUser::query()->create([
+        'user_id' => $user->id,
+        'device_id' => $device->id,
+        'is_active' => true,
+    ]);
+
+    $token = $user->createToken('test-access', ['access-api'])->plainTextToken;
+
+    test()->withToken($token)
+        ->withHeader('X-Device-Id', $device->identifier);
+
+    return [$user, $token];
+}
+
+test('a user can register via the v1 api', function (): void {
+    $response = $this->postJson('/api/v1/auth/register', apiRegisterPayload());
+
+    $response->assertOk()
+        ->assertJsonPath('success', true);
+
+    OtpVerification::query()
+        ->where('email', 'jean@example.com')
+        ->where('purpose', 'register')
+        ->update(['code' => Hash::make('123456')]);
+
+    $verify = $this->postJson('/api/v1/auth/verify-otp', [
+        'email' => 'jean@example.com',
+        'purpose' => 'register',
+        'code' => '123456',
+    ]);
+
+    $verify->assertCreated()
         ->assertJsonPath('success', true)
         ->assertJsonPath('data.user.email', 'jean@example.com')
         ->assertJsonPath('data.token_type', 'Bearer')
@@ -71,31 +188,30 @@ test('a user can register via the v1 api', function (): void {
             'success',
             'message',
             'data' => [
-                'user' => ['id', 'name', 'email', 'phone_number'],
-                'token',
+                'user' => ['name', 'email', 'phone_number'],
+                'access_token',
+                'refresh_token',
                 'token_type',
             ],
         ]);
 
     $this->assertDatabaseHas('users', [
         'email' => 'jean@example.com',
-        'phone_number' => '+22990000001',
     ]);
 });
 
 test('registration requires unique email and phone number', function (): void {
     User::factory()->create([
         'email' => 'taken@example.com',
-        'phone_number' => '+22990000002',
+        'phone_number' => '+2250700000002',
     ]);
 
-    $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Autre',
+    $response = $this->postJson('/api/v1/auth/register', apiRegisterPayload([
         'email' => 'taken@example.com',
-        'phone_number' => '+22990000002',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
+        'phone_number' => '0700000002',
+        'device_id' => 'device-auth-002',
+        'fcm_token' => 'fcm-auth-token-2',
+    ]));
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['email', 'phone_number']);
@@ -104,54 +220,79 @@ test('registration requires unique email and phone number', function (): void {
 test('a user can login with email', function (): void {
     $user = User::factory()->create([
         'email' => 'login@example.com',
-        'phone_number' => '+22990000003',
+        'phone_number' => '+2250700000003',
         'password' => Hash::make('password123'),
         'statut' => 'actif',
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
-        'login' => 'login@example.com',
-        'password' => 'password123',
-        'device_name' => 'android',
-    ]);
+    $response = $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload('login@example.com', 'password123', 'device-login-email')
+    );
 
     $response->assertOk()
+        ->assertJsonPath('success', true);
+
+    OtpVerification::query()
+        ->where('email', $user->email)
+        ->where('purpose', 'login')
+        ->update(['code' => Hash::make('123456')]);
+
+    $verify = $this->postJson('/api/v1/auth/verify-otp', [
+        'email' => $user->email,
+        'purpose' => 'login',
+        'code' => '123456',
+    ]);
+
+    $verify->assertOk()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data.user.id', $user->id)
+        ->assertJsonPath('data.user.email', $user->email)
         ->assertJsonStructure([
-            'data' => ['user', 'token', 'token_type'],
+            'data' => ['user', 'access_token', 'refresh_token', 'token_type'],
         ]);
 });
 
 test('a user can login with phone number', function (): void {
-    User::factory()->create([
+    $user = User::factory()->create([
         'email' => 'phone@example.com',
-        'phone_number' => '+22990000004',
+        'phone_number' => '+2250700000004',
         'password' => Hash::make('password123'),
         'statut' => 'actif',
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
-        'login' => '+22990000004',
-        'password' => 'password123',
-    ]);
+    $response = $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload('+2250700000004', 'password123', 'device-login-phone')
+    );
 
-    $response->assertOk()
+    $response->assertOk()->assertJsonPath('success', true);
+
+    OtpVerification::query()
+        ->where('email', $user->email)
+        ->where('purpose', 'login')
+        ->update(['code' => Hash::make('123456')]);
+
+    $this->postJson('/api/v1/auth/verify-otp', [
+        'email' => $user->email,
+        'purpose' => 'login',
+        'code' => '123456',
+    ])
+        ->assertOk()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data.user.phone_number', '+22990000004');
+        ->assertJsonPath('data.user.phone_number', '+2250700000004');
 });
 
 test('login fails with invalid credentials', function (): void {
     User::factory()->create([
         'email' => 'wrong@example.com',
-        'phone_number' => '+22990000005',
+        'phone_number' => '+2250700000005',
         'password' => Hash::make('password123'),
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
-        'login' => 'wrong@example.com',
-        'password' => 'bad-password',
-    ]);
+    $response = $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload('wrong@example.com', 'bad-password', 'device-login-bad')
+    );
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['login']);
@@ -160,41 +301,35 @@ test('login fails with invalid credentials', function (): void {
 test('inactive users cannot login', function (): void {
     User::factory()->create([
         'email' => 'inactive@example.com',
-        'phone_number' => '+22990000006',
+        'phone_number' => '+2250700000006',
         'password' => Hash::make('password123'),
         'statut' => 'inactif',
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
-        'login' => 'inactive@example.com',
-        'password' => 'password123',
-    ]);
+    $response = $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload('inactive@example.com', 'password123', 'device-login-inactive')
+    );
 
     $response->assertForbidden()
         ->assertJsonPath('success', false);
 });
 
 test('authenticated user can fetch me and logout', function (): void {
-    $user = User::factory()->create([
-        'phone_number' => '+22990000007',
-        'statut' => 'actif',
+    [$user, $token] = authUserWithAccessToken([
+        'phone_number' => '+2250700000007',
     ]);
 
-    $token = $user->createToken('test')->plainTextToken;
-
-    $this->withToken($token)
-        ->getJson('/api/v1/auth/me')
+    $this->getJson('/api/v1/auth/me')
         ->assertOk()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data.user.id', $user->id);
+        ->assertJsonPath('data.user.email', $user->email);
 
-    $this->withToken($token)
-        ->getJson('/api/v1/user')
+    $this->getJson('/api/v1/user')
         ->assertOk()
         ->assertJsonPath('data.user.email', $user->email);
 
-    $this->withToken($token)
-        ->postJson('/api/v1/auth/logout')
+    $this->postJson('/api/v1/auth/logout')
         ->assertOk()
         ->assertJsonPath('success', true);
 
@@ -203,26 +338,24 @@ test('authenticated user can fetch me and logout', function (): void {
     $this->app['auth']->forgetGuards();
 
     $this->withToken($token)
+        ->withHeader('X-Device-Id', 'device-auth-session')
         ->getJson('/api/v1/auth/me')
         ->assertUnauthorized();
 });
 
 test('authenticated user can change password', function (): void {
-    $user = User::factory()->create([
-        'phone_number' => '+22990000008',
-        'password' => 'password123',
-        'statut' => 'actif',
+    [$user] = authUserWithAccessToken([
+        'phone_number' => '+2250700000008',
+        'password' => Hash::make('password123'),
     ]);
 
-    $token = $user->createToken('current')->plainTextToken;
-    $user->createToken('other-device');
+    $user->createToken('other-device', ['access-api']);
 
-    $this->withToken($token)
-        ->putJson('/api/v1/auth/password', [
-            'current_password' => 'password123',
-            'password' => 'new-password123',
-            'password_confirmation' => 'new-password123',
-        ])
+    $this->putJson('/api/v1/auth/password', [
+        'current_password' => 'password123',
+        'password' => 'new-password123',
+        'password_confirmation' => 'new-password123',
+    ])
         ->assertOk()
         ->assertJsonPath('success', true);
 
@@ -231,31 +364,28 @@ test('authenticated user can change password', function (): void {
     expect(Hash::check('new-password123', $user->password))->toBeTrue()
         ->and(Hash::check('password123', $user->password))->toBeFalse();
 
-    $this->assertDatabaseCount('personal_access_tokens', 1);
+    // Rotation : tous les anciens tokens sont révoqués, puis access + refresh sont recréés.
+    $this->assertDatabaseCount('personal_access_tokens', 2);
 
     $this->app['auth']->forgetGuards();
 
-    $this->postJson('/api/v1/auth/login', [
-        'login' => $user->email,
-        'password' => 'new-password123',
-    ])->assertOk();
+    $this->postJson(
+        '/api/v1/auth/login',
+        apiLoginDevicePayload($user->email, 'new-password123', 'device-after-password')
+    )->assertOk();
 });
 
 test('change password rejects invalid current password', function (): void {
-    $user = User::factory()->create([
-        'phone_number' => '+22990000009',
-        'password' => 'password123',
-        'statut' => 'actif',
+    authUserWithAccessToken([
+        'phone_number' => '+2250700000009',
+        'password' => Hash::make('password123'),
     ]);
 
-    $token = $user->createToken('test')->plainTextToken;
-
-    $this->withToken($token)
-        ->putJson('/api/v1/auth/password', [
-            'current_password' => 'wrong-password',
-            'password' => 'new-password123',
-            'password_confirmation' => 'new-password123',
-        ])
+    $this->putJson('/api/v1/auth/password', [
+        'current_password' => 'wrong-password',
+        'password' => 'new-password123',
+        'password_confirmation' => 'new-password123',
+    ])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['current_password']);
 });
@@ -263,19 +393,19 @@ test('change password rejects invalid current password', function (): void {
 test('admin cannot login via the api and gets the same response as unknown credentials', function (): void {
     $admin = User::factory()->admin()->create([
         'email' => 'admin-api@example.com',
-        'phone_number' => '+22990000010',
+        'phone_number' => '+2250700000010',
         'password' => Hash::make('password123'),
         'statut' => 'actif',
     ]);
 
     $unknownResponse = $this->postJson(
         '/api/v1/auth/login',
-        apiLoginDevicePayload('unknown@example.com', 'password123')
+        apiLoginDevicePayload('unknown@example.com', 'password123', 'device-unknown')
     );
 
     $adminResponse = $this->postJson(
         '/api/v1/auth/login',
-        apiLoginDevicePayload($admin->email, 'password123')
+        apiLoginDevicePayload($admin->email, 'password123', 'device-admin')
     );
 
     $unknownResponse->assertUnprocessable()
@@ -294,7 +424,7 @@ test('admin cannot login via the api and gets the same response as unknown crede
 test('forgot password returns the same success for unknown and admin accounts', function (): void {
     $admin = User::factory()->admin()->create([
         'email' => 'admin-reset@example.com',
-        'phone_number' => '+22990000011',
+        'phone_number' => '+2250700000011',
         'statut' => 'actif',
     ]);
 

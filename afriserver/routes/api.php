@@ -21,3 +21,6 @@ Route::get('/v1/n8n/profiles/{profile_id}', [ProfileVerificationController::clas
 
 // 🟢 Route appelée par les nœuds HTTP violets de n8n
 Route::post('/v1/n8n/kyc-callback', [ProfileVerificationController::class, 'traiterVerdictN8N']);
+
+// Cron / n8n : drain des campagnes notifications (HMAC sur "process-notification-campaigns")
+Route::post('/v1/internal/process-notification-campaigns', \App\Http\Controllers\Api\V1\ProcessNotificationCampaignsController::class);

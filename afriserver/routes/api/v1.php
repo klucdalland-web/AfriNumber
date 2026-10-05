@@ -6,9 +6,10 @@ use App\Http\Controllers\Api\V1\ObservabilityController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PaysController;
 use App\Http\Controllers\Api\V1\PieceIdentiteController;
-use App\Http\Controllers\Api\V1\ProfileVerificationController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\ProfileVerificationController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
+use App\Http\Controllers\Api\V1\TypeNotificationController;
 use App\Http\Controllers\Api\V1\TypePieceIdentiteController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,7 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
     Route::get('/abonnement', [SubscriptionController::class, 'show'])->name('abonnement.show');
 
     Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
+    Route::post('/devices/fcm-token', [DeviceController::class, 'updateFcmToken'])->name('devices.fcm-token');
     Route::delete('/devices/others', [DeviceController::class, 'destroyOthers'])->name('devices.destroy-others');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
@@ -68,6 +70,10 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
     // Types de pièces (référentiel)
     Route::get('/type-piece-identites', [TypePieceIdentiteController::class, 'index'])->name('type-piece-identites.index');
     Route::get('/type-piece-identites/{typePieceIdentite}', [TypePieceIdentiteController::class, 'show'])->name('type-piece-identites.show');
+
+    // Types de notifications (référentiel)
+    Route::get('/type-notifications', [TypeNotificationController::class, 'index'])->name('type-notifications.index');
+    Route::get('/type-notifications/{typeNotification}', [TypeNotificationController::class, 'show'])->name('type-notifications.show');
 
     // Pièces d'identité user — logique métier déléguée à Node.js
     Route::get('/pieces', [PieceIdentiteController::class, 'index'])->name('pieces.index');

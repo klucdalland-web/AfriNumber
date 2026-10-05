@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Device\UpdateFcmTokenRequest;
 use App\Http\Resources\DeviceResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Device;
@@ -17,6 +18,7 @@ class DeviceController extends Controller
     public function __construct(
         private readonly ObservabilityService $observability,
     ) {}
+
     /**
      * Liste les appareils liés au compte authentifié.
      */
@@ -36,6 +38,40 @@ class DeviceController extends Controller
         return ApiResponse::success(null, [
             'devices' => DeviceResource::collection($devices),
         ]);
+    }
+
+    /**
+     * Actualise le token FCM d'un appareil appartenant à l'utilisateur connecté.
+     */
+    public function updateFcmToken(UpdateFcmTokenRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $user = $request->user();
+
+        $device = Device::query()
+            ->where('user_id', $user->id)
+            ->where('identifier', $data['device_id'])
+            ->where('actif', true)
+            ->first();
+
+        if (! $device) {
+            return ApiResponse::error('Appareil introuvable.', null, 404);
+        }
+
+        DeviceTokenFcm::query()
+            ->where('token', $data['token'])
+            ->where('device_id', '!=', $device->id)
+            ->delete();
+
+        DeviceTokenFcm::query()->updateOrCreate(
+            ['device_id' => $device->id],
+            [
+                'token' => $data['token'],
+                'actif' => true,
+            ]
+        );
+
+        return ApiResponse::success('Token FCM mis à jour.');
     }
 
     /**
@@ -127,8 +163,7 @@ class DeviceController extends Controller
         return ApiResponse::success(
             $count === 0
                 ? 'Aucun autre appareil à déconnecter.'
-                : "{$count} appareil(s) déconnecté(s)."
-            ,
+                : "{$count} appareil(s) déconnecté(s).",
             ['revoked_count' => $count]
         );
     }
