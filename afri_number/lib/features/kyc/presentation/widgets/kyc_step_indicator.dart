@@ -6,24 +6,9 @@ import '../../domain/models/kyc_progress_status.dart';
 /// Indicateur de progression avec un état visuel pour chaque étape.
 class KycStepIndicator extends StatelessWidget {
   const KycStepIndicator({super.key, required this.statuses});
-enum KycProgressStatus { pending, active, passed, failed } ;
-List<KycProgressStatus> get progressStatuses {
-  final stages = <KycStep>[
-    KycStep.choose,
-    KycStep.front,
-    if (selectedType.value?.requiresBack == true) KycStep.back,
-    KycStep.face,
-  ];
-  return stages.map((stage) {
-    if (stage == step.value && errorMessage.value != null) {
-      return KycProgressStatus.failed;
-    }
-    if (stage == step.value) return KycProgressStatus.active;
 
-    if (stage == KycStep.choose) return KycProgressStatus.passed;
-    return _photoQuality[stage] ?? KycProgressStatus.pending;
-  }).toList(growable: false);
-}
+  /// État de chaque étape de la progression.
+  final List<KycProgressStatus> statuses;
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +18,19 @@ List<KycProgressStatus> get progressStatuses {
     Color colorFor(KycProgressStatus status) {
       switch (status) {
         case KycProgressStatus.pending:
-          // Étape à venir : grisée
+          // Étape à venir : grisée.
           return scheme.outlineVariant.withValues(alpha: 0.6);
+
         case KycProgressStatus.active:
-          // Étape en cours
-          return scheme.primary;
+          // Étape actuelle : blanche.
+          return Colors.white;
+
         case KycProgressStatus.passed:
+          // Étape terminée avec succès.
           return const Color(0xFF2EAD66);
+
         case KycProgressStatus.failed:
+          // Étape ayant rencontré une erreur.
           return scheme.error;
       }
     }
@@ -52,12 +42,21 @@ List<KycProgressStatus> get progressStatuses {
           return Expanded(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
               height: r.space(3),
               margin: EdgeInsets.only(
                 right: i < statuses.length - 1 ? r.space(4) : 0,
               ),
               decoration: BoxDecoration(
                 color: colorFor(statuses[i]),
+                border: switch (statuses[i]) {
+                  KycProgressStatus.pending => null,
+                  KycProgressStatus.active => Border.all(
+                    color: scheme.primary,
+                    width: 1.5,
+                  ),
+                  KycProgressStatus.passed || KycProgressStatus.failed => null,
+                },
                 borderRadius: BorderRadius.circular(r.space(2)),
               ),
             ),

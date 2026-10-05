@@ -95,13 +95,13 @@ class KycController extends GetxController {
     ];
     return stages
         .map((stage) {
-          if (stage == step.value && errorMessage.value != null) {
-            return KycProgressStatus.failed;
+          if (stage == step.value) {
+            return errorMessage.value != null
+                ? KycProgressStatus.failed
+                : KycProgressStatus.active;
           }
           if (stage == KycStep.choose) {
-            return step.value == KycStep.choose
-                ? KycProgressStatus.pending
-                : KycProgressStatus.passed;
+            return KycProgressStatus.passed;
           }
           return _photoQuality[stage] ?? KycProgressStatus.pending;
         })
