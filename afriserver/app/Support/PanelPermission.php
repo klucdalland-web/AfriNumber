@@ -104,6 +104,22 @@ final class PanelPermission
 
     public const OBSERVABILITY_DELETE = 'observability.delete';
 
+    public const TYPE_NOTIFICATIONS_VIEW = 'type_notifications.view';
+
+    public const TYPE_NOTIFICATIONS_CREATE = 'type_notifications.create';
+
+    public const TYPE_NOTIFICATIONS_UPDATE = 'type_notifications.update';
+
+    public const TYPE_NOTIFICATIONS_DELETE = 'type_notifications.delete';
+
+    public const NOTIFICATION_CAMPAIGNS_VIEW = 'notification_campaigns.view';
+
+    public const NOTIFICATION_CAMPAIGNS_CREATE = 'notification_campaigns.create';
+
+    public const NOTIFICATION_CAMPAIGNS_UPDATE = 'notification_campaigns.update';
+
+    public const NOTIFICATION_CAMPAIGNS_DELETE = 'notification_campaigns.delete';
+
     /**
      * @return list<string>
      */
@@ -160,6 +176,14 @@ final class PanelPermission
             self::TRANSACTIONS_DELETE,
             self::OBSERVABILITY_VIEW,
             self::OBSERVABILITY_DELETE,
+            self::TYPE_NOTIFICATIONS_VIEW,
+            self::TYPE_NOTIFICATIONS_CREATE,
+            self::TYPE_NOTIFICATIONS_UPDATE,
+            self::TYPE_NOTIFICATIONS_DELETE,
+            self::NOTIFICATION_CAMPAIGNS_VIEW,
+            self::NOTIFICATION_CAMPAIGNS_CREATE,
+            self::NOTIFICATION_CAMPAIGNS_UPDATE,
+            self::NOTIFICATION_CAMPAIGNS_DELETE,
         ];
     }
 

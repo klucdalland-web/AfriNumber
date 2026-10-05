@@ -19,21 +19,29 @@ class FcmNotificationService
     ) {}
 
     /**
-     * Envoie une notification push à tous les appareils actifs de l'utilisateur.
+     * Envoie une notification push aux appareils actifs de l'utilisateur.
      *
      * @param  array<string, scalar|null>  $data
+     * @param  list<int>|null  $deviceIds  Si fourni, limite l'envoi à ces devices.
      */
-    public function sendToUser(User $user, string $title, string $body, array $data = []): ?MulticastSendReport
-    {
+    public function sendToUser(
+        User $user,
+        string $title,
+        string $body,
+        array $data = [],
+        ?array $deviceIds = null,
+    ): ?MulticastSendReport {
+        $deviceQuery = Device::query()
+            ->where('user_id', $user->id)
+            ->where('actif', true);
+
+        if ($deviceIds !== null) {
+            $deviceQuery->whereIn('id', $deviceIds);
+        }
+
         $tokens = DeviceTokenFcm::query()
             ->where('actif', true)
-            ->whereIn(
-                'device_id',
-                Device::query()
-                    ->where('user_id', $user->id)
-                    ->where('actif', true)
-                    ->select('id')
-            )
+            ->whereIn('device_id', $deviceQuery->select('id'))
             ->pluck('token')
             ->filter()
             ->unique()
