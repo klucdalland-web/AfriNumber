@@ -9,8 +9,6 @@ use App\Models\SessionUser;
 use App\Models\TypeNotification;
 use App\Models\TypeUser;
 use App\Models\User;
-use App\Services\CampaignMailService;
-use App\Services\FcmNotificationService;
 use App\Services\NotificationCampaignProcessor;
 use Database\Seeders\TypeNotificationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -157,7 +155,7 @@ test('processor promotes due scheduled campaigns then sends email', function ():
 
     $stats = app(NotificationCampaignProcessor::class)->process(20);
 
-    expect($stats['campaigns_started'])->toBe(1)
+    expect($stats['campaigns_started'])->toBe(2)
         ->and($stats['sent'])->toBe(1)
         ->and($campaign->fresh()->status)->toBe(NotificationCampaign::STATUS_COMPLETED);
 

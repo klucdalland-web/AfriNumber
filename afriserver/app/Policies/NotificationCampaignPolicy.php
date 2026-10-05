@@ -20,4 +20,21 @@ class NotificationCampaignPolicy extends ResourcePermissionPolicy
 
         return parent::update($user, $model);
     }
+
+    public function delete(User $user, mixed $model): bool
+    {
+        if (! $model instanceof NotificationCampaign) {
+            return false;
+        }
+
+        if (! in_array($model->status, [
+            NotificationCampaign::STATUS_SCHEDULED,
+            NotificationCampaign::STATUS_CANCELLED,
+            NotificationCampaign::STATUS_FAILED,
+        ], true)) {
+            return false;
+        }
+
+        return parent::delete($user, $model);
+    }
 }
