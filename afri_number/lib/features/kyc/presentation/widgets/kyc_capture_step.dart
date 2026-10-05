@@ -37,6 +37,7 @@ class _KycCaptureStepState extends State<KycCaptureStep>
   bool _initializing = true;
   bool _initializationInProgress = false;
   bool _takingPicture = false;
+  bool _cameraShouldBeOpen = true;
   String? _cameraError;
 
   @override
@@ -53,28 +54,36 @@ class _KycCaptureStepState extends State<KycCaptureStep>
       final camera = _camera;
       _camera = null;
       _description = null;
-      if (camera != null) unawaited(camera.dispose());
-      _initializeCamera();
+      unawaited(_replaceCamera(camera));
     }
+  }
+
+  Future<void> _replaceCamera(CameraController? previousCamera) async {
+    if (previousCamera != null) await previousCamera.dispose();
+    if (mounted && _cameraShouldBeOpen) await _initializeCamera();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _cameraShouldBeOpen = state == AppLifecycleState.resumed;
     final camera = _camera;
-    if (camera == null || !camera.value.isInitialized) return;
+    if (camera == null) {
+      if (_cameraShouldBeOpen) _initializeCamera(description: _description);
+      return;
+    }
 
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
+    if (!_cameraShouldBeOpen) {
       _camera = null;
-      unawaited(camera.dispose());
-    } else if (state == AppLifecycleState.resumed) {
+      unawaited(_replaceCamera(camera));
+    } else {
       _initializeCamera(description: _description);
     }
   }
 
   Future<void> _initializeCamera({CameraDescription? description}) async {
-    if (_initializationInProgress) return;
+    if (_initializationInProgress || !_cameraShouldBeOpen) return;
     _initializationInProgress = true;
+    final sideAtStart = widget.side;
     if (mounted) {
       setState(() {
         _initializing = true;
@@ -86,12 +95,12 @@ class _KycCaptureStepState extends State<KycCaptureStep>
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        throw const CameraException('CameraNotFound', 'No camera available');
-      }
+throw CameraException('CameraNotFound', 'No camera available');      }
       final requestedDirection = widget.side == KycSide.face
           ? CameraLensDirection.front
           : CameraLensDirection.back;
-      final selectedCamera = description ??
+      final selectedCamera =
+          description ??
           cameras.firstWhere(
             (camera) => camera.lensDirection == requestedDirection,
             orElse: () => cameras.first,
@@ -104,8 +113,12 @@ class _KycCaptureStepState extends State<KycCaptureStep>
         enableAudio: false,
       );
       await nextCamera.initialize();
-      if (!mounted) {
+      if (!mounted || !_cameraShouldBeOpen || sideAtStart != widget.side) {
         await nextCamera.dispose();
+        if (mounted && _cameraShouldBeOpen && sideAtStart != widget.side) {
+          _cameraShouldBeOpen = true;
+          _initializeAfterCurrentAttempt();
+        }
         return;
       }
       _camera = nextCamera;
@@ -119,6 +132,12 @@ class _KycCaptureStepState extends State<KycCaptureStep>
       _initializationInProgress = false;
       if (mounted) setState(() => _initializing = false);
     }
+  }
+
+  void _initializeAfterCurrentAttempt() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initializeCamera();
+    });
   }
 
   String _messageFor(CameraException error) {
@@ -226,7 +245,8 @@ class _KycCaptureStepState extends State<KycCaptureStep>
             width: double.infinity,
             height: r.heightOf(54),
             child: FilledButton.icon(
-              onPressed: camera?.value.isInitialized == true &&
+              onPressed:
+                  camera?.value.isInitialized == true &&
                       !_takingPicture &&
                       !widget.isBusy
                   ? _takePicture
@@ -336,7 +356,11 @@ class _CameraErrorView extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.no_photography_outlined, size: r.iconSize(42), color: colors.error),
+        Icon(
+          Icons.no_photography_outlined,
+          size: r.iconSize(42),
+          color: colors.error,
+        ),
         SizedBox(height: r.space(12)),
         Text(message, textAlign: TextAlign.center),
         SizedBox(height: r.space(8)),
