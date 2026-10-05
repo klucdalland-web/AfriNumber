@@ -8,6 +8,7 @@ use App\Filament\Resources\NotificationCampaigns\Pages\ListNotificationCampaigns
 use App\Filament\Resources\NotificationCampaigns\Pages\ViewNotificationCampaign;
 use App\Filament\Resources\NotificationCampaigns\RelationManagers\DeliveriesRelationManager;
 use App\Filament\Resources\NotificationCampaigns\Schemas\NotificationCampaignForm;
+use App\Filament\Resources\NotificationCampaigns\Schemas\NotificationCampaignInfolist;
 use App\Filament\Resources\NotificationCampaigns\Tables\NotificationCampaignsTable;
 use App\Models\NotificationCampaign;
 use BackedEnum;
@@ -15,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class NotificationCampaignResource extends Resource
@@ -40,9 +42,21 @@ class NotificationCampaignResource extends Resource
         return NotificationCampaignForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return NotificationCampaignInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return NotificationCampaignsTable::configure($table);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return $record instanceof NotificationCampaign
+            && $record->isEditable()
+            && parent::canEdit($record);
     }
 
     public static function getRelations(): array

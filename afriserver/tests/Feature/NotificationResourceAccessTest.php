@@ -66,4 +66,18 @@ test('super_admin can view a notification campaign', function (): void {
 
     $this->get(NotificationCampaignResource::getUrl('view', ['record' => $campaign]))->assertOk();
     $this->get(NotificationCampaignResource::getUrl('edit', ['record' => $campaign]))->assertForbidden();
+
+    $scheduled = NotificationCampaign::query()->create([
+        'sent_by' => $admin->id,
+        'type_notification_id' => $type->id,
+        'channels' => [NotificationCampaign::CHANNEL_PUSH],
+        'audience_type' => NotificationCampaign::AUDIENCE_ALL_USERS,
+        'device_scope' => NotificationCampaign::DEVICE_SCOPE_ALL,
+        'title' => 'Campagne planifiée',
+        'body' => 'Corps',
+        'status' => NotificationCampaign::STATUS_SCHEDULED,
+        'scheduled_at' => now()->addHour(),
+    ]);
+
+    $this->get(NotificationCampaignResource::getUrl('edit', ['record' => $scheduled]))->assertOk();
 });

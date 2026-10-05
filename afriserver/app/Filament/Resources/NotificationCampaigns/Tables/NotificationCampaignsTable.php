@@ -32,9 +32,11 @@ class NotificationCampaignsTable
                 TextColumn::make('channels')
                     ->label('Canaux')
                     ->badge()
-                    ->formatStateUsing(fn ($state): string => is_array($state)
-                        ? implode(', ', $state)
-                        : (string) $state),
+                    ->formatStateUsing(fn ($state): string => match ($state) {
+                        NotificationCampaign::CHANNEL_PUSH => 'Push',
+                        NotificationCampaign::CHANNEL_EMAIL => 'E-mail',
+                        default => (string) $state,
+                    }),
                 TextColumn::make('audience_type')
                     ->label('Audience')
                     ->badge()
@@ -67,6 +69,23 @@ class NotificationCampaignsTable
                         default => $state,
                     })
                     ->sortable(),
+                TextColumn::make('stats_sent')
+                    ->label('Envoyés')
+                    ->state(fn (NotificationCampaign $record): ?int => isset($record->stats['sent'])
+                        ? (int) $record->stats['sent']
+                        : null)
+                    ->placeholder('-')
+                    ->alignEnd()
+                    ->toggleable(),
+                TextColumn::make('stats_failed')
+                    ->label('Échoués')
+                    ->state(fn (NotificationCampaign $record): ?int => isset($record->stats['failed'])
+                        ? (int) $record->stats['failed']
+                        : null)
+                    ->placeholder('-')
+                    ->alignEnd()
+                    ->color(fn (NotificationCampaign $record): string => ((int) ($record->stats['failed'] ?? 0)) > 0 ? 'danger' : 'gray')
+                    ->toggleable(),
                 TextColumn::make('scheduled_at')
                     ->label('Planifiée le')
                     ->dateTime()
