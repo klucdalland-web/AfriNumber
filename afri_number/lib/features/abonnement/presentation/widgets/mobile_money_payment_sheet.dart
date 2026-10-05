@@ -17,7 +17,7 @@ class MobileMoneyPaymentRequest {
   final String countryCode;
   final MobileMoneyOperator operator;
 
-  /// Numéro normalisé au format local : 0XXXXXXXXX
+  /// Numéro normalisé au format local 
   final String phone;
 }
 
