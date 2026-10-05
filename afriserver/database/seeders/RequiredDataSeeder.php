@@ -29,6 +29,7 @@ class RequiredDataSeeder extends Seeder
             ServiceSeeder::class,
             PlanSeeder::class,
             TypeTransactionSeeder::class,
+            TypeNotificationSeeder::class,
         ];
     }
 
