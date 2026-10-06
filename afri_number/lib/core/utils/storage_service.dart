@@ -48,11 +48,11 @@ class StorageService {
       write(StorageKeys.refreshToken, token);
 
   /// Efface les jetons et les données utilisateur du stockage local.
+  /// Le FCM token est conservé : il est lié à l'appareil, pas à la session.
   Future<void> clearTokens() async {
     await remove(StorageKeys.accessToken);
     await remove(StorageKeys.refreshToken);
     await remove(StorageKeys.user);
-    await remove(StorageKeys.fcmToken);
   }
 
   // ── User helpers ───────────────────────────────────────────────────────────

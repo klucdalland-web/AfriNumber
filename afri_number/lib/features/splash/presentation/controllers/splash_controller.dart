@@ -1,17 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
+import '../../../../core/services/firebase_notification_service.dart';
 import '../../../../core/utils/storage_service.dart';
 
 class SplashController extends GetxController {
-  SplashController(this._storage);
+  SplashController(this._storage, this._notifications);
 
   final StorageService _storage;
+  final FirebaseNotificationService _notifications;
 
   @override
   void onInit() {
     super.onInit();
-    _checkAuthentication();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    // Permissions + token FCM avant navigation (login ou session existante).
+    await _notifications.init();
+    await _checkAuthentication();
   }
 
   Future<void> _checkAuthentication() async {
@@ -36,6 +44,8 @@ class SplashController extends GetxController {
         if (kDebugMode) {
           print("_checkAuthentication: Token trouvé -> Redirection vers Main");
         }
+        // Fire-and-forget : ne bloque pas la navigation.
+        _notifications.syncTokenWithBackend();
         Get.offAllNamed(AppRoutes.main);
       } else {
         if (kDebugMode) {

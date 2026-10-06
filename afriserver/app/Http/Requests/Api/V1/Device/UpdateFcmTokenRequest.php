@@ -18,7 +18,7 @@ class UpdateFcmTokenRequest extends FormRequest
     {
         return [
             'device_id' => ['required', 'string', 'max:255'],
-            'token' => ['required', 'string', 'max:1000'],
+            'token' => ['required', 'string', 'max:1000', 'not_in:dummy_fcm_token'],
         ];
     }
 }

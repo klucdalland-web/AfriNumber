@@ -10,18 +10,8 @@ import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
 import 'core/localization/app_translations.dart';
 import 'core/localization/localization_service.dart';
+import 'core/services/firebase_notification_service.dart';
 import 'firebase_options.dart';
-
-/// Handler pour les messages FCM reçus en background (top-level requis).
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    debugPrint('[FCM Background] Message reçu: ${message.messageId}');
-  } catch (error, stackTrace) {
-    debugPrint('[FCM Background] Initialization failed: $error\n$stackTrace');
-  }
-}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +29,7 @@ Future<void> main() async {
 
   // Handler FCM background (doit être enregistré avant runApp)
   try {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   } catch (error, stackTrace) {
     debugPrint('FCM handler registration failed: $error\n$stackTrace');
   }

@@ -6,16 +6,18 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/constants/country_constants.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/services/firebase_notification_service.dart';
 import '../../../../core/utils/storage_service.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Contrôleur gérant les flux d'authentification (connexion, inscription, OTP, mot de passe oublié).
 class AuthController extends GetxController {
-  AuthController(this._repository, this._storage);
+  AuthController(this._repository, this._storage, this._notifications);
 
   final AuthRepository _repository;
   final StorageService _storage;
+  final FirebaseNotificationService _notifications;
 
   final isLoading = false.obs;
   final isVerifyingOtp = false.obs;
@@ -404,6 +406,8 @@ class AuthController extends GetxController {
       stopOtpTimer();
       await _storage.clearPendingOtp();
       isLoading.value = false;
+      // Token JWT dispo → synchronise le FCM token réel avec le backend.
+      _notifications.syncTokenWithBackend();
       Get.offAllNamed(
         otpPurpose == otpPurposeLogin
             ? AppRoutes.authFeedbackConnexion
