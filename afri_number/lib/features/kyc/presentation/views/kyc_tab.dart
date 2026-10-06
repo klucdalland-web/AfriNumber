@@ -86,15 +86,21 @@ class KycPage extends StatelessWidget {
         );
       case KycStep.verifying:
         return KycStatusStep(
-          isLoading: true,
+          variant: KycStatusVariant.loading,
           title: 'kyc.verifying.title'.tr,
           body: 'kyc.verifying.body'.tr,
         );
       case KycStep.verified:
         return KycStatusStep(
-          isLoading: false,
+          variant: KycStatusVariant.success,
           title: 'kyc.verified.title'.tr,
           body: 'kyc.verified.body'.tr,
+        );
+      case KycStep.rejected:
+        return KycStatusStep(
+          variant: KycStatusVariant.rejected,
+          title: 'kyc.rejected.title'.tr,
+          body: c.rejectionBody,
         );
     }
   }
@@ -119,6 +125,11 @@ class KycPage extends StatelessWidget {
               ? 'kyc.verified.continue'.tr
               : 'kyc.verified.buy'.tr,
           onPressed: c.onVerifiedContinue,
+        );
+      case KycStep.rejected:
+        return AppButton(
+          label: 'kyc.rejected.resubmit'.tr,
+          onPressed: c.resubmitDocuments,
         );
     }
   }

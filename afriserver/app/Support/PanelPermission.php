@@ -12,6 +12,14 @@ final class PanelPermission
 
     public const USERS_DELETE = 'users.delete';
 
+    public const CLIENTS_VIEW = 'clients.view';
+
+    public const CLIENTS_CREATE = 'clients.create';
+
+    public const CLIENTS_UPDATE = 'clients.update';
+
+    public const CLIENTS_DELETE = 'clients.delete';
+
     public const ORGANISATIONS_VIEW = 'organisations.view';
 
     public const ORGANISATIONS_CREATE = 'organisations.create';
@@ -130,6 +138,10 @@ final class PanelPermission
             self::USERS_CREATE,
             self::USERS_UPDATE,
             self::USERS_DELETE,
+            self::CLIENTS_VIEW,
+            self::CLIENTS_CREATE,
+            self::CLIENTS_UPDATE,
+            self::CLIENTS_DELETE,
             self::ORGANISATIONS_VIEW,
             self::ORGANISATIONS_CREATE,
             self::ORGANISATIONS_UPDATE,

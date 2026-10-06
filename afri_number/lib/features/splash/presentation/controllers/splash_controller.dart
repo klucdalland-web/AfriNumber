@@ -4,12 +4,14 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../core/services/firebase_notification_service.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/storage_service.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 
 class SplashController extends GetxController {
-  SplashController(this._storage, this._notifications);
+  SplashController(this._storage, this._notifications, this._authRepository);
 
   final StorageService _storage;
   final FirebaseNotificationService _notifications;
+  final AuthRepository _authRepository;
 
   @override
   void onInit() {
@@ -25,10 +27,8 @@ class SplashController extends GetxController {
 
   Future<void> _checkAuthentication() async {
     if (kDebugMode) {
-      print("_checkAuthentication: Vérification du token...");
+      print('_checkAuthentication: Vérification du token...');
     }
-
-    await Future.delayed(const Duration(seconds: 2));
 
     try {
       final pendingOtp = _storage.pendingOtp;
@@ -37,11 +37,21 @@ class SplashController extends GetxController {
               pendingOtp['purpose'] == 'register') &&
           pendingOtp['identifier'] is String &&
           (pendingOtp['identifier'] as String).isNotEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         Get.offAllNamed(AppRoutes.otpVerification);
         return;
       }
 
       if (_storage.hasToken) {
+        // Charge le statut serveur (KYC validé / non) avant de choisir l'écran.
+        await Future.wait<void>([
+          AuthNavigation.syncSessionBeforeRouting(
+            storage: _storage,
+            authRepository: _authRepository,
+          ),
+          Future<void>.delayed(const Duration(milliseconds: 800)),
+        ]);
+
         final destination = AuthNavigation.homeRoute(_storage);
         if (kDebugMode) {
           print(
@@ -52,8 +62,9 @@ class SplashController extends GetxController {
         _notifications.syncTokenWithBackend();
         Get.offAllNamed(destination);
       } else {
+        await Future<void>.delayed(const Duration(seconds: 2));
         if (kDebugMode) {
-          print("_checkAuthentication: Aucun token -> Redirection vers Welcome");
+          print('_checkAuthentication: Aucun token -> Redirection vers Welcome');
         }
         Get.offAllNamed(AppRoutes.welcome);
       }

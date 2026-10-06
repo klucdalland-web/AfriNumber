@@ -7,6 +7,8 @@ use App\Models\Profile;
 use App\Models\SessionUser;
 use App\Models\TypeNotification;
 use App\Models\User;
+use App\Models\UserNotification;
+use Database\Seeders\TypeNotificationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -19,6 +21,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     config(['services.internal.secret' => 'testing-internal-secret']);
+    $this->seed(TypeNotificationSeeder::class);
 });
 
 /**
@@ -121,6 +124,14 @@ test('approved verdict sends fcm with kyc_approved type', function (): void {
         'id' => $profile->id,
         'status' => 'approuve',
     ]);
+
+    $this->assertDatabaseHas('user_notifications', [
+        'user_id' => $profile->user_id,
+        'title' => 'OK',
+        'body' => 'Votre identité est validée.',
+    ]);
+
+    expect(UserNotification::query()->where('user_id', $profile->user_id)->count())->toBe(1);
 });
 
 test('rejected verdict sends fcm with kyc_rejected type and reason', function (): void {
@@ -157,6 +168,12 @@ test('rejected verdict sends fcm with kyc_rejected type and reason', function ()
         'id' => $profile->id,
         'status' => 'rejete',
     ]);
+
+    $this->assertDatabaseHas('user_notifications', [
+        'user_id' => $profile->user_id,
+        'title' => 'Vérification refusée',
+        'body' => 'Merci de renvoyer une photo plus nette.',
+    ]);
 });
 
 test('manual_review verdict sends fcm with kyc_manual_review type', function (): void {
@@ -188,7 +205,12 @@ test('manual_review verdict sends fcm with kyc_manual_review type', function ():
 
     $this->assertDatabaseHas('profiles', [
         'id' => $profile->id,
-        'status' => 'en_cours_de_verification',
+        'status' => 'validation_manuelle',
+    ]);
+
+    $this->assertDatabaseHas('user_notifications', [
+        'user_id' => $profile->user_id,
+        'title' => 'Vérification en cours',
     ]);
 });
 
@@ -212,6 +234,35 @@ test('kyc verdict still succeeds when fcm sending fails', function (): void {
         'id' => $profile->id,
         'status' => 'approuve',
     ]);
+
+    // Inbox créée même si le push FCM échoue.
+    expect(UserNotification::query()->where('user_id', $profile->user_id)->count())->toBe(1);
+});
+
+test('kyc verdict creates inbox notification even without fcm token', function (): void {
+    $user = User::factory()->create(['statut' => 'actif']);
+    $profile = Profile::query()->create([
+        'user_id' => $user->id,
+        'status' => 'en_cours_de_verification',
+    ]);
+
+    $this->mock(Messaging::class, function (MockInterface $mock): void {
+        $mock->shouldNotReceive('sendMulticast');
+    });
+
+    $this->postJson('/api/v1/n8n/kyc-callback', [
+        'profile_id' => $profile->id,
+        'kyc_status' => 'rejected',
+        'reason' => 'Pièce expirée',
+    ], kycSignedHeaders($profile->id))
+        ->assertOk()
+        ->assertJsonPath('statut', 'succes');
+
+    $this->assertDatabaseHas('user_notifications', [
+        'user_id' => $user->id,
+        'title' => 'Vérification refusée',
+        'body' => 'Pièce expirée',
+    ]);
 });
 
 test('rejects kyc callback with invalid signature', function (): void {
@@ -226,4 +277,6 @@ test('rejects kyc callback with invalid signature', function (): void {
         'kyc_status' => 'approved',
     ], ['X-Signature' => 'invalid'])
         ->assertForbidden();
+
+    expect(UserNotification::query()->count())->toBe(0);
 });
