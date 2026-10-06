@@ -89,6 +89,13 @@ class StorageService {
   /// Efface le numéro mémorisé.
   Future<void> clearRememberedPhone() => remove(StorageKeys.rememberedPhone);
 
+  /// Code ISO pays préféré (sélection précédente ou inscription).
+  String? get preferredCountryCode =>
+      read<String>(StorageKeys.preferredCountryCode);
+
+  Future<void> savePreferredCountryCode(String code) =>
+      write(StorageKeys.preferredCountryCode, code.trim().toUpperCase());
+
   Map<String, dynamic>? get pendingOtp {
     final value = read(StorageKeys.pendingOtp);
     return value is Map ? Map<String, dynamic>.from(value) : null;
