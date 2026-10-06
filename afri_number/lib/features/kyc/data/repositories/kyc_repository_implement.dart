@@ -18,12 +18,14 @@ class KycRepositoryImpl implements KycRepository {
   @override
   Future<KycProfile> initVerification() async {
     final KycProfile profile = await _remote.initVerification();
-    if (!profile.isAuthorized) {
-      throw KycException(
-        message: profile.message.isEmpty ? null : profile.message,
-      );
+    if (profile.isAuthorized ||
+        profile.isAlreadyPending ||
+        profile.isAlreadyApproved) {
+      return profile;
     }
-    return profile;
+    throw KycException(
+      message: profile.message.isEmpty ? null : profile.message,
+    );
   }
 
   @override
@@ -39,6 +41,10 @@ class KycRepositoryImpl implements KycRepository {
         frontPath: frontPath,
         backPath: backPath,
       );
+
+  @override
+  Future<KycVerification> getCurrentVerificationStatus() =>
+      _remote.fetchCurrentStatus();
 
   @override
   Future<KycVerification> getVerificationStatus({

@@ -95,6 +95,9 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
 
     // Route pour le Mobile (Nécessite que l'utilisateur soit connecté à son appli)
 
-    Route::middleware('auth:sanctum')->post('/verifier/init', [ProfileVerificationController::class, 'initialiserVerification']);
-
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::post('/verifier/init', [ProfileVerificationController::class, 'initialiserVerification']);
+        Route::get('/verifier/status', [ProfileVerificationController::class, 'statutVerification']);
+        Route::get('/verifier/status/{profile_id}', [ProfileVerificationController::class, 'statutVerificationParId']);
+    });
 });

@@ -124,13 +124,15 @@ class KycController extends GetxController {
   bool get showProgress =>
       step.value != KycStep.verifying && step.value != KycStep.verified;
 
-  /// Charge la liste des pièces acceptées.
+  /// Charge les pièces et reprend l'écran d'attente si une demande est en cours.
   Future<void> load() async {
     if (isLoading.value) return;
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      documentTypes.assignAll(await _repository.getDocumentTypes());
+      final typesFuture = _repository.getDocumentTypes();
+      await _resumeIfPending();
+      documentTypes.assignAll(await typesFuture);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
     } catch (_) {
@@ -138,6 +140,36 @@ class KycController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Si `non_valide` et dossier déjà ouvert → écran attente (ou verified).
+  Future<void> _resumeIfPending() async {
+    if (!isBlockedUntilValidated) return;
+    try {
+      final KycVerification current =
+          await _repository.getCurrentVerificationStatus();
+      if (current.isApproved) {
+        _profileId = current.reference.isEmpty ? null : current.reference;
+        step.value = KycStep.verified;
+        return;
+      }
+      if (current.isPending && current.reference.isNotEmpty) {
+        _enterWaiting(current.reference);
+      }
+    } catch (_) {
+      // Pas de statut : on laisse le parcours classique (choix de pièce).
+    }
+  }
+
+  /// Affiche « Vérification en cours » et démarre le polling.
+  void _enterWaiting(String profileId) {
+    _profileId = profileId;
+    verification.value = KycVerification(
+      status: 'pending',
+      reference: profileId,
+    );
+    step.value = KycStep.verifying;
+    _startPolling();
   }
 
   /// Sélectionne une pièce (le verso déjà pris est oublié si la pièce change).
@@ -250,6 +282,8 @@ class KycController extends GetxController {
   }
 
   /// Ouvre le ticket (une seule fois), envoie les 3 fichiers, lance le suivi.
+  ///
+  /// Si Laravel refuse (`demande déjà en cours`) → écran d'attente, pas d'erreur.
   Future<void> _submit(KycDocumentType type) async {
     final String? front = frontPath.value;
     final String? face = facePath.value;
@@ -263,6 +297,15 @@ class KycController extends GetxController {
     String? profileId = _profileId;
     if (profileId == null) {
       final KycProfile profile = await _repository.initVerification();
+      if (profile.isAlreadyApproved) {
+        _profileId = profile.profileId;
+        step.value = KycStep.verified;
+        return;
+      }
+      if (profile.isAlreadyPending) {
+        _enterWaiting(profile.profileId);
+        return;
+      }
       profileId = profile.profileId;
       _profileId = profileId;
     }
@@ -274,12 +317,7 @@ class KycController extends GetxController {
       backPath: back,
     );
 
-    verification.value = KycVerification(
-      status: 'pending',
-      reference: profileId,
-    );
-    step.value = KycStep.verifying;
-    _startPolling();
+    _enterWaiting(profileId);
   }
 
   /// Lance l'interrogation périodique du statut du dossier.

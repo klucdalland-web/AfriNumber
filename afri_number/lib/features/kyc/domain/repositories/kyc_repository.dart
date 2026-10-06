@@ -21,7 +21,11 @@ abstract class KycRepository {
 
   /// Ouvre un ticket de vérification et retourne le profil créé.
   ///
-  /// Lève [KycException] si le serveur n'autorise pas la vérification.
+  /// Peut aussi renvoyer un profil `refuse` avec `profile_id` si une demande
+  /// est déjà en cours ou déjà approuvée ([KycProfile.isAlreadyPending] /
+  /// [KycProfile.isAlreadyApproved]).
+  ///
+  /// Lève [KycException] uniquement pour les autres refus / erreurs.
   Future<KycProfile> initVerification();
 
   /// Envoie les documents du dossier [profileId] en un seul appel.
@@ -33,6 +37,9 @@ abstract class KycRepository {
     required String frontPath,
     String? backPath,
   });
+
+  /// Statut KYC du compte connecté (sans `profile_id`) — reprise app.
+  Future<KycVerification> getCurrentVerificationStatus();
 
   /// Retourne le statut courant du dossier [profileId].
   Future<KycVerification> getVerificationStatus({required String profileId});

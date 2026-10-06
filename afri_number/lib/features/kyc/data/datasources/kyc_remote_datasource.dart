@@ -30,12 +30,31 @@ class KycRemoteDataSource {
   final Dio _express;
 
   /// POST `/verifier/init` : `{ statut, profile_id, message }`.
-  /// POST `/verifier/init` : `{ statut, profile_id, message }`.
+  ///
+  /// Un 409/400 `statut: refuse` avec `profile_id` est renvoyé comme
+  /// [KycProfile] (demande déjà en cours / déjà approuvée), pas comme erreur.
   Future<KycProfile> initVerification() async {
-    final res = await _laravel(
-      () => _client.post<Map<String, dynamic>>(ApiConstants.kycInit),
-    );
-    return KycProfile.fromJson(res.data ?? <String, dynamic>{});
+    try {
+      final res = await _client.post<Map<String, dynamic>>(ApiConstants.kycInit);
+      return KycProfile.fromJson(res.data ?? <String, dynamic>{});
+    } on DioException catch (e) {
+      final profile = _refuseProfileFromError(e);
+      if (profile != null) return profile;
+      final Object? inner = e.error;
+      if (inner is ApiException) throw inner;
+      throw KycException(message: _serverMessage(e));
+    }
+  }
+
+  /// Parse un corps `refuse` (409/400) en [KycProfile], sinon `null`.
+  KycProfile? _refuseProfileFromError(DioException e) {
+    final int? code = e.response?.statusCode;
+    if (code != 409 && code != 400) return null;
+    final dynamic body = e.response?.data;
+    if (body is! Map) return null;
+    final profile = KycProfile.fromJson(Map<String, dynamic>.from(body));
+    if (profile.status != 'refuse' || profile.profileId.isEmpty) return null;
+    return profile;
   }
 
   Future<Response<T>> _laravel<T>(Future<Response<T>> Function() call) async {
@@ -109,21 +128,36 @@ class KycRemoteDataSource {
     };
   }
 
-  /// GET du statut (endpoint à confirmer).
+  /// GET `/verifier/status` — statut du dossier de l'utilisateur connecté.
+  Future<KycVerification> fetchCurrentStatus() async {
+    final res = await _laravel(
+      () => _client.get<Map<String, dynamic>>(ApiConstants.kycStatus),
+    );
+    return _verificationFromBody(res.data);
+  }
+
+  /// GET `/verifier/status/{profileId}`.
   Future<KycVerification> fetchStatus({required String profileId}) async {
     final res = await _laravel(
       () => _client.get<Map<String, dynamic>>(
         '${ApiConstants.kycStatus}/$profileId',
       ),
     );
-    final Map<String, dynamic> body = res.data ?? <String, dynamic>{};
+    return _verificationFromBody(res.data, fallbackReference: profileId);
+  }
+
+  KycVerification _verificationFromBody(
+    Map<String, dynamic>? data, {
+    String? fallbackReference,
+  }) {
+    final Map<String, dynamic> body = data ?? <String, dynamic>{};
     final dynamic inner = body['data'];
     final Map<String, dynamic> json = inner is Map<String, dynamic>
         ? inner
         : body;
     return KycVerification.fromJson(<String, dynamic>{
       ...json,
-      'reference': profileId,
+      'reference': ?fallbackReference,
     });
   }
 

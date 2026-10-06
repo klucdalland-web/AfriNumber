@@ -55,7 +55,7 @@ class ErrorInterceptor extends Interceptor {
         errors = Map<String, dynamic>.from(rawErrors);
       }
 
-      final rawMessage = data['message'];
+      final rawMessage = data['message'] ?? data['erreur'] ?? data['error'];
       if (rawMessage is String && rawMessage.trim().isNotEmpty) {
         message = rawMessage.trim();
       }

@@ -58,11 +58,13 @@ class ProfileVerificationController extends Controller
             // 2. Sécurité : Vérifier si une validation n'est pas déjà en cours
             $profilExistant = Profile::where('user_id', $user->id)->first();
 
-            if ($profilExistant && in_array($profilExistant->status, ['en_cours_de_verification', 'approuve'])) {
+            if ($profilExistant && in_array($profilExistant->status, ['en_cours_de_verification', 'approuve'], true)) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Une vérification est déjà en cours ou votre compte est déjà approuvé.',
-                ], 400);
+                    'profile_id' => $profilExistant->id,
+                    'profile_status' => $profilExistant->status,
+                ], 409);
             }
 
             // 3. Initialisation ou réinitialisation du ticket de profil (les anciens documents sont effacés)
@@ -79,6 +81,7 @@ class ProfileVerificationController extends Controller
             return response()->json([
                 'statut' => 'autorise',
                 'profile_id' => $profil->id,
+                'profile_status' => $profil->status,
                 'message' => 'Ticket de validation ouvert. Veuillez transmettre cet ID à Express lors de l\'upload.',
             ], 200);
 
@@ -91,6 +94,72 @@ class ProfileVerificationController extends Controller
                 'erreur' => 'Impossible d\'ouvrir un ticket de validation. Problème technique temporaire.',
             ], 500);
         }
+    }
+
+    /**
+     * Statut KYC du profil de l'utilisateur connecté (reprise app / écran d'attente).
+     */
+    public function statutVerification(Request $request)
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return response()->json([
+                'statut' => 'refuse',
+                'erreur' => 'Utilisateur non authentifié.',
+            ], 401);
+        }
+
+        $profil = Profile::where('user_id', $user->id)->first();
+
+        if (! $profil) {
+            return response()->json([
+                'statut' => 'aucun',
+                'profile_id' => null,
+                'profile_status' => null,
+                'status_valide' => $user->status_valide,
+            ], 200);
+        }
+
+        return response()->json([
+            'statut' => $profil->status,
+            'profile_id' => $profil->id,
+            'profile_status' => $profil->status,
+            'status_valide' => $user->status_valide,
+        ], 200);
+    }
+
+    /**
+     * Statut d'un dossier KYC (propriétaire uniquement).
+     */
+    public function statutVerificationParId(Request $request, string $profile_id)
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return response()->json([
+                'statut' => 'refuse',
+                'erreur' => 'Utilisateur non authentifié.',
+            ], 401);
+        }
+
+        $profil = Profile::where('id', $profile_id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $profil) {
+            return response()->json([
+                'statut' => 'refuse',
+                'erreur' => 'Dossier de vérification introuvable.',
+            ], 404);
+        }
+
+        return response()->json([
+            'statut' => $profil->status,
+            'profile_id' => $profil->id,
+            'profile_status' => $profil->status,
+            'status_valide' => $user->status_valide,
+        ], 200);
     }
 
     /**
@@ -303,6 +372,13 @@ class ProfileVerificationController extends Controller
             }
 
             $profil->save();
+
+            // Synchronise le compte utilisateur quand le KYC est tranché
+            if ($request->kyc_status === 'approved') {
+                $profil->user?->update(['status_valide' => 'valide']);
+            } elseif ($request->kyc_status === 'rejected') {
+                $profil->user?->update(['status_valide' => 'non_valide']);
+            }
 
             // 🧹 3 bis. Décision prise : suppression des documents (pas en revue manuelle)
             if (in_array($request->kyc_status, ['approved', 'rejected'])) {
