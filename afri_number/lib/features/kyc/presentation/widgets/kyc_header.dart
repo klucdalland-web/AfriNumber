@@ -6,13 +6,21 @@ import '../../../../core/responsive/responsive.dart';
 /// En-tête du parcours KYC : retour, titre centré, bouton info.
 class KycHeader extends StatelessWidget {
   /// Crée l'en-tête.
-  const KycHeader({super.key, required this.onBack, required this.onInfo});
+  const KycHeader({
+    super.key,
+    required this.onBack,
+    required this.onInfo,
+    this.showBack = true,
+  });
 
   /// Action du bouton retour.
   final VoidCallback onBack;
 
   /// Action du bouton info.
   final VoidCallback onInfo;
+
+  /// Affiche le bouton retour (masqué pendant le blocus KYC sur l'étape initiale).
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +34,14 @@ class KycHeader extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.chevron_left),
-            color: scheme.onSurface,
-          ),
+          if (showBack)
+            IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.chevron_left),
+              color: scheme.onSurface,
+            )
+          else
+            SizedBox(width: r.space(48)),
           Expanded(
             child: Text(
               'kyc.title'.tr,

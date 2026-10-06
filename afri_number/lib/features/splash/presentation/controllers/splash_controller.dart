@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/services/firebase_notification_service.dart';
+import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/storage_service.dart';
 
 class SplashController extends GetxController {
@@ -41,12 +42,15 @@ class SplashController extends GetxController {
       }
 
       if (_storage.hasToken) {
+        final destination = AuthNavigation.homeRoute(_storage);
         if (kDebugMode) {
-          print("_checkAuthentication: Token trouvé -> Redirection vers Main");
+          print(
+            '_checkAuthentication: Token trouvé -> Redirection vers $destination',
+          );
         }
         // Fire-and-forget : ne bloque pas la navigation.
         _notifications.syncTokenWithBackend();
-        Get.offAllNamed(AppRoutes.main);
+        Get.offAllNamed(destination);
       } else {
         if (kDebugMode) {
           print("_checkAuthentication: Aucun token -> Redirection vers Welcome");

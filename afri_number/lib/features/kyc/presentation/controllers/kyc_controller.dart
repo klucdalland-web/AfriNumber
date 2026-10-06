@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/utils/auth_navigation.dart';
 import '../../domain/models/kyc_document_type.dart';
 import '../../domain/models/kyc_profile.dart';
 import '../../domain/models/kyc_progress_status.dart';
@@ -78,6 +79,17 @@ class KycController extends GetxController {
 
   /// Dernier statut du dossier soumis.
   final Rxn<KycVerification> verification = Rxn<KycVerification>();
+
+  /// `true` tant que le compte n'est pas validé : sortie vers Main interdite.
+  bool get isBlockedUntilValidated => !AuthNavigation.isUserValidated();
+
+  /// Bouton retour visible uniquement pour naviguer entre étapes (ou quitter si déjà validé).
+  bool get canShowBackButton {
+    if (!isBlockedUntilValidated) return true;
+    return step.value == KycStep.front ||
+        step.value == KycStep.back ||
+        step.value == KycStep.face;
+  }
 
   @override
   void onInit() {
@@ -196,14 +208,20 @@ class KycController extends GetxController {
     }
   }
 
-  /// Revient à l'étape précédente, ou quitte la page.
+  /// Revient à l'étape précédente. Ne quitte pas le KYC si le compte n'est pas validé.
   void goBack() {
     if (isBusy.value) return;
     errorMessage.value = null;
     switch (step.value) {
       case KycStep.choose:
       case KycStep.verifying:
+        if (isBlockedUntilValidated) return;
+        Get.back<void>();
       case KycStep.verified:
+        if (isBlockedUntilValidated) {
+          unawaited(enterAppAfterValidation());
+          return;
+        }
         Get.back<void>();
       case KycStep.front:
         step.value = KycStep.choose;
@@ -216,13 +234,20 @@ class KycController extends GetxController {
     }
   }
 
-  /// Quitte le parcours pour revenir à l'accueil.
-  void goHome() => Get.until((route) => route.isFirst);
+  /// Après validation KYC : met à jour le statut local et ouvre Main.
+  Future<void> enterAppAfterValidation() =>
+      AuthNavigation.completeKycAndEnterApp();
 
-  /// Redirige vers l'achat d'un numéro.
-  ///
-  /// À remplacer par la route d'achat dès qu'elle existe.
-  void onBuyNumber() => goHome();
+  /// Quitte le parcours pour revenir à l'accueil (interdit si non validé).
+  void goHome() {
+    if (isBlockedUntilValidated) return;
+    AuthNavigation.goToHome();
+  }
+
+  /// CTA post-vérification : débloque l'app (statut local `valide`) puis Main.
+  void onVerifiedContinue() {
+    unawaited(enterAppAfterValidation());
+  }
 
   /// Ouvre le ticket (une seule fois), envoie les 3 fichiers, lance le suivi.
   Future<void> _submit(KycDocumentType type) async {

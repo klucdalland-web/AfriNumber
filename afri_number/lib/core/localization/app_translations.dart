@@ -200,6 +200,7 @@ class AppTranslations extends Translations {
       'kyc.verified.title': 'Identité vérifiée',
       'kyc.verified.body':
           'Votre identité a été confirmée. Vous pouvez continuer.',
+      'kyc.verified.continue': 'Continuer',
       'kyc.verified.buy': 'Acheter un numéro',
       'kyc.rejected': 'La vérification a échoué. Vous pouvez réessayer.',
       'kyc.err': 'Une erreur est survenue pendant la vérification.',
@@ -553,6 +554,7 @@ class AppTranslations extends Translations {
       'kyc.verified.title': 'Identity verified',
       'kyc.verified.body':
           'Your identity has been confirmed. You can continue.',
+      'kyc.verified.continue': 'Continue',
       'kyc.verified.buy': 'Buy a number',
       'kyc.rejected': 'Verification failed. You can try again.',
       'kyc.err': 'An error occurred during verification.',
