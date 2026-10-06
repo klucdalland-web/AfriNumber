@@ -191,3 +191,36 @@ test('processor marks push delivery as no_token when user has no devices', funct
         ->toBe(NotificationDelivery::STATUS_NO_TOKEN)
         ->and($campaign->fresh()->status)->toBe(NotificationCampaign::STATUS_COMPLETED);
 });
+
+test('processor marks push delivery as failed when FCM accepts zero tokens', function (): void {
+    campaignUserWithDevice('bad-token');
+    $type = TypeNotification::query()->where('code', TypeNotification::CODE_ALERT)->firstOrFail();
+
+    $campaign = NotificationCampaign::query()->create([
+        'type_notification_id' => $type->id,
+        'channels' => [NotificationCampaign::CHANNEL_PUSH],
+        'audience_type' => NotificationCampaign::AUDIENCE_ALL_USERS,
+        'device_scope' => NotificationCampaign::DEVICE_SCOPE_ALL,
+        'title' => 'Push',
+        'body' => 'Token mort',
+        'status' => NotificationCampaign::STATUS_QUEUED,
+    ]);
+
+    $this->mock(Messaging::class, function (MockInterface $mock): void {
+        $mock->shouldReceive('sendMulticast')
+            ->once()
+            ->andReturn(MulticastSendReport::withItems([
+                SendReport::failure(
+                    MessageTarget::with(MessageTarget::TOKEN, 'bad-token'),
+                    new \Kreait\Firebase\Exception\Messaging\NotFound('Requested entity was not found.'),
+                ),
+            ]));
+    });
+
+    $stats = app(NotificationCampaignProcessor::class)->process(20);
+
+    expect($stats['failed'])->toBe(1)
+        ->and(NotificationDelivery::query()->where('notification_campaign_id', $campaign->id)->value('status'))
+        ->toBe(NotificationDelivery::STATUS_FAILED)
+        ->and($campaign->fresh()->status)->toBe(NotificationCampaign::STATUS_COMPLETED);
+});

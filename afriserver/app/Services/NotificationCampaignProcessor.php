@@ -227,8 +227,33 @@ class NotificationCampaignProcessor
             return 'no_token';
         }
 
+        // Avant : on marquait "sent" même si Firebase refusait tous les tokens
+        // (credentials prod absents / mauvais projet → succès=0, téléphone = rien).
+        $successCount = $report->successes()->count();
+        $failureCount = $report->failures()->count();
+
+        if ($successCount === 0) {
+            $firstError = null;
+            foreach ($report->failures() as $failure) {
+                $firstError = $failure->error()?->getMessage();
+                break;
+            }
+
+            $delivery->update([
+                'status' => NotificationDelivery::STATUS_FAILED,
+                'error_message' => $firstError
+                    ?? "FCM: 0 succès / {$failureCount} échec(s). Vérifier FIREBASE_CREDENTIALS sur le serveur.",
+                'processed_at' => now(),
+            ]);
+
+            return 'failed';
+        }
+
         $delivery->update([
             'status' => NotificationDelivery::STATUS_SENT,
+            'error_message' => $failureCount > 0
+                ? "Partiel: {$successCount} ok, {$failureCount} échec(s)."
+                : null,
             'processed_at' => now(),
         ]);
 

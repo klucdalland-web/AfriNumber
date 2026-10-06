@@ -28,19 +28,6 @@ EOF
 
 echo "Listening on 0.0.0.0:${PORT}"
 
-# Render Secret File is root-only; php-fpm runs as www-data and needs a readable copy.
-FIREBASE_SECRET_SRC="/etc/secrets/credentials.json"
-FIREBASE_SECRET_DST="/var/www/html/storage/app/firebase/credentials.json"
-if [ -f "$FIREBASE_SECRET_SRC" ]; then
-  mkdir -p /var/www/html/storage/app/firebase
-  cp "$FIREBASE_SECRET_SRC" "$FIREBASE_SECRET_DST"
-  chown www-data:www-data "$FIREBASE_SECRET_DST"
-  chmod 640 "$FIREBASE_SECRET_DST"
-  echo "Firebase credentials prepared for php-fpm (www-data)"
-else
-  echo "Firebase secret file not found at ${FIREBASE_SECRET_SRC}; skipping copy"
-fi
-
 # Évite migrate avec les defaults Laravel (127.0.0.1 / laravel)
 if [ -z "${DB_HOST:-}" ] || [ -z "${DB_DATABASE:-}" ] || [ -z "${DB_USERNAME:-}" ] || [ -z "${DB_PASSWORD:-}" ]; then
   echo "ERROR: variables DB manquantes. Sur Render, définis au minimum :"

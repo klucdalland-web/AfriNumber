@@ -1,4 +1,6 @@
 *
 !private/
 !public/
+!firebase/
+!firebase/credentials.json
 !.gitignore
