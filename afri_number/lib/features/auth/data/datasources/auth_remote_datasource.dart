@@ -114,11 +114,7 @@ class AuthRemoteDataSource {
         'email': email,
         'code': code,
         'password': newPassword,
-<<<<<<< HEAD
-        'password_confirmation': newPassword,
-=======
         'password_confirmation': passwordConfirmation,
->>>>>>> e04c6dc427fe99aea3bc65f23f8ae82d007e5651
       },
     );
     return Map<String, dynamic>.from(response.data as Map);

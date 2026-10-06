@@ -234,7 +234,7 @@ class AppTranslations extends Translations {
       'kyc.quality.content_unclear': 'Le contenu semble difficile à lire. Cadrez le document et réessayez.',
       'kyc.info.title': 'Vérification d’identité',
       'kyc.info.body': 'Prenez des photos nettes et lisibles de vos documents. Ces informations servent à confirmer votre identité.',
-      'kyc.info.close': 'Compris',git a
+      'kyc.info.close': 'Compris',
 
       // ── Dashboard ──
       'dashboard.notifications': 'Notifications',

@@ -16,7 +16,7 @@ class ApiConstants {
   static const String expressBaseUrl = String.fromEnvironment(
     'EXPRESS_BASE_URL',
     // Development Express service hosted on the PC's local network address.
-    defaultValue: 'http://192.168.5.121:3000',
+    defaultValue: 'https://traitement-de-fichiers.onrender.com',
   );
 
   /// Upload multipart des documents (Express).
