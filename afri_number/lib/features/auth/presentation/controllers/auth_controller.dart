@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/constants/country_constants.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/services/firebase_notification_service.dart';
+import '../../../../core/utils/country_iso_mapper.dart';
 import '../../../../core/utils/storage_service.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -23,10 +25,14 @@ class AuthController extends GetxController {
   final isVerifyingOtp = false.obs;
   final rememberMe = false.obs;
 
+  /// Connexion : téléphone (défaut) ou e-mail.
+  final loginWithEmail = false.obs;
+
   // Pays
   final countries = <CountryData>[].obs;
   final selectedCountry = Rxn<CountryData>();
   final isLoadingCountries = false.obs;
+  final countriesLoadFailed = false.obs;
 
   final loginFormKey = GlobalKey<FormState>();
   final registerFormKey = GlobalKey<FormState>();
@@ -36,12 +42,13 @@ class AuthController extends GetxController {
   // Login controllers
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
+  late final PhoneController loginPhoneController;
 
   // Contrôleurs du formulaire d'inscription
   final lastNameController = TextEditingController();
   final firstNameController = TextEditingController();
   final emailController = TextEditingController();
-  final registerPhoneController = TextEditingController();
+  late final PhoneController registerPhoneController;
   final registerPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -90,16 +97,43 @@ class AuthController extends GetxController {
   final errorMessage = ''.obs;
   Timer? _errorTimer;
 
+  List<IsoCode> get allowedIsoCodes =>
+      CountryIsoMapper.allowedFrom(countries);
+
   @override
   void onInit() {
     super.onInit();
+    loginPhoneController = PhoneController();
+    registerPhoneController = PhoneController();
+
     final remembered = _storage.rememberedPhone;
     if (remembered != null && remembered.isNotEmpty) {
-      phoneController.text = remembered;
       rememberMe.value = true;
+      _applyLoginIdentifier(remembered);
     }
     _restorePendingOtp();
     loadCountries();
+  }
+
+  void _applyLoginIdentifier(String identifier) {
+    final trimmed = identifier.trim();
+    if (trimmed.contains('@')) {
+      loginWithEmail.value = true;
+      phoneController.text = trimmed;
+      return;
+    }
+
+    loginWithEmail.value = false;
+    try {
+      loginPhoneController.value = PhoneNumber.parse(trimmed);
+    } catch (_) {
+      phoneController.text = trimmed;
+      loginWithEmail.value = true;
+    }
+  }
+
+  void setLoginWithEmail(bool value) {
+    loginWithEmail.value = value;
   }
 
   void _restorePendingOtp() {
@@ -108,14 +142,15 @@ class AuthController extends GetxController {
     final purpose = pending['purpose'];
     final identifier = pending['identifier'];
     if ((purpose != otpPurposeLogin && purpose != otpPurposeRegister) ||
-        identifier is! String || identifier.isEmpty) {
+        identifier is! String ||
+        identifier.isEmpty) {
       _storage.clearPendingOtp();
       return;
     }
 
     otpPurpose = purpose as String;
     if (otpPurpose == otpPurposeLogin) {
-      phoneController.text = identifier;
+      _applyLoginIdentifier(identifier);
     } else {
       emailController.text = identifier;
     }
@@ -127,11 +162,10 @@ class AuthController extends GetxController {
   }
 
   Future<void> _savePendingOtp() => _storage.savePendingOtp(
-    purpose: otpPurpose,
-    identifier: _otpIdentifier ?? '',
-    expiresAtMillis: (_otpExpiresAt ?? DateTime.now())
-        .millisecondsSinceEpoch,
-  );
+        purpose: otpPurpose,
+        identifier: _otpIdentifier ?? '',
+        expiresAtMillis: (_otpExpiresAt ?? DateTime.now()).millisecondsSinceEpoch,
+      );
 
   @override
   void onClose() {
@@ -139,6 +173,7 @@ class AuthController extends GetxController {
     _otpTimer?.cancel();
     phoneController.dispose();
     passwordController.dispose();
+    loginPhoneController.dispose();
     lastNameController.dispose();
     firstNameController.dispose();
     emailController.dispose();
@@ -175,36 +210,42 @@ class AuthController extends GetxController {
 
   void toggleRememberMe(bool value) => rememberMe.value = value;
 
-  /// Normalise le numéro de téléphone au format international.
-  String getNormalizedPhone(String rawInput) {
-    var text = rawInput.trim().replaceAll(' ', '').replaceAll('-', '');
-    if (text.isEmpty) return '';
+  /// Numéro E.164 sans espaces ni tirets (ex. `+242060000000`).
+  String toE164(PhoneNumber number) => number.international;
 
-    if (text.startsWith('+')) {
-      final current = selectedCountry.value;
-      if (current != null && text.startsWith(current.dialCode)) return text;
-
-      for (final country in countries) {
-        if (text.startsWith(country.dialCode)) {
-          selectedCountry.value = country;
-          return text;
-        }
-      }
-      return text;
+  void onPhoneChanged(PhoneNumber number) {
+    final match = CountryIsoMapper.findCountry(countries, number.isoCode);
+    if (match == null) return;
+    if (selectedCountry.value?.id != match.id) {
+      selectedCountry.value = match;
+      _storage.savePreferredCountryCode(match.code);
     }
+  }
 
-    if (text.startsWith('0')) {
-      text = text.substring(1);
+  void _applyDefaultCountryToPhoneControllers(CountryData country) {
+    final iso = CountryIsoMapper.tryParse(country.code);
+    if (iso == null) return;
+    if (loginPhoneController.value.nsn.trim().isEmpty &&
+        loginPhoneController.value.isoCode != iso) {
+      loginPhoneController.changeCountry(iso);
     }
-
-    final dial = selectedCountry.value?.dialCode ?? '';
-    return '$dial$text';
+    if (registerPhoneController.value.nsn.trim().isEmpty &&
+        registerPhoneController.value.isoCode != iso) {
+      registerPhoneController.changeCountry(iso);
+    }
   }
 
   String? get _otpIdentifier {
-    final value = otpPurpose == otpPurposeLogin
-        ? phoneController.text.trim()
-        : emailController.text.trim();
+    if (otpPurpose == otpPurposeLogin) {
+      if (loginWithEmail.value) {
+        final value = phoneController.text.trim();
+        return value.isNotEmpty ? value : null;
+      }
+      final number = loginPhoneController.value;
+      if (number.nsn.trim().isEmpty) return null;
+      return toE164(number);
+    }
+    final value = emailController.text.trim();
     return value.isNotEmpty ? value : null;
   }
 
@@ -264,15 +305,56 @@ class AuthController extends GetxController {
   Future<void> loadCountries() async {
     if (isLoadingCountries.value) return;
     isLoadingCountries.value = true;
+    countriesLoadFailed.value = false;
     try {
       final list = await _repository.getCountries();
       countries.assignAll(list);
-      if (list.isNotEmpty) {
-        selectedCountry.value =
-            list.firstWhereOrNull((c) => c.code == 'MG') ?? list.first;
+
+      if (list.isEmpty) {
+        selectedCountry.value = null;
+        return;
+      }
+
+      // Numéro déjà saisi (ex. « se souvenir de moi ») → conserve son pays.
+      if (loginPhoneController.value.nsn.trim().isNotEmpty) {
+        final fromPhone = CountryIsoMapper.findCountry(
+          list,
+          loginPhoneController.value.isoCode,
+        );
+        if (fromPhone != null) {
+          selectedCountry.value = fromPhone;
+          final iso = CountryIsoMapper.tryParse(fromPhone.code);
+          if (iso != null && registerPhoneController.value.nsn.isEmpty) {
+            registerPhoneController.changeCountry(iso);
+          }
+          return;
+        }
+      }
+
+      final preferredCode = _storage.preferredCountryCode;
+      final preferred = preferredCode == null
+          ? null
+          : list.firstWhereOrNull((c) => c.code == preferredCode);
+      final current = selectedCountry.value;
+      final stillValid = current != null &&
+          list.any((c) => c.id == current.id) &&
+          CountryIsoMapper.tryParse(current.code) != null;
+
+      final chosen = stillValid
+          ? list.firstWhere((c) => c.id == current.id)
+          : preferred ??
+              list.firstWhereOrNull(
+                (c) => CountryIsoMapper.tryParse(c.code) != null,
+              ) ??
+              list.first;
+
+      selectedCountry.value = chosen;
+      if (CountryIsoMapper.tryParse(chosen.code) != null) {
+        _applyDefaultCountryToPhoneControllers(chosen);
       }
     } catch (_) {
-      setError('error.countries_load_failed'.tr);
+      countriesLoadFailed.value = true;
+      countries.clear();
     } finally {
       isLoadingCountries.value = false;
     }
@@ -287,7 +369,13 @@ class AuthController extends GetxController {
     isLoading.value = true;
 
     try {
-      final identifier = phoneController.text.trim();
+      final String identifier;
+      if (loginWithEmail.value) {
+        identifier = phoneController.text.trim();
+      } else {
+        identifier = toE164(loginPhoneController.value);
+        onPhoneChanged(loginPhoneController.value);
+      }
       final password = passwordController.text;
 
       await _repository.login(email: identifier, password: password);
@@ -319,7 +407,11 @@ class AuthController extends GetxController {
     if (isLoading.value) return;
     if (!(registerFormKey.currentState?.validate() ?? false)) return;
 
-    final country = selectedCountry.value;
+    final phoneNumber = registerPhoneController.value;
+    onPhoneChanged(phoneNumber);
+
+    final country = selectedCountry.value ??
+        CountryIsoMapper.findCountry(countries, phoneNumber.isoCode);
     if (country == null) {
       setError('error.country_required'.tr);
       return;
@@ -332,9 +424,7 @@ class AuthController extends GetxController {
       final name = lastNameController.text.trim();
       final firstName = firstNameController.text.trim();
       final email = emailController.text.trim();
-      final rawPhone = registerPhoneController.text.trim();
-      final phoneNumber = getNormalizedPhone(rawPhone);
-      registerPhoneController.text = phoneNumber;
+      final e164 = toE164(phoneNumber);
       final password = registerPasswordController.text;
       final passwordConfirmation = confirmPasswordController.text;
 
@@ -342,11 +432,13 @@ class AuthController extends GetxController {
         name: name,
         firstName: firstName,
         email: email,
-        phoneNumber: phoneNumber,
+        phoneNumber: e164,
         countryId: country.id,
         password: password,
         passwordConfirmation: passwordConfirmation,
       );
+
+      await _storage.savePreferredCountryCode(country.code);
 
       otpPurpose = otpPurposeRegister;
       otpResendCount.value = 0;

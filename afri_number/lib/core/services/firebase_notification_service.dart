@@ -115,13 +115,23 @@ class FirebaseNotificationService {
     try {
       final cached = _storage.fcmToken;
       if (cached != null && cached.isNotEmpty && !_isDummyToken(cached)) {
+        if (kDebugMode) {
+          debugPrint('[FCM] Token from cache: $cached');
+        }
         return cached;
       }
 
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null && token.isNotEmpty && !_isDummyToken(token)) {
+        if (kDebugMode) {
+          debugPrint('[FCM] Token acquired: $token');
+        }
         await _storage.saveFcmToken(token);
         return token;
+      }
+
+      if (kDebugMode) {
+        debugPrint('[FCM] getToken returned null/empty/dummy: $token');
       }
     } catch (e) {
       debugPrint('[FCM] getToken error: $e');
@@ -157,7 +167,11 @@ class FirebaseNotificationService {
       final token = await messaging.getToken();
       if (token != null && token.isNotEmpty && !_isDummyToken(token)) {
         await _storage.saveFcmToken(token);
-        if (kDebugMode) debugPrint('[FCM] Token acquired');
+        if (kDebugMode) {
+          debugPrint('[FCM] Token acquired at init: $token');
+        }
+      } else if (kDebugMode) {
+        debugPrint('[FCM] init getToken returned null/empty/dummy: $token');
       }
     } catch (e) {
       debugPrint('[FCM] _fetchAndCacheToken error: $e');

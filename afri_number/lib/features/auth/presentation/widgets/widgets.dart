@@ -1,4 +1,5 @@
 export 'auth_header.dart';
+export 'auth_phone_field.dart';
 export 'login_form.dart';
 export 'register_form.dart';
 export 'forgot_password_form.dart';

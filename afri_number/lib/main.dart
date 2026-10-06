@@ -2,8 +2,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 
 import 'app/bindings/initial_binding.dart';
 import 'app/routes/app_pages.dart';
@@ -53,6 +55,13 @@ class AfriNumberApp extends StatelessWidget {
       translations: AppTranslations(),
       locale: LocalizationService.currentLocale,
       fallbackLocale: AppTranslations.fallbackLocale,
+      supportedLocales: AppTranslations.supportedLocales,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        ...PhoneFieldLocalization.delegates,
+      ],
       defaultTransition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 350),
       initialBinding: InitialBinding(),

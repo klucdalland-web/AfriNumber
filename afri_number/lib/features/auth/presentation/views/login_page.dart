@@ -4,8 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/widgets.dart';
 
-/// Vue de connexion : ajustée sur une seule vue dynamique sans scroll,
-/// sauf pour les petits écrans.
+/// Vue de connexion : scroll pour que le clavier ne masque pas le formulaire.
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
@@ -19,22 +18,22 @@ class LoginPage extends StatelessWidget {
           builder: (context, constraints) {
             return SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: r.space(24),
-                      vertical: r.space(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AuthHeader(moduleLabel: 'auth.module_login'.tr),
-                        SizedBox(height: r.space(12)),
-                        const Expanded(child: LoginForm()),
-                      ],
-                    ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: r.space(24),
+                    vertical: r.space(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AuthHeader(moduleLabel: 'auth.module_login'.tr),
+                      SizedBox(height: r.space(12)),
+                      const LoginForm(),
+                      SizedBox(height: r.space(16)),
+                    ],
                   ),
                 ),
               ),

@@ -48,6 +48,10 @@ class AppTranslations extends Translations {
       'login.title': 'De retour !',
       'login.subtitle': 'Heureux de vous revoir ! Connectez-vous pour continuer là où vous vous êtes arrêté.',
       'login.phone_or_email': 'Téléphone ou e-mail',
+      'login.phone': 'Téléphone',
+      'login.email': 'E-mail',
+      'login.use_email': 'Utiliser un e-mail',
+      'login.use_phone': 'Utiliser un téléphone',
       'login.password': 'Mot de passe',
       'login.remember_me': 'Se souvenir de moi',
       'login.forgot_password': 'Mot de passe oublié ?',
@@ -97,8 +101,16 @@ class AppTranslations extends Translations {
       'error.email_required': "L'e-mail est requis",
       'error.email_invalid': 'E-mail invalide',
       'error.phone_required': 'Le téléphone est requis',
+      'error.phone_invalid': 'Numéro de téléphone invalide',
+      'error.phone_country_invalid': 'Pays non disponible pour ce numéro',
       'error.confirm_required': 'Confirmez le mot de passe',
       'error.password_mismatch': 'Les mots de passe ne correspondent pas',
+
+      'phone.countries_loading': 'Chargement des pays…',
+      'phone.countries_empty': 'Aucun pays disponible.',
+      'phone.countries_unsupported': 'Aucun pays compatible avec le sélecteur.',
+      'phone.retry': 'Réessayer',
+      'phone.no_country_result': 'Aucun pays trouvé',
 
       // ── Erreurs applicatives ──
       'error.login_failed': 'Erreur de connexion. Veuillez réessayer.',
@@ -388,6 +400,10 @@ class AppTranslations extends Translations {
       'login.subtitle':
           'Glad to see you again! Log in to continue where you left off.',
       'login.phone_or_email': 'Phone or email',
+      'login.phone': 'Phone',
+      'login.email': 'Email',
+      'login.use_email': 'Use an email',
+      'login.use_phone': 'Use a phone number',
       'login.password': 'Password',
       'login.remember_me': 'Remember me',
       'login.forgot_password': 'Forgot password?',
@@ -430,8 +446,16 @@ class AppTranslations extends Translations {
       'error.email_required': 'Email is required',
       'error.email_invalid': 'Invalid email',
       'error.phone_required': 'Phone is required',
+      'error.phone_invalid': 'Invalid phone number',
+      'error.phone_country_invalid': 'Country not available for this number',
       'error.confirm_required': 'Confirm your password',
       'error.password_mismatch': 'Passwords do not match',
+
+      'phone.countries_loading': 'Loading countries…',
+      'phone.countries_empty': 'No countries available.',
+      'phone.countries_unsupported': 'No countries compatible with the picker.',
+      'phone.retry': 'Retry',
+      'phone.no_country_result': 'No country found',
 
       // ── Application errors ──
       'error.login_failed': 'Login error. Please try again.',

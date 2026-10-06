@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_web_plugins:
     sdk: flutter
 
@@ -50,6 +52,7 @@ dependencies:
   package_info_plus: ^10.2.1
   image_picker: ^1.1.2
   firebase_messaging: ^16.7.0
+  phone_form_field: ^10.0.18
 
 dev_dependencies:
   flutter_test:

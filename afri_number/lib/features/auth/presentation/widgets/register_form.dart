@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/routes/app_routes.dart';
-import '../../../../core/constants/country_constants.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import 'auth_phone_field.dart';
 
 /// Formulaire d'inscription complet (titre, champs, mentions légales,
 /// bouton de soumission et lien de connexion).
@@ -18,11 +17,12 @@ class RegisterForm extends StatelessWidget {
     final theme = Theme.of(context);
     final controller = Get.find<AuthController>();
 
-    return Form(
-      key: controller.registerFormKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return AutofillGroup(
+      child: Form(
+        key: controller.registerFormKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           Text(
             'register.title'.tr,
             textAlign: TextAlign.center,
@@ -76,18 +76,19 @@ class RegisterForm extends StatelessWidget {
               if (value == null || value.trim().isEmpty) {
                 return 'error.email_required'.tr;
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                  .hasMatch(value)) {
+              if (!RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,}$')
+                  .hasMatch(value.trim())) {
                 return 'error.email_invalid'.tr;
               }
               return null;
             },
           ),
           SizedBox(height: r.space(16)),
-
-          // Champ téléphone avec sélecteur de pays / indicatif (+261, +33, etc.)
-          _PhoneWithCountryPicker(controller: controller),
-
+          AuthPhoneField(
+            auth: controller,
+            phoneController: controller.registerPhoneController,
+            textInputAction: TextInputAction.next,
+          ),
           SizedBox(height: r.space(16)),
           CustomTextField(
             hintText: 'register.password'.tr,
@@ -147,129 +148,10 @@ class RegisterForm extends StatelessWidget {
             ),
           ),
           SizedBox(height: r.space(24)),
-          _LegalText(),
+          const _LegalText(),
         ],
-      ),
-    );
-  }
-}
-
-class _PhoneWithCountryPicker extends StatelessWidget {
-  const _PhoneWithCountryPicker({required this.controller});
-
-  final AuthController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = context.responsive;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final fieldBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-    final borderColor = isDark
-        ? const Color(0xFF334155)
-        : const Color(0xFFE2E8F0);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Dropdown pour sélectionner le pays / indicatif
-        Obx(() {
-          if (controller.isLoadingCountries.value) {
-            return SizedBox(
-              height: r.heightOf(50),
-              width: r.space(110),
-              child: const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            );
-          }
-
-          if (controller.countries.isEmpty) {
-            return SizedBox(
-              height: r.heightOf(50),
-              child: IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: controller.loadCountries,
-              ),
-            );
-          }
-
-          return Container(
-            height: r.heightOf(50),
-            padding: EdgeInsets.symmetric(horizontal: r.space(12)),
-            decoration: BoxDecoration(
-              color: fieldBg,
-              borderRadius: BorderRadius.circular(r.radius(28)),
-              border: Border.all(color: borderColor, width: 1.0),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<CountryData>(
-                value: controller.selectedCountry.value,
-                icon: Icon(
-                  Icons.arrow_drop_down_rounded,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(r.radius(16)),
-                onChanged: (country) {
-                  if (country != null) {
-                    controller.selectedCountry.value = country;
-                  }
-                },
-                items: controller.countries.map((country) {
-                  return DropdownMenuItem<CountryData>(
-                    value: country,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CountryFlagBadge(code: country.code, size: 20),
-                        SizedBox(width: r.space(6)),
-                        Text(
-                          '${country.code} ${country.dialCode}',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: r.fontSize(13),
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          );
-        }),
-        SizedBox(width: r.space(10)),
-
-        // Champ du numéro de téléphone
-        Expanded(
-          child: CustomTextField(
-            hintText: 'register.phone'.tr,
-            icon: Icons.call_outlined,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.telephoneNumber],
-            controller: controller.registerPhoneController,
-            isRequired: true,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'error.phone_required'.tr;
-              }
-              final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
-              if (digitsOnly.length < 6) {
-                return 'Numéro invalide';
-              }
-              return null;
-            },
-          ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -319,6 +201,8 @@ class _ErrorBanner extends StatelessWidget {
 }
 
 class _LegalText extends StatelessWidget {
+  const _LegalText();
+
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
