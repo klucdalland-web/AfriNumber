@@ -54,30 +54,43 @@ class AuthRemoteDataSource {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
-// Vérification du code OTP 
-Future<Map<String, dynamic>> verifyOtp({
-  required String code,
-  required String purpose,
-  String? email,
-}) async {
-  final response = await _client.post(
-    ApiConstants.verifyOtp,
-    data: {'email': email, 'purpose': purpose, 'code': code},
-  );
-  return Map<String, dynamic>.from(response.data as Map);
-}
+// Vérification du code OTP
+  Future<Map<String, dynamic>> verifyOtp({
+    required String code,
+    required String purpose,
+    String? email,
+    String? phoneNumber,
+  }) async {
+    final response = await _client.post(
+      ApiConstants.verifyOtp,
+      data: {
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (phoneNumber != null && phoneNumber.isNotEmpty)
+          'phone_number': phoneNumber,
+        'purpose': purpose,
+        'code': code,
+      },
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
 
-// Renvoi du code OTP
-Future<Map<String, dynamic>> resendOtp({
-  required String purpose,
-  String? email,
-}) async {
-  final response = await _client.post(
-    ApiConstants.resendOtp,
-    data: {'email': email, 'purpose': purpose},
-  );
-  return Map<String, dynamic>.from(response.data as Map);
-}
+  // Renvoi du code OTP
+  Future<Map<String, dynamic>> resendOtp({
+    required String purpose,
+    String? email,
+    String? phoneNumber,
+  }) async {
+    final response = await _client.post(
+      ApiConstants.resendOtp,
+      data: {
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (phoneNumber != null && phoneNumber.isNotEmpty)
+          'phone_number': phoneNumber,
+        'purpose': purpose,
+      },
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
 
   /// Demande de réinitialisation de mot de passe (POST /auth/forgot-password).
   Future<Map<String, dynamic>> forgotPassword({required String email}) async {
@@ -93,10 +106,16 @@ Future<Map<String, dynamic>> resendOtp({
     required String email,
     required String code,
     required String newPassword,
+    required String passwordConfirmation,
   }) async {
     final response = await _client.post(
       ApiConstants.resetPassword,
-      data: {'email': email, 'code': code, 'password': newPassword},
+      data: {
+        'email': email,
+        'code': code,
+        'password': newPassword,
+        'password_confirmation': passwordConfirmation,
+      },
     );
     return Map<String, dynamic>.from(response.data as Map);
   }

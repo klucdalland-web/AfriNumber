@@ -21,11 +21,13 @@ abstract class AuthRepository {
     required String code,
     required String purpose,
     String? email,
+    String? phoneNumber,
   });
 
   Future<Map<String, dynamic>> resendOtp({
     required String purpose,
     String? email,
+    String? phoneNumber,
   });
 
   Future<void> forgotPassword({required String email});
@@ -34,6 +36,7 @@ abstract class AuthRepository {
     required String email,
     required String code,
     required String newPassword,
+    required String passwordConfirmation,
   });
 
   Future<List<CountryData>> getCountries();

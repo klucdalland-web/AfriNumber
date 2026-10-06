@@ -20,205 +20,184 @@ class OTPInput extends StatefulWidget {
 }
 
 class OTPInputState extends State<OTPInput> {
-  late final List<TextEditingController> _controllers;
-  late final FocusNode _hiddenFocusNode;
-  int _currentIndex = 0;
-
-  static final Map<LogicalKeyboardKey, int> _digitMap = {
-    LogicalKeyboardKey.digit0: 0,
-    LogicalKeyboardKey.digit1: 1,
-    LogicalKeyboardKey.digit2: 2,
-    LogicalKeyboardKey.digit3: 3,
-    LogicalKeyboardKey.digit4: 4,
-    LogicalKeyboardKey.digit5: 5,
-    LogicalKeyboardKey.digit6: 6,
-    LogicalKeyboardKey.digit7: 7,
-    LogicalKeyboardKey.digit8: 8,
-    LogicalKeyboardKey.digit9: 9,
-    LogicalKeyboardKey.numpad0: 0,
-    LogicalKeyboardKey.numpad1: 1,
-    LogicalKeyboardKey.numpad2: 2,
-    LogicalKeyboardKey.numpad3: 3,
-    LogicalKeyboardKey.numpad4: 4,
-    LogicalKeyboardKey.numpad5: 5,
-    LogicalKeyboardKey.numpad6: 6,
-    LogicalKeyboardKey.numpad7: 7,
-    LogicalKeyboardKey.numpad8: 8,
-    LogicalKeyboardKey.numpad9: 9,
-  };
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  String _code = '';
 
   @override
   void initState() {
     super.initState();
-    _controllers = List.generate(widget.length, (_) => TextEditingController());
-    _hiddenFocusNode = FocusNode();
+    _controller = TextEditingController();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
 
     if (widget.autoFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _hiddenFocusNode.requestFocus();
+        if (mounted) _focusNode.requestFocus();
       });
     }
   }
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    _hiddenFocusNode.dispose();
+    _focusNode.removeListener(_onFocusChange);
+    _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  String get _currentCode => _controllers.map((c) => c.text).join();
+  void _onFocusChange() {
+    if (mounted) setState(() {});
+  }
 
   // ----- API publique -----
-  void addDigit(int digit) => _handleNumericInput(digit);
+  void addDigit(int digit) {
+    if (_code.length >= widget.length) return;
+    _applyCode('$_code$digit');
+  }
 
-  void deleteLastDigit() => _handleBackspace();
+  void deleteLastDigit() {
+    if (_code.isEmpty) return;
+    _applyCode(_code.substring(0, _code.length - 1));
+  }
 
   /// Vide tous les champs (utilisé après un "resend").
   void clear() {
     if (!mounted) return;
-    setState(() {
-      for (final c in _controllers) {
-        c.clear();
-      }
-      _currentIndex = 0;
-    });
-    widget.onChanged?.call('');
+    _applyCode('');
+    _focusNode.requestFocus();
   }
 
-  // ----- Gestion clavier physique -----
-  bool _isHandledKey(LogicalKeyboardKey key) =>
-      key == LogicalKeyboardKey.backspace ||
-      key == LogicalKeyboardKey.enter ||
-      key == LogicalKeyboardKey.numpadEnter ||
-      _digitMap.containsKey(key);
+  void _applyCode(String value) {
+    final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+    final truncated = digitsOnly.length > widget.length
+        ? digitsOnly.substring(0, widget.length)
+        : digitsOnly;
 
-  void _onKeyEvent(KeyEvent event) {
-    if (event is! KeyDownEvent) return;
-    final key = event.logicalKey;
+    if (truncated == _code && _controller.text == truncated) return;
 
-    if (key == LogicalKeyboardKey.backspace) {
-      _handleBackspace();
-    } else if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
-      _handleSubmit();
-    } else if (_digitMap.containsKey(key)) {
-      _handleNumericInput(_digitMap[key]!);
+    setState(() => _code = truncated);
+
+    if (_controller.text != truncated) {
+      _controller.value = TextEditingValue(
+        text: truncated,
+        selection: TextSelection.collapsed(offset: truncated.length),
+      );
+    }
+
+    widget.onChanged?.call(truncated);
+
+    if (truncated.length == widget.length) {
+      widget.onCompleted?.call(truncated);
     }
   }
 
-  // ----- Saisie / suppression -----
-  void _handleNumericInput(int digit) {
-    if (!mounted) return;
-    final emptyIndex = _controllers.indexWhere((c) => c.text.isEmpty);
-    if (emptyIndex == -1) return;
-
-    setState(() {
-      _controllers[emptyIndex].text = digit.toString();
-      // On s'arrête visuellement sur la dernière case si tout est rempli.
-      _currentIndex = (emptyIndex + 1).clamp(0, widget.length - 1);
-    });
-
-    final code = _currentCode;
-    widget.onChanged?.call(code);
-
-    if (code.length == widget.length) {
-      widget.onCompleted?.call(code);
-    }
-  }
-
-  void _handleBackspace() {
-    if (!mounted) return;
-    final lastFilledIndex = _controllers.lastIndexWhere(
-      (c) => c.text.isNotEmpty,
-    );
-    if (lastFilledIndex == -1) return;
-
-    setState(() {
-      _controllers[lastFilledIndex].clear();
-      _currentIndex = lastFilledIndex;
-    });
-
-    widget.onChanged?.call(_currentCode);
-  }
-
-  void _handleSubmit() {
-    if (_currentCode.length == widget.length) {
-      widget.onCompleted?.call(_currentCode);
-    }
-  }
+  void _onChanged(String value) => _applyCode(value);
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final allFilled = _currentCode.length == widget.length;
+    final allFilled = _code.length == widget.length;
+    final currentIndex = allFilled ? widget.length - 1 : _code.length;
 
-    return Focus(
-      focusNode: _hiddenFocusNode,
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent && _isHandledKey(event.logicalKey)) {
-          _onKeyEvent(event);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(widget.length, (index) {
-          // Highlight sur la case active, sauf si tout est rempli.
-          final isFocused = !allFilled && index == _currentIndex;
-          final hasValue = _controllers[index].text.isNotEmpty;
-
-          return Container(
-            width: 48,
-            height: 56,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            child: Stack(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    color: colors.surfaceContainerHighest,
-                    border: Border.all(
-                      color: isFocused
-                          ? colors.primary
-                          : hasValue
-                          ? colors.outline
-                          : colors.outlineVariant,
-                      width: isFocused ? 2.5 : 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.shadow.withValues(
-                          alpha: isFocused ? 0.1 : 0.05,
-                        ),
-                        blurRadius: isFocused ? 16 : 8,
-                        offset: const Offset(0, 4),
-                        spreadRadius: isFocused ? 0 : -2,
-                      ),
-                    ],
-                  ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _focusNode.requestFocus(),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Champ invisible : déclenche le clavier natif du téléphone.
+          Opacity(
+            opacity: 0,
+            child: SizedBox(
+              width: 1,
+              height: 1,
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                autofocus: widget.autoFocus,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                enableSuggestions: false,
+                autocorrect: false,
+                showCursor: false,
+                maxLength: widget.length,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(widget.length),
+                ],
+                onChanged: _onChanged,
+                onSubmitted: (_) {
+                  if (_code.length == widget.length) {
+                    widget.onCompleted?.call(_code);
+                  }
+                },
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  counterText: '',
                 ),
-                Center(
-                  child: Text(
-                    _controllers[index].text,
-                    style: TextStyle(
-                      fontFamily: 'Georgia',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
-                      color: colors.onSurface,
-                    ),
-                  ),
-                ),
-                if (isFocused)
-                  Center(child: _BlinkingCursor(color: colors.primary)),
-              ],
+              ),
             ),
-          );
-        }),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(widget.length, (index) {
+              final isFocused =
+                  _focusNode.hasFocus && !allFilled && index == currentIndex;
+              final hasValue =
+                  index < _code.length && _code[index].isNotEmpty;
+              final digit = hasValue ? _code[index] : '';
+
+              return Container(
+                width: 48,
+                height: 56,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: Stack(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        color: colors.surfaceContainerHighest,
+                        border: Border.all(
+                          color: isFocused
+                              ? colors.primary
+                              : hasValue
+                                  ? colors.outline
+                                  : colors.outlineVariant,
+                          width: isFocused ? 2.5 : 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.shadow.withValues(
+                              alpha: isFocused ? 0.1 : 0.05,
+                            ),
+                            blurRadius: isFocused ? 16 : 8,
+                            offset: const Offset(0, 4),
+                            spreadRadius: isFocused ? 0 : -2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        digit,
+                        style: TextStyle(
+                          fontFamily: 'Georgia',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 28,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (isFocused)
+                      Center(child: _BlinkingCursor(color: colors.primary)),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }

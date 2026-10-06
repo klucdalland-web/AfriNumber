@@ -104,12 +104,21 @@ class StorageService {
   Future<void> savePendingOtp({
     required String purpose,
     required String identifier,
+    required String identifierType,
     required int expiresAtMillis,
-  }) => write(StorageKeys.pendingOtp, {
-    'purpose': purpose,
-    'identifier': identifier,
-    'expires_at': expiresAtMillis,
-  });
+    int resendCount = 0,
+    int? nextResendAtMillis,
+    int? lockedUntilMillis,
+  }) =>
+      write(StorageKeys.pendingOtp, {
+        'purpose': purpose,
+        'identifier': identifier,
+        'identifier_type': identifierType,
+        'expires_at': expiresAtMillis,
+        'resend_count': resendCount,
+        'next_resend_at': ?nextResendAtMillis,
+        'locked_until': ?lockedUntilMillis,
+      });
 
   Future<void> clearPendingOtp() => remove(StorageKeys.pendingOtp);
 }

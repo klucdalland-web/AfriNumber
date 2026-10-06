@@ -122,8 +122,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
                       ),
                       SizedBox(height: r.space(24)),
                       _buildResendSection(r, theme),
-                      SizedBox(height: r.space(32)),
-                      _buildKeypad(theme),
                       SizedBox(height: r.space(40)),
                     ],
                   ),
@@ -291,8 +289,27 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   /// Section "Vous n'avez pas reçu de code ? Renvoyer"
   Widget _buildResendSection(Responsive r, ThemeData theme) {
     return Obx(() {
-      final limitReached = !_authController.canResendOtp;
+      final locked = _authController.isOtpLocked;
+      final coolingDown = _authController.isResendCoolingDown;
       final isLoading = _authController.isLoading.value;
+      final canResend = _authController.canResendOtp;
+
+      final hintColor = (locked || coolingDown)
+          ? (locked
+              ? theme.colorScheme.error
+              : theme.colorScheme.onSurface.withValues(alpha: 0.55))
+          : theme.colorScheme.onSurface.withValues(alpha: 0.5);
+
+      final String hint;
+      if (locked) {
+        hint = 'otp.locked'.trParams({'time': _authController.otpLockLabel});
+      } else if (coolingDown) {
+        hint = 'otp.resend_in'.trParams({
+          'time': _authController.resendCooldownLabel,
+        });
+      } else {
+        hint = 'otp.resend_ready'.tr;
+      }
 
       return Column(
         children: [
@@ -309,7 +326,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
               ),
               AppButton.text(
                 label: 'otp.resend'.tr,
-                onPressed: (isLoading || limitReached) ? null : _handleResend,
+                onPressed: canResend && !isLoading ? _handleResend : null,
                 foregroundColor: theme.colorScheme.onSurface,
                 underline: true,
               ),
@@ -317,32 +334,16 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
           ),
           SizedBox(height: r.space(4)),
           Text(
-            limitReached
-                ? 'otp.resend_limit_reached'.tr
-                : '${'otp.resends_left'.tr} ${_authController.otpResendsLeft}',
+            hint,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: r.fontSize(12),
-              color: limitReached
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: hintColor,
             ),
           ),
         ],
       );
     });
-  }
-
-  /// Clavier numérique — un seul Obx pour `isLoading`.
-  Widget _buildKeypad(ThemeData theme) {
-    return Obx(() => CustomNumericKeypad(
-          onDigitTap: (digit) => _otpInputKey.currentState?.addDigit(digit),
-          onBackspaceTap: () =>
-              _otpInputKey.currentState?.deleteLastDigit(),
-          enabled: !_authController.isLoading.value,
-          foregroundColor: theme.colorScheme.onSurface,
-          backgroundColor: theme.colorScheme.surfaceContainerHighest,
-          disabledColor: theme.colorScheme.onSurfaceVariant,
-        ));
   }
 
 }

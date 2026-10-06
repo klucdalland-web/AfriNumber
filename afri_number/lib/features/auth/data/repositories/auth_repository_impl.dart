@@ -52,18 +52,31 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Map<String, dynamic>> resendOtp({
     required String purpose,
     String? email,
+    String? phoneNumber,
   }) {
-    return _request(() => _remote.resendOtp(email: email, purpose: purpose));
+    return _request(
+      () => _remote.resendOtp(
+        email: email,
+        phoneNumber: phoneNumber,
+        purpose: purpose,
+      ),
+    );
   }
 
   @override
   Future<Map<String, dynamic>> verifyOtp({
     required String code,
     String? email,
+    String? phoneNumber,
     required String purpose,
   }) async {
     final result = await _request(
-      () => _remote.verifyOtp(code: code, email: email, purpose: purpose),
+      () => _remote.verifyOtp(
+        code: code,
+        email: email,
+        phoneNumber: phoneNumber,
+        purpose: purpose,
+      ),
     );
     final accessToken = _extractValue(result, {
       'access_token',
@@ -100,12 +113,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String code,
     required String newPassword,
+    required String passwordConfirmation,
   }) async {
     await _request(
       () => _remote.resetPassword(
         email: email,
         code: code,
         newPassword: newPassword,
+        passwordConfirmation: passwordConfirmation,
       ),
     );
   }
