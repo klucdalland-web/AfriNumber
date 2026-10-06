@@ -109,24 +109,30 @@ class ClientInfolist
                     ]),
 
                 Section::make('Documents KYC')
-                    ->description('Visibles tant que le dossier est en revue (conservés après `manual_review`).')
+                    ->description('Cliquez sur une pièce pour l’ouvrir en grand avant d’approuver ou de rejeter.')
                     ->columns(3)
                     ->visible(fn (User $record): bool => filled($record->profile?->documents))
                     ->schema([
                         ImageEntry::make('kyc_selfie')
                             ->label('Selfie')
                             ->state(fn (User $record): ?string => $record->profile?->temporaryDocumentUrl('photopath'))
-                            ->imageHeight(180)
+                            ->url(fn (User $record): ?string => $record->profile?->temporaryDocumentUrl('photopath'))
+                            ->openUrlInNewTab()
+                            ->imageHeight(240)
                             ->checkFileExistence(false),
                         ImageEntry::make('kyc_piece_avant')
                             ->label('Pièce (recto)')
                             ->state(fn (User $record): ?string => $record->profile?->temporaryDocumentUrl('pieceavantpath'))
-                            ->imageHeight(180)
+                            ->url(fn (User $record): ?string => $record->profile?->temporaryDocumentUrl('pieceavantpath'))
+                            ->openUrlInNewTab()
+                            ->imageHeight(240)
                             ->checkFileExistence(false),
                         ImageEntry::make('kyc_piece_arriere')
                             ->label('Pièce (verso)')
                             ->state(fn (User $record): ?string => $record->profile?->temporaryDocumentUrl('piecearrierepath'))
-                            ->imageHeight(180)
+                            ->url(fn (User $record): ?string => $record->profile?->temporaryDocumentUrl('piecearrierepath'))
+                            ->openUrlInNewTab()
+                            ->imageHeight(240)
                             ->checkFileExistence(false),
                     ]),
             ]);

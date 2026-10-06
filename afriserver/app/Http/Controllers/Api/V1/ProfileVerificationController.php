@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Profile;
 use App\Models\TypeNotification;
 use App\Models\User;
-use App\Services\FcmNotificationService;
+use App\Services\KycNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 
 // 🚀 Pour suivre les erreurs dans les logs de Render
 
@@ -119,6 +118,7 @@ class ProfileVerificationController extends Controller
                 'profile_id' => null,
                 'profile_status' => null,
                 'status_valide' => $user->status_valide,
+                'rejection_reason' => null,
             ], 200);
         }
 
@@ -127,6 +127,7 @@ class ProfileVerificationController extends Controller
             'profile_id' => $profil->id,
             'profile_status' => $profil->status,
             'status_valide' => $user->status_valide,
+            'rejection_reason' => $profil->rejection_reason,
         ], 200);
     }
 
@@ -160,6 +161,7 @@ class ProfileVerificationController extends Controller
             'profile_id' => $profil->id,
             'profile_status' => $profil->status,
             'status_valide' => $user->status_valide,
+            'rejection_reason' => $profil->rejection_reason,
         ], 200);
     }
 
@@ -423,8 +425,8 @@ class ProfileVerificationController extends Controller
     }
 
     /**
-     * Envoie une notification push à l'utilisateur selon le verdict KYC.
-     * L'échec FCM ne doit jamais faire échouer le verdict déjà persisté.
+     * Envoie une notification (inbox + push) à l'utilisateur selon le verdict KYC.
+     * L'échec d'envoi ne doit jamais faire échouer le verdict déjà persisté.
      */
     private function notifierVerdictKyc(
         Profile $profil,
@@ -466,25 +468,16 @@ class ProfileVerificationController extends Controller
 
         $payload = $payloads[$kycStatus];
 
-        try {
-            app(FcmNotificationService::class)->sendToUser(
-                $user,
-                $payload['title'],
-                $payload['body'],
-                [
-                    'type' => $payload['type'],
-                    'profile_id' => $profil->id,
-                    'kyc_status' => $kycStatus,
-                    'reason' => $reason,
-                ],
-            );
-        } catch (Throwable $e) {
-            Log::error('Échec notification FCM après verdict KYC', [
-                'profile_id' => $profil->id,
-                'user_id' => $user->id,
+        app(KycNotificationService::class)->notifyVerdict(
+            $user,
+            $profil,
+            $payload['type'],
+            $payload['title'],
+            $payload['body'],
+            [
                 'kyc_status' => $kycStatus,
-                'error' => $e->getMessage(),
-            ]);
-        }
+                'reason' => $reason,
+            ],
+        );
     }
 }

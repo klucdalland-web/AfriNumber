@@ -203,6 +203,10 @@ class AppTranslations extends Translations {
       'kyc.verified.continue': 'Continuer',
       'kyc.verified.buy': 'Acheter un numéro',
       'kyc.rejected': 'La vérification a échoué. Vous pouvez réessayer.',
+      'kyc.rejected.title': 'Vérification refusée',
+      'kyc.rejected.body':
+          'Votre dossier a été refusé. Vous pouvez renvoyer vos pièces pour une nouvelle vérification.',
+      'kyc.rejected.resubmit': 'Renvoyer les pièces',
       'kyc.err': 'Une erreur est survenue pendant la vérification.',
       'kyc.express.unreachable': 'Impossible de joindre le serveur d’envoi des photos. Vérifie son adresse réseau et qu’il est accessible depuis ce téléphone.',
       'kyc.express.timeout': 'Le serveur d’envoi des photos ne répond pas. Vérifie sa disponibilité puis réessaie.',
@@ -557,6 +561,10 @@ class AppTranslations extends Translations {
       'kyc.verified.continue': 'Continue',
       'kyc.verified.buy': 'Buy a number',
       'kyc.rejected': 'Verification failed. You can try again.',
+      'kyc.rejected.title': 'Verification refused',
+      'kyc.rejected.body':
+          'Your application was refused. You can resubmit your documents for a new verification.',
+      'kyc.rejected.resubmit': 'Resubmit documents',
       'kyc.err': 'An error occurred during verification.',
       'kyc.express.unreachable': 'The photo upload server cannot be reached. Check its network address and that this device can access it.',
       'kyc.express.timeout': 'The photo upload server did not respond. Check that it is available and try again.',

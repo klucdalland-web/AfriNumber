@@ -6,7 +6,11 @@
 /// ```
 class KycVerification {
   /// Crée une vérification.
-  const KycVerification({required this.status, required this.reference});
+  const KycVerification({
+    required this.status,
+    required this.reference,
+    this.reason,
+  });
 
   /// Construit un [KycVerification] depuis un JSON (clés `status` ou `statut`).
   factory KycVerification.fromJson(Map<String, dynamic> json) {
@@ -15,9 +19,12 @@ class KycVerification {
             json['profile_status'] ??
             '')
         .toString();
+    final dynamic rawReason = json['rejection_reason'] ?? json['reason'];
+    final String? trimmed = rawReason?.toString().trim();
     return KycVerification(
       status: _normalize(raw),
       reference: (json['reference'] ?? json['profile_id'] ?? '').toString(),
+      reason: (trimmed == null || trimmed.isEmpty) ? null : trimmed,
     );
   }
 
@@ -26,6 +33,9 @@ class KycVerification {
 
   /// Référence du dossier (le `profile_id`).
   final String reference;
+
+  /// Motif de refus renvoyé par n8n / l'admin (optionnel).
+  final String? reason;
 
   /// Aucun dossier ouvert.
   bool get isNone => status == 'none';

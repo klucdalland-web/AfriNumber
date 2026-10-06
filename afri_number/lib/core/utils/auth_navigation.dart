@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../app/routes/app_routes.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/profile/data/models/user_profile.dart';
 import 'storage_service.dart';
 
@@ -23,6 +25,31 @@ class AuthNavigation {
   /// Remplace la pile par la bonne route d'accueil.
   static void goToHome([StorageService? storage]) {
     Get.offAllNamed(homeRoute(storage));
+  }
+
+  /// Rafraîchit le profil depuis `/auth/me` avant de choisir l'écran.
+  ///
+  /// En cas d'échec réseau, conserve le cache local (ne bloque pas le boot).
+  static Future<void> syncSessionBeforeRouting({
+    StorageService? storage,
+    AuthRepository? authRepository,
+  }) async {
+    final box = storage ?? Get.find<StorageService>();
+    if (!box.hasToken) return;
+
+    try {
+      final repo = authRepository ?? Get.find<AuthRepository>();
+      final userMap = await repo.me();
+      if (userMap != null && userMap.isNotEmpty) {
+        await box.saveUser(userMap);
+      }
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthNavigation] syncSessionBeforeRouting failed: $error\n$stackTrace',
+        );
+      }
+    }
   }
 
   /// Marque le compte local comme validé puis ouvre Main.

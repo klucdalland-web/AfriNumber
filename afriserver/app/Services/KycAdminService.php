@@ -6,9 +6,7 @@ use App\Models\Profile;
 use App\Models\TypeNotification;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
-use Throwable;
 
 /**
  * Actions KYC déclenchées depuis le dashboard Filament.
@@ -19,7 +17,7 @@ use Throwable;
 class KycAdminService
 {
     public function __construct(
-        private readonly FcmNotificationService $fcm,
+        private readonly KycNotificationService $notifier,
     ) {}
 
     public function approve(User $user, ?string $title = null, ?string $message = null): Profile
@@ -37,13 +35,13 @@ class KycAdminService
 
             $profile->clearStoredDocuments();
 
-            $this->notify(
+            $this->notifier->notifyVerdict(
                 $user,
                 $profile,
                 TypeNotification::CODE_KYC_APPROVED,
                 $title ?: 'Identité vérifiée',
                 $message ?: 'Votre vérification d\'identité a été approuvée.',
-                'approved',
+                ['kyc_status' => 'approved'],
             );
 
             return $profile->fresh();
@@ -68,14 +66,16 @@ class KycAdminService
             $body = $message
                 ?: ($reason ?: 'Votre vérification d\'identité a été refusée.');
 
-            $this->notify(
+            $this->notifier->notifyVerdict(
                 $user,
                 $profile,
                 TypeNotification::CODE_KYC_REJECTED,
                 $title ?: 'Vérification refusée',
                 $body,
-                'rejected',
-                $reason,
+                [
+                    'kyc_status' => 'rejected',
+                    'reason' => $reason,
+                ],
             );
 
             return $profile->fresh();
@@ -99,32 +99,6 @@ class KycAdminService
             throw new InvalidArgumentException(
                 'Seuls les profils en validation manuelle peuvent être approuvés ou rejetés.'
             );
-        }
-    }
-
-    private function notify(
-        User $user,
-        Profile $profile,
-        string $type,
-        string $title,
-        string $body,
-        string $kycStatus,
-        ?string $reason = null,
-    ): void {
-        try {
-            $this->fcm->sendToUser($user, $title, $body, [
-                'type' => $type,
-                'profile_id' => $profile->id,
-                'kyc_status' => $kycStatus,
-                'reason' => $reason,
-            ]);
-        } catch (Throwable $e) {
-            Log::error('Échec notification FCM (admin KYC)', [
-                'user_id' => $user->id,
-                'profile_id' => $profile->id,
-                'kyc_status' => $kycStatus,
-                'error' => $e->getMessage(),
-            ]);
         }
     }
 }

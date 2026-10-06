@@ -29,6 +29,9 @@ enum KycStep {
 
   /// Identité vérifiée.
   verified,
+
+  /// Dossier refusé — proposer de renvoyer les pièces.
+  rejected,
 }
 
 /// Contrôleur du parcours KYC.
@@ -91,6 +94,13 @@ class KycController extends GetxController {
         step.value == KycStep.face;
   }
 
+  /// Message affiché sur l'écran de refus (motif serveur ou texte générique).
+  String get rejectionBody {
+    final reason = verification.value?.reason?.trim();
+    if (reason != null && reason.isNotEmpty) return reason;
+    return 'kyc.rejected.body'.tr;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -122,9 +132,11 @@ class KycController extends GetxController {
 
   /// Indique si l'indicateur de progression doit être visible.
   bool get showProgress =>
-      step.value != KycStep.verifying && step.value != KycStep.verified;
+      step.value != KycStep.verifying &&
+      step.value != KycStep.verified &&
+      step.value != KycStep.rejected;
 
-  /// Charge les pièces et reprend l'écran d'attente si une demande est en cours.
+  /// Charge les pièces et reprend l'écran d'attente / refus si besoin.
   Future<void> load() async {
     if (isLoading.value) return;
     isLoading.value = true;
@@ -142,15 +154,20 @@ class KycController extends GetxController {
     }
   }
 
-  /// Si `non_valide` et dossier déjà ouvert → écran attente (ou verified).
+  /// Si `non_valide` et dossier déjà ouvert → attente, verified ou rejected.
   Future<void> _resumeIfPending() async {
     if (!isBlockedUntilValidated) return;
     try {
       final KycVerification current =
           await _repository.getCurrentVerificationStatus();
+      verification.value = current;
       if (current.isApproved) {
         _profileId = current.reference.isEmpty ? null : current.reference;
         step.value = KycStep.verified;
+        return;
+      }
+      if (current.isRejected) {
+        _enterRejected(current);
         return;
       }
       if (current.isPending && current.reference.isNotEmpty) {
@@ -170,6 +187,20 @@ class KycController extends GetxController {
     );
     step.value = KycStep.verifying;
     _startPolling();
+  }
+
+  /// Affiche l'écran de refus avec possibilité de renvoyer les pièces.
+  void _enterRejected(KycVerification result) {
+    _pollTimer?.cancel();
+    _profileId = null;
+    frontPath.value = null;
+    backPath.value = null;
+    facePath.value = null;
+    _photoQuality.clear();
+    selectedType.value = null;
+    verification.value = result;
+    step.value = KycStep.rejected;
+    errorMessage.value = null;
   }
 
   /// Sélectionne une pièce (le verso déjà pris est oublié si la pièce change).
@@ -214,8 +245,22 @@ class KycController extends GetxController {
         return;
       case KycStep.verifying:
       case KycStep.verified:
+      case KycStep.rejected:
         return;
     }
+  }
+
+  /// Repart du choix de pièce après un refus.
+  void resubmitDocuments() {
+    frontPath.value = null;
+    backPath.value = null;
+    facePath.value = null;
+    _photoQuality.clear();
+    verification.value = null;
+    selectedType.value = null;
+    _profileId = null;
+    errorMessage.value = null;
+    step.value = KycStep.choose;
   }
 
   /// Traite la photo prise depuis l'aperçu caméra intégré.
@@ -236,6 +281,7 @@ class KycController extends GetxController {
       case KycStep.choose:
       case KycStep.verifying:
       case KycStep.verified:
+      case KycStep.rejected:
         return;
     }
   }
@@ -247,6 +293,7 @@ class KycController extends GetxController {
     switch (step.value) {
       case KycStep.choose:
       case KycStep.verifying:
+      case KycStep.rejected:
         if (isBlockedUntilValidated) return;
         Get.back<void>();
       case KycStep.verified:
@@ -340,27 +387,13 @@ class KycController extends GetxController {
         _pollTimer?.cancel();
         step.value = KycStep.verified;
       } else if (result.isRejected) {
-        _pollTimer?.cancel();
-        _restart();
+        _enterRejected(result);
       }
     } catch (_) {
       // Erreur réseau ponctuelle : on réessaie au prochain tick.
     } finally {
       _isPolling = false;
     }
-  }
-
-  /// Réinitialise le parcours après un refus (un nouveau ticket sera créé).
-  void _restart() {
-    frontPath.value = null;
-    backPath.value = null;
-    facePath.value = null;
-    _photoQuality.clear();
-    verification.value = null;
-    selectedType.value = null;
-    _profileId = null;
-    step.value = KycStep.choose;
-    errorMessage.value = 'kyc.rejected'.tr;
   }
 
   Future<void> _run(Future<void> Function() action) async {
