@@ -25,7 +25,13 @@ class KycPage extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: <Widget>[
-              KycHeader(onBack: c.goBack, onInfo: () => _showInfo(context)),
+              Obx(
+                () => KycHeader(
+                  onBack: c.goBack,
+                  onInfo: () => _showInfo(context),
+                  showBack: c.canShowBackButton,
+                ),
+              ),
               Obx(
                 () => c.showProgress
                     ? KycStepIndicator(statuses: c.progressStatuses)
@@ -109,8 +115,10 @@ class KycPage extends StatelessWidget {
         return AppButton(label: 'kyc.verifying.home'.tr, onPressed: null);
       case KycStep.verified:
         return AppButton(
-          label: 'kyc.verified.buy'.tr,
-          onPressed: c.onBuyNumber,
+          label: c.isBlockedUntilValidated
+              ? 'kyc.verified.continue'.tr
+              : 'kyc.verified.buy'.tr,
+          onPressed: c.onVerifiedContinue,
         );
     }
   }

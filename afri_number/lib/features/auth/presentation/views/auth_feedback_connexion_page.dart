@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../app/routes/app_routes.dart';
+import '../../../../core/utils/auth_navigation.dart';
 import '../widgets/widgets.dart';
 
 /// Écran "Connexion Réussie !" — `Auth/FeedBack/Connexion` dans la maquette.
@@ -13,7 +13,7 @@ class AuthFeedbackConnexionPage extends StatelessWidget {
     return AuthFeedbackView(
       title: 'feedback.login_success_title'.tr,
       subtitle: 'feedback.login_success_subtitle'.tr,
-      onContinue: () => Get.offAllNamed(AppRoutes.main),
+      onContinue: AuthNavigation.goToHome,
     );
   }
 }

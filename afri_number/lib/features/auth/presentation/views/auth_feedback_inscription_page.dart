@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../app/routes/app_routes.dart';
+import '../../../../core/utils/auth_navigation.dart';
 import '../widgets/widgets.dart';
 
 /// Écran "Inscription Réussie !" — `Auth/FeedBack/Inscription` dans la maquette.
@@ -13,7 +13,7 @@ class AuthFeedbackInscriptionPage extends StatelessWidget {
     return AuthFeedbackView(
       title: 'feedback.register_success_title'.tr,
       subtitle: 'feedback.register_success_subtitle'.tr,
-      onContinue: () => Get.offAllNamed(AppRoutes.main),
+      onContinue: AuthNavigation.goToHome,
     );
   }
 }

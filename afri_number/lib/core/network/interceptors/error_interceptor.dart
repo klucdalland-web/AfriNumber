@@ -50,13 +50,22 @@ class ErrorInterceptor extends Interceptor {
     Map<String, dynamic>? errors;
 
     if (data is Map) {
-      final rawMessage = data['message'];
-      if (rawMessage is String && rawMessage.trim().isNotEmpty) {
-        message = rawMessage;
-      }
       final rawErrors = data['errors'];
       if (rawErrors is Map) {
         errors = Map<String, dynamic>.from(rawErrors);
+      }
+
+      final rawMessage = data['message'] ?? data['erreur'] ?? data['error'];
+      if (rawMessage is String && rawMessage.trim().isNotEmpty) {
+        message = rawMessage.trim();
+      }
+
+      // Laravel 422 : le détail utile est souvent dans errors.field[0]
+      final fieldMessage = ApiException.firstFieldMessage(errors);
+      if (fieldMessage != null &&
+          (ApiException.isGenericValidationMessage(message) ||
+              (errors?.containsKey('code') ?? false))) {
+        message = fieldMessage;
       }
     }
 

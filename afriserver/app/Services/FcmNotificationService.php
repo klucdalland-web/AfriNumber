@@ -82,6 +82,22 @@ class FcmNotificationService
             throw $e;
         }
 
+        Log::info('FCM multicast terminé', [
+            'user_id' => $user->id,
+            'token_count' => count($tokens),
+            'success' => $report->successes()->count(),
+            'failure' => $report->failures()->count(),
+            'invalid' => count($report->invalidTokens()),
+            'unknown' => count($report->unknownTokens()),
+        ]);
+
+        foreach ($report->failures() as $failure) {
+            Log::warning('FCM token refusé', [
+                'user_id' => $user->id,
+                'error' => $failure->error()?->getMessage(),
+            ]);
+        }
+
         $this->deactivateInvalidTokens($report);
 
         return $report;

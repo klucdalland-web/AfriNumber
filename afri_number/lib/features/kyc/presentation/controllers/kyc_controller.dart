@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/utils/auth_navigation.dart';
 import '../../domain/models/kyc_document_type.dart';
 import '../../domain/models/kyc_profile.dart';
 import '../../domain/models/kyc_progress_status.dart';
@@ -79,6 +80,17 @@ class KycController extends GetxController {
   /// Dernier statut du dossier soumis.
   final Rxn<KycVerification> verification = Rxn<KycVerification>();
 
+  /// `true` tant que le compte n'est pas validé : sortie vers Main interdite.
+  bool get isBlockedUntilValidated => !AuthNavigation.isUserValidated();
+
+  /// Bouton retour visible uniquement pour naviguer entre étapes (ou quitter si déjà validé).
+  bool get canShowBackButton {
+    if (!isBlockedUntilValidated) return true;
+    return step.value == KycStep.front ||
+        step.value == KycStep.back ||
+        step.value == KycStep.face;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -112,13 +124,15 @@ class KycController extends GetxController {
   bool get showProgress =>
       step.value != KycStep.verifying && step.value != KycStep.verified;
 
-  /// Charge la liste des pièces acceptées.
+  /// Charge les pièces et reprend l'écran d'attente si une demande est en cours.
   Future<void> load() async {
     if (isLoading.value) return;
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      documentTypes.assignAll(await _repository.getDocumentTypes());
+      final typesFuture = _repository.getDocumentTypes();
+      await _resumeIfPending();
+      documentTypes.assignAll(await typesFuture);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
     } catch (_) {
@@ -126,6 +140,36 @@ class KycController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Si `non_valide` et dossier déjà ouvert → écran attente (ou verified).
+  Future<void> _resumeIfPending() async {
+    if (!isBlockedUntilValidated) return;
+    try {
+      final KycVerification current =
+          await _repository.getCurrentVerificationStatus();
+      if (current.isApproved) {
+        _profileId = current.reference.isEmpty ? null : current.reference;
+        step.value = KycStep.verified;
+        return;
+      }
+      if (current.isPending && current.reference.isNotEmpty) {
+        _enterWaiting(current.reference);
+      }
+    } catch (_) {
+      // Pas de statut : on laisse le parcours classique (choix de pièce).
+    }
+  }
+
+  /// Affiche « Vérification en cours » et démarre le polling.
+  void _enterWaiting(String profileId) {
+    _profileId = profileId;
+    verification.value = KycVerification(
+      status: 'pending',
+      reference: profileId,
+    );
+    step.value = KycStep.verifying;
+    _startPolling();
   }
 
   /// Sélectionne une pièce (le verso déjà pris est oublié si la pièce change).
@@ -196,14 +240,20 @@ class KycController extends GetxController {
     }
   }
 
-  /// Revient à l'étape précédente, ou quitte la page.
+  /// Revient à l'étape précédente. Ne quitte pas le KYC si le compte n'est pas validé.
   void goBack() {
     if (isBusy.value) return;
     errorMessage.value = null;
     switch (step.value) {
       case KycStep.choose:
       case KycStep.verifying:
+        if (isBlockedUntilValidated) return;
+        Get.back<void>();
       case KycStep.verified:
+        if (isBlockedUntilValidated) {
+          unawaited(enterAppAfterValidation());
+          return;
+        }
         Get.back<void>();
       case KycStep.front:
         step.value = KycStep.choose;
@@ -216,15 +266,24 @@ class KycController extends GetxController {
     }
   }
 
-  /// Quitte le parcours pour revenir à l'accueil.
-  void goHome() => Get.until((route) => route.isFirst);
+  /// Après validation KYC : met à jour le statut local et ouvre Main.
+  Future<void> enterAppAfterValidation() =>
+      AuthNavigation.completeKycAndEnterApp();
 
-  /// Redirige vers l'achat d'un numéro.
-  ///
-  /// À remplacer par la route d'achat dès qu'elle existe.
-  void onBuyNumber() => goHome();
+  /// Quitte le parcours pour revenir à l'accueil (interdit si non validé).
+  void goHome() {
+    if (isBlockedUntilValidated) return;
+    AuthNavigation.goToHome();
+  }
+
+  /// CTA post-vérification : débloque l'app (statut local `valide`) puis Main.
+  void onVerifiedContinue() {
+    unawaited(enterAppAfterValidation());
+  }
 
   /// Ouvre le ticket (une seule fois), envoie les 3 fichiers, lance le suivi.
+  ///
+  /// Si Laravel refuse (`demande déjà en cours`) → écran d'attente, pas d'erreur.
   Future<void> _submit(KycDocumentType type) async {
     final String? front = frontPath.value;
     final String? face = facePath.value;
@@ -238,6 +297,15 @@ class KycController extends GetxController {
     String? profileId = _profileId;
     if (profileId == null) {
       final KycProfile profile = await _repository.initVerification();
+      if (profile.isAlreadyApproved) {
+        _profileId = profile.profileId;
+        step.value = KycStep.verified;
+        return;
+      }
+      if (profile.isAlreadyPending) {
+        _enterWaiting(profile.profileId);
+        return;
+      }
       profileId = profile.profileId;
       _profileId = profileId;
     }
@@ -249,12 +317,7 @@ class KycController extends GetxController {
       backPath: back,
     );
 
-    verification.value = KycVerification(
-      status: 'pending',
-      reference: profileId,
-    );
-    step.value = KycStep.verifying;
-    _startPolling();
+    _enterWaiting(profileId);
   }
 
   /// Lance l'interrogation périodique du statut du dossier.

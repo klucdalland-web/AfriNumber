@@ -101,8 +101,11 @@ class AppTranslations extends Translations {
 
       // OTP
       'otp.expires_in': 'Expire dans',
-      'otp.expired': 'Code expiré. Veuillez réessayer.',
-      'otp_resends_in': 'Renvoi dans {seconds} secondes',
+      'otp.expired': 'Code expiré. Veuillez renvoyer un nouveau code.',
+      'otp.resend_in': 'Renvoi possible dans {time}',
+      'otp.resend_ready': 'Vous pouvez renvoyer un nouveau code.',
+      'otp.locked':
+          'Trop de tentatives. Réessayez dans {time}.',
       'otp.resends_left': 'Renvois restants :',
       'otp.resend_limit_reached':
           'Limite de renvois atteinte. Réessayez plus tard.',
@@ -144,17 +147,18 @@ class AppTranslations extends Translations {
           'Impossible de charger les pays. Réessayez.',
       'error.country_required': 'Veuillez sélectionner un pays.',
       'error.otp_resend_limit': 'La limite de renvois du code est atteinte.',
+      'error.reset_failed':
+          'Impossible de réinitialiser le mot de passe. Réessayez.',
 
       // ── OTP / Mot de passe oublié ──
       'otp.title': 'Code de vérification',
       'otp.verifying': 'Vérification du code en cours…',
       'otp.subtitle':
-          'Entrez le code à 6 chiffres envoyé à votre numéro pour continuer.',
+          'Entrez le code à 6 chiffres envoyé pour continuer.',
       'otp.no_code_received': "Vous n'avez pas reçu le code ?",
       'forgot.title': 'Mot de passe oublié ?',
       'forgot.subtitle': 'Indiquez votre e-mail : nous vous envoyons un code pour réinitialiser votre mot de passe.',
       'reset.title': 'Nouveau mot de passe',
-      'otp.resend_in': 'Renvoi dans {seconds} secondes',
       'reset.subtitle': 'Entrez le code reçu par e-mail et choisissez votre nouveau mot de passe.',
 
       // ── Welcome / Onboarding ──
@@ -211,6 +215,7 @@ class AppTranslations extends Translations {
       'kyc.verified.title': 'Identité vérifiée',
       'kyc.verified.body':
           'Votre identité a été confirmée. Vous pouvez continuer.',
+      'kyc.verified.continue': 'Continuer',
       'kyc.verified.buy': 'Acheter un numéro',
       'kyc.rejected': 'La vérification a échoué. Vous pouvez réessayer.',
       'kyc.err': 'Une erreur est survenue pendant la vérification.',
@@ -459,6 +464,14 @@ class AppTranslations extends Translations {
       'reset.submit': 'Reset',
       'otp.back': 'Back',
       'otp.resend': 'Resend',
+      'otp.expires_in': 'Expires in',
+      'otp.expired': 'Code expired. Please request a new one.',
+      'otp.resend_in': 'Resend available in {time}',
+      'otp.resend_ready': 'You can request a new code.',
+      'otp.locked': 'Too many attempts. Try again in {time}.',
+      'otp.resends_left': 'Resends left:',
+      'otp.resend_limit_reached':
+          'Resend limit reached. Please try again later.',
       'feedback.login_success_title': 'Login successful!',
       'feedback.login_success_subtitle':
           'Welcome back! You are now logged in to your account.',
@@ -502,11 +515,12 @@ class AppTranslations extends Translations {
           'Unable to load countries. Please try again.',
       'error.country_required': 'Please select a country.',
       'error.otp_resend_limit': 'The OTP resend limit has been reached.',
+      'error.reset_failed': 'Unable to reset the password. Please try again.',
 
       // ── OTP / Forgot password ──
       'otp.title': 'Verification code',
       'otp.verifying': 'Verifying your code…',
-      'otp.subtitle': 'Enter the 6-digit code sent to your phone to continue.',
+      'otp.subtitle': 'Enter the 6-digit code that was sent to continue.',
       'otp.no_code_received': "Didn't receive the code?",
       'forgot.title': 'Forgot password?',
       'forgot.subtitle': 'Enter your email and we will send you a code to reset your password.',
@@ -570,6 +584,7 @@ class AppTranslations extends Translations {
       'kyc.verified.title': 'Identity verified',
       'kyc.verified.body':
           'Your identity has been confirmed. You can continue.',
+      'kyc.verified.continue': 'Continue',
       'kyc.verified.buy': 'Buy a number',
       'kyc.rejected': 'Verification failed. You can try again.',
       'kyc.err': 'An error occurred during verification.',

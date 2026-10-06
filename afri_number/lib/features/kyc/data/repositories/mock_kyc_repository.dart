@@ -43,6 +43,15 @@ class MockKycRepository implements KycRepository {
   }
 
   @override
+  Future<KycVerification> getCurrentVerificationStatus() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (_uploadedAt == null) {
+      return const KycVerification(status: 'none', reference: '');
+    }
+    return getVerificationStatus(profileId: _profileId);
+  }
+
+  @override
   Future<KycVerification> getVerificationStatus({
     required String profileId,
   }) async {

@@ -50,7 +50,28 @@ return [
              *
              */
 
-            'credentials' => env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS')),
+            'credentials' => (function (): mixed {
+                $base64 = env('FIREBASE_CREDENTIALS_BASE64');
+                if (is_string($base64) && $base64 !== '') {
+                    $json = base64_decode($base64, true);
+                    if ($json === false) {
+                        throw new InvalidArgumentException(
+                            'FIREBASE_CREDENTIALS_BASE64 is set but is not valid base64.'
+                        );
+                    }
+
+                    $credentials = json_decode($json, true);
+                    if (! is_array($credentials)) {
+                        throw new InvalidArgumentException(
+                            'FIREBASE_CREDENTIALS_BASE64 decoded successfully but is not valid JSON object/array.'
+                        );
+                    }
+
+                    return $credentials;
+                }
+
+                return env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS'));
+            })(),
 
             /*
              * ------------------------------------------------------------------------

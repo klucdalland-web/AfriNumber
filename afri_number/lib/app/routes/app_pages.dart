@@ -18,6 +18,7 @@ import '../../features/notifications/presentation/views/notifications_tab.dart';
 import '../../features/splash/presentation/bindings/splash_binding.dart';
 import '../../features/splash/presentation/views/splash_page.dart';
 import '../../features/welcome/presentation/views/welcome_page.dart';
+import '../middleware/kyc_gate_middleware.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -101,6 +102,7 @@ class AppPages {
       name: AppRoutes.main,
       page: () => const MainPage(),
       binding: MainBinding(),
+      middlewares: [KycGateMiddleware()],
     ),
   ];
 }
