@@ -25,7 +25,7 @@ class LoginRequest extends FormRequest
             'device_model' => ['required', 'string', 'max:100'],
             'os_version' => ['required', 'string', 'max:50'],
             'app_version' => ['required', 'string', 'max:20'],
-            'fcm_token' => ['required', 'string', 'max:1000'],
+            'fcm_token' => ['nullable', 'string', 'max:1000'],
 
         ];
     }

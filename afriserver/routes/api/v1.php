@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ObservabilityController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PaysController;
@@ -74,6 +75,14 @@ Route::middleware(['auth:sanctum', 'abilities:access-api', 'check.token.expirati
     // Types de notifications (référentiel)
     Route::get('/type-notifications', [TypeNotificationController::class, 'index'])->name('type-notifications.index');
     Route::get('/type-notifications/{typeNotification}', [TypeNotificationController::class, 'show'])->name('type-notifications.show');
+
+    // Inbox notifications (compte authentifié uniquement)
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // Pièces d'identité user — logique métier déléguée à Node.js
     Route::get('/pieces', [PieceIdentiteController::class, 'index'])->name('pieces.index');

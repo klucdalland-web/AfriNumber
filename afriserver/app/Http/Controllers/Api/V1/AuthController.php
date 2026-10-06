@@ -717,18 +717,24 @@ class AuthController extends Controller
             ]
         );
 
-        DeviceTokenFcm::query()
-            ->where('token', $validated['fcm_token'])
-            ->where('device_id', '!=', $device->id)
-            ->delete();
+        $fcmToken = $validated['fcm_token'] ?? null;
+        if (is_string($fcmToken)
+            && $fcmToken !== ''
+            && $fcmToken !== 'dummy_fcm_token'
+        ) {
+            DeviceTokenFcm::query()
+                ->where('token', $fcmToken)
+                ->where('device_id', '!=', $device->id)
+                ->delete();
 
-        DeviceTokenFcm::query()->updateOrCreate(
-            ['device_id' => $device->id],
-            [
-                'token' => $validated['fcm_token'],
-                'actif' => true,
-            ]
-        );
+            DeviceTokenFcm::query()->updateOrCreate(
+                ['device_id' => $device->id],
+                [
+                    'token' => $fcmToken,
+                    'actif' => true,
+                ]
+            );
+        }
 
         $deviceName = $validated['device_name'] ?? 'api';
 
