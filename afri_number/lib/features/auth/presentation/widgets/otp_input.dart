@@ -61,7 +61,7 @@ class OTPInputState extends State<OTPInput> {
     _applyCode(_code.substring(0, _code.length - 1));
   }
 
-  /// Vide tous les champs (utilisé après un "resend").
+  /// Vide tous les champs (utilisé après un "resend" ou un code incorrect).
   void clear() {
     if (!mounted) return;
     _applyCode('');
@@ -139,63 +139,83 @@ class OTPInputState extends State<OTPInput> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(widget.length, (index) {
-              final isFocused =
-                  _focusNode.hasFocus && !allFilled && index == currentIndex;
-              final hasValue =
-                  index < _code.length && _code[index].isNotEmpty;
-              final digit = hasValue ? _code[index] : '';
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final gap = constraints.maxWidth < 340 ? 4.0 : 8.0;
+              final totalGaps = gap * (widget.length - 1);
+              final rawWidth =
+                  (constraints.maxWidth - totalGaps) / widget.length;
+              final boxWidth = rawWidth.clamp(36.0, 48.0);
+              final boxHeight = (boxWidth * 1.15).clamp(44.0, 56.0);
+              final fontSize = (boxWidth * 0.55).clamp(20.0, 28.0);
 
-              return Container(
-                width: 48,
-                height: 56,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                child: Stack(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        color: colors.surfaceContainerHighest,
-                        border: Border.all(
-                          color: isFocused
-                              ? colors.primary
-                              : hasValue
-                                  ? colors.outline
-                                  : colors.outlineVariant,
-                          width: isFocused ? 2.5 : 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.shadow.withValues(
-                              alpha: isFocused ? 0.1 : 0.05,
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.length, (index) {
+                  final isFocused = _focusNode.hasFocus &&
+                      !allFilled &&
+                      index == currentIndex;
+                  final hasValue =
+                      index < _code.length && _code[index].isNotEmpty;
+                  final digit = hasValue ? _code[index] : '';
+
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: index == 0 ? 0 : gap / 2,
+                      right: index == widget.length - 1 ? 0 : gap / 2,
+                    ),
+                    child: SizedBox(
+                      width: boxWidth,
+                      height: boxHeight,
+                      child: Stack(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: colors.surfaceContainerHighest,
+                              border: Border.all(
+                                color: isFocused
+                                    ? colors.primary
+                                    : hasValue
+                                        ? colors.outline
+                                        : colors.outlineVariant,
+                                width: isFocused ? 2.5 : 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colors.shadow.withValues(
+                                    alpha: isFocused ? 0.1 : 0.05,
+                                  ),
+                                  blurRadius: isFocused ? 16 : 8,
+                                  offset: const Offset(0, 4),
+                                  spreadRadius: isFocused ? 0 : -2,
+                                ),
+                              ],
                             ),
-                            blurRadius: isFocused ? 16 : 8,
-                            offset: const Offset(0, 4),
-                            spreadRadius: isFocused ? 0 : -2,
                           ),
+                          Center(
+                            child: Text(
+                              digit,
+                              style: TextStyle(
+                                fontFamily: 'Georgia',
+                                fontWeight: FontWeight.w700,
+                                fontSize: fontSize,
+                                color: colors.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (isFocused)
+                            Center(
+                              child: _BlinkingCursor(color: colors.primary),
+                            ),
                         ],
                       ),
                     ),
-                    Center(
-                      child: Text(
-                        digit,
-                        style: TextStyle(
-                          fontFamily: 'Georgia',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 28,
-                          color: colors.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (isFocused)
-                      Center(child: _BlinkingCursor(color: colors.primary)),
-                  ],
-                ),
+                  );
+                }),
               );
-            }),
+            },
           ),
         ],
       ),
@@ -242,7 +262,7 @@ class _BlinkingCursorState extends State<_BlinkingCursor>
           opacity: _animation.value,
           child: Container(
             width: 2.5,
-            height: 32,
+            height: 28,
             decoration: BoxDecoration(
               color: widget.color,
               borderRadius: BorderRadius.circular(1.25),

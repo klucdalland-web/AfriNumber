@@ -535,6 +535,15 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Vide les champs du formulaire de connexion (identifiants incorrects, etc.).
+  void _clearLoginFields() {
+    phoneController.clear();
+    passwordController.clear();
+    final iso = loginPhoneController.value.isoCode;
+    loginPhoneController.value = PhoneNumber(isoCode: iso, nsn: '');
+    loginFormKey.currentState?.reset();
+  }
+
   /// Procédure de connexion de l'utilisateur.
   Future<void> login() async {
     if (isLoading.value) return;
@@ -579,9 +588,12 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       isLoading.value = false;
       _applyThrottleFromException(e);
+      // Mot de passe / identifiants incorrects → reset complet du formulaire.
+      _clearLoginFields();
       setError(e.displayMessage);
     } catch (_) {
       isLoading.value = false;
+      _clearLoginFields();
       setError('error.login_failed'.tr);
     }
   }
@@ -644,20 +656,23 @@ class AuthController extends GetxController {
   }
 
   /// Procédure de vérification du code OTP.
-  Future<void> verifyOtp() async {
-    if (isLoading.value || isVerifyingOtp.value) return;
+  /// Retourne `true` en cas de succès, `false` sinon (les cases doivent être vidées).
+  Future<bool> verifyOtp() async {
+    if (isLoading.value || isVerifyingOtp.value) return false;
     clearError();
 
     if (isOtpLocked) {
       setError(
         'otp.locked'.trParams({'time': otpLockLabel}),
       );
-      return;
+      otpController.clear();
+      return false;
     }
 
     if (isOtpExpired) {
       setError('error.code_expired'.tr);
-      return;
+      otpController.clear();
+      return false;
     }
 
     isLoading.value = true;
@@ -668,7 +683,8 @@ class AuthController extends GetxController {
         isLoading.value = false;
         isVerifyingOtp.value = false;
         setError('error.code_length'.tr);
-        return;
+        otpController.clear();
+        return false;
       }
 
       final response = await _repository.verifyOtp(
@@ -701,13 +717,18 @@ class AuthController extends GetxController {
             ? AppRoutes.authFeedbackConnexion
             : AppRoutes.authFeedbackInscription,
       );
+      return true;
     } on ApiException catch (e) {
       isLoading.value = false;
       _applyThrottleFromException(e);
+      otpController.clear();
       setError(e.displayMessage);
+      return false;
     } catch (_) {
       isLoading.value = false;
+      otpController.clear();
       setError('error.code_invalid'.tr);
+      return false;
     } finally {
       isVerifyingOtp.value = false;
       isLoading.value = false;

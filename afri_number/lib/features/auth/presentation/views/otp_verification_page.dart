@@ -62,9 +62,11 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     if (code.length != AuthController.otpLength) return;
     // Synchronise le code dans le controller avant l'appel réseau
     _authController.otpController.text = code;
-    await _authController.verifyOtp();
+    final ok = await _authController.verifyOtp();
     // Après l'await : si la page est disposée (navigation réussie), on arrête
     if (!mounted) return;
+    // Code incorrect / expiré / lock → vide les cases pour une nouvelle saisie
+    if (!ok) _clearOtpInput();
   }
 
   Future<void> _handleResend() async {

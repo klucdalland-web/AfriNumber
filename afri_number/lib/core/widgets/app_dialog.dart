@@ -12,6 +12,8 @@ import 'platform_utils.dart';
 class AppDialog {
   AppDialog._();
 
+  static Timer? _activeDismissTimer;
+
   /// Affiche une boîte de dialogue d'erreur adaptative selon la plateforme.
   /// Se ferme automatiquement après [autoDismissDuration] (par défaut 5 secondes).
   static Future<void> showError({
@@ -23,30 +25,37 @@ class AppDialog {
     Duration autoDismissDuration = const Duration(seconds: 5),
   }) async {
     final ctx = context ?? Get.context;
-    if (ctx == null) return;
+    if (ctx == null || !ctx.mounted) return;
 
-    // Retours haptiques
+    // Évite l'empilement de dialogues + timers orphelins.
+    _activeDismissTimer?.cancel();
+    _activeDismissTimer = null;
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
+
     HapticFeedback.mediumImpact();
 
     final dialogTitle = title ?? 'Erreur';
     final confirmText = buttonText ?? 'Compris';
 
-    Timer? dismissTimer;
-
     void dismissDialog(BuildContext dialogCtx) {
-      dismissTimer?.cancel();
-      if (Navigator.of(dialogCtx).canPop()) {
-        Navigator.of(dialogCtx).pop();
+      _activeDismissTimer?.cancel();
+      _activeDismissTimer = null;
+      if (!dialogCtx.mounted) return;
+      final navigator = Navigator.maybeOf(dialogCtx);
+      if (navigator != null && navigator.canPop()) {
+        navigator.pop();
       }
-      if (onConfirm != null) onConfirm();
+      onConfirm?.call();
     }
 
     if (isApplePlatform) {
-      showCupertinoDialog(
+      await showCupertinoDialog<void>(
         context: ctx,
         barrierDismissible: true,
         builder: (dialogCtx) {
-          dismissTimer = Timer(autoDismissDuration, () {
+          _activeDismissTimer = Timer(autoDismissDuration, () {
             dismissDialog(dialogCtx);
           });
 
@@ -85,12 +94,11 @@ class AppDialog {
         },
       );
     } else {
-      // Android / Material 3 Dialog
-      showDialog(
+      await showDialog<void>(
         context: ctx,
         barrierDismissible: true,
         builder: (dialogCtx) {
-          dismissTimer = Timer(autoDismissDuration, () {
+          _activeDismissTimer = Timer(autoDismissDuration, () {
             dismissDialog(dialogCtx);
           });
 
@@ -109,7 +117,6 @@ class AppDialog {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // En-tête : Icône d'erreur rouge dans une pastille circulaire
                   Container(
                     width: r.iconSize(56),
                     height: r.iconSize(56),
@@ -126,8 +133,6 @@ class AppDialog {
                     ),
                   ),
                   SizedBox(height: r.space(16)),
-
-                  // Titre
                   Text(
                     dialogTitle,
                     textAlign: TextAlign.center,
@@ -138,8 +143,6 @@ class AppDialog {
                     ),
                   ),
                   SizedBox(height: r.space(8)),
-
-                  // Message
                   Text(
                     message,
                     textAlign: TextAlign.center,
@@ -151,8 +154,6 @@ class AppDialog {
                     ),
                   ),
                   SizedBox(height: r.space(24)),
-
-                  // Bouton d'action pilule
                   SizedBox(
                     width: double.infinity,
                     height: r.heightOf(48),
@@ -182,5 +183,8 @@ class AppDialog {
         },
       );
     }
+
+    _activeDismissTimer?.cancel();
+    _activeDismissTimer = null;
   }
 }
