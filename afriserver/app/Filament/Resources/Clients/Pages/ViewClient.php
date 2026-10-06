@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Clients\Pages;
 
 use App\Filament\Resources\Clients\ClientResource;
+use App\Models\Profile;
 use App\Models\User;
 use App\Services\KycAdminService;
 use App\Support\PanelPermission;
@@ -151,6 +152,9 @@ class ViewClient extends ViewRecord
             return false;
         }
 
-        return $this->record->profile?->isAwaitingManualReview() === true;
+        return in_array($this->record->profile?->status, [
+                Profile::STATUS_VALIDATION_MANUELLE,
+                Profile::STATUS_EN_COURS_DE_VERIFICATION,
+            ], true);
     }
 }
