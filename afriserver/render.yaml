@@ -43,3 +43,5 @@ services:
         value: database
       - key: CACHE_STORE
         value: database
+      - key: FIREBASE_CREDENTIALS_BASE64
+        sync: false

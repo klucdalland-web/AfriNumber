@@ -17,16 +17,25 @@ class FirebasePingCommand extends Command
     public function handle(Messaging $messaging): int
     {
         $configured = config('firebase.projects.app.credentials');
-        $this->line('FIREBASE_CREDENTIALS config = '.json_encode($configured));
 
-        if (is_string($configured) && $configured !== '') {
+        if (is_array($configured)) {
+            $this->line('Credentials source = FIREBASE_CREDENTIALS_BASE64');
+            $this->line('Project ID       = '.($configured['project_id'] ?? '(missing)'));
+        } elseif (is_string($configured) && $configured !== '') {
             $path = str_starts_with($configured, '/') || str_contains($configured, ':\\')
                 ? $configured
                 : base_path($configured);
-            $this->line('Resolved path = '.$path);
-            $this->line('File exists  = '.(is_file($path) ? 'yes' : 'NO'));
+            $projectId = '(missing)';
+            if (is_file($path)) {
+                $decoded = json_decode((string) file_get_contents($path), true);
+                if (is_array($decoded) && isset($decoded['project_id']) && is_string($decoded['project_id'])) {
+                    $projectId = $decoded['project_id'];
+                }
+            }
+            $this->line('Credentials source = FIREBASE_CREDENTIALS (file)');
+            $this->line('Project ID       = '.$projectId);
         } else {
-            $this->warn('Aucun chemin credentials configuré (env FIREBASE_CREDENTIALS vide).');
+            $this->warn('Aucune credential (FIREBASE_CREDENTIALS_BASE64 / FIREBASE_CREDENTIALS).');
         }
 
         $token = $this->option('token');
