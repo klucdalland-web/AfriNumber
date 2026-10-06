@@ -33,6 +33,21 @@ class AppTranslations extends Translations {
       'common.yesterday': 'Hier',
       'common.minutes': 'min',
       'inbox.unread': '{count} non lus',
+      'notifications.title': 'Notifications',
+      'notifications.subtitle': 'Vos dernières activités',
+      'notifications.mark_all_read': 'Tout marquer comme lu',
+      'notifications.filter_all': 'Toutes',
+      'notifications.filter_unread': 'Non lues',
+      'notifications.empty': 'Vous n’avez aucune notification pour le moment.',
+      'notifications.empty_unread': 'Vous n’avez aucune notification non lue.',
+      'notifications.older': 'Plus anciennes',
+      'notifications.load_error': 'Impossible de charger les notifications.',
+      'notifications.load_more_error': 'Impossible de charger la suite.',
+      'notifications.action_error': 'Cette action n’a pas pu être effectuée.',
+      'notifications.details': 'Détail de la notification',
+      'notifications.delete': 'Supprimer',
+      'notifications.delete_title': 'Supprimer cette notification ?',
+      'notifications.delete_body': 'Cette notification sera supprimée de votre boîte de réception.',
 
       // ── Navigation ──
       'nav.home': 'Accueil',
@@ -202,7 +217,7 @@ class AppTranslations extends Translations {
       'kyc.quality.content_unclear': 'Le contenu semble difficile à lire. Cadrez le document et réessayez.',
       'kyc.info.title': 'Vérification d’identité',
       'kyc.info.body': 'Prenez des photos nettes et lisibles de vos documents. Ces informations servent à confirmer votre identité.',
-      'kyc.info.close': 'Compris',
+      'kyc.info.close': 'Compris',git a
 
       // ── Dashboard ──
       'dashboard.notifications': 'Notifications',
@@ -372,6 +387,21 @@ class AppTranslations extends Translations {
       'common.yesterday': 'Yesterday',
       'common.minutes': 'min',
       'inbox.unread': '{count} unread',
+      'notifications.title': 'Notifications',
+      'notifications.subtitle': 'Your latest activity',
+      'notifications.mark_all_read': 'Mark all as read',
+      'notifications.filter_all': 'All',
+      'notifications.filter_unread': 'Unread',
+      'notifications.empty': 'You have no notifications yet.',
+      'notifications.empty_unread': 'You have no unread notifications.',
+      'notifications.older': 'Older',
+      'notifications.load_error': 'Could not load notifications.',
+      'notifications.load_more_error': 'Could not load more notifications.',
+      'notifications.action_error': 'This action could not be completed.',
+      'notifications.details': 'Notification details',
+      'notifications.delete': 'Delete',
+      'notifications.delete_title': 'Delete this notification?',
+      'notifications.delete_body': 'This notification will be removed from your inbox.',
 
       // ── Navigation ──
       'nav.home': 'Home',

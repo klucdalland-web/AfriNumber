@@ -8,9 +8,14 @@ import '../models/notification_item.dart';
 
 /// Titre de groupe + carte adaptative dont les lignes sont séparées par un filet.
 class NotificationGroupSection extends StatelessWidget {
-  const NotificationGroupSection({super.key, required this.group});
+  const NotificationGroupSection({
+    super.key,
+    required this.group,
+    required this.onNotificationTap,
+  });
 
   final NotificationGroup group;
+  final ValueChanged<NotificationItem> onNotificationTap;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +58,10 @@ class NotificationGroupSection extends StatelessWidget {
                       thickness: 1,
                       color: borderColor,
                     ),
-                  _NotificationRow(item: group.items[i]),
+                  _NotificationRow(
+                    item: group.items[i],
+                    onTap: () => onNotificationTap(group.items[i]),
+                  ),
                 ],
               ],
             ),
@@ -65,19 +73,21 @@ class NotificationGroupSection extends StatelessWidget {
 }
 
 class _NotificationRow extends StatelessWidget {
-  const _NotificationRow({required this.item});
+  const _NotificationRow({required this.item, required this.onTap});
 
   final NotificationItem item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InboxItemTile(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12.5),
-      leading: ServiceAvatar(label: item.service, assetPath: item.logoAsset),
+      leading: ServiceAvatar(label: item.service),
       title: item.service,
       preview: item.message,
       timeLabel: item.timeLabel,
       isUnread: item.isUnread,
+      onTap: onTap,
     );
   }
 }

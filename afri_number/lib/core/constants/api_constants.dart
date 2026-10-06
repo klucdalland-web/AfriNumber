@@ -69,6 +69,11 @@ class ApiConstants {
   /// Retourne la liste des pays disponibles sur la plateforme.
   static const String pays = '/pays';
 
+  // Notifications inbox
+  static const String notifications = '/notifications';
+  static const String notificationsUnreadCount = '/notifications/unread-count';
+  static const String notificationsReadAll = '/notifications/read-all';
+
   /// Vérifie si l'URL est configurée pour le développement local
   static bool get isLocalDevelopment {
     return baseUrl.contains('localhost') ||
