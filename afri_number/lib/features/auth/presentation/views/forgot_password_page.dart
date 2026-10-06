@@ -19,7 +19,7 @@ class ForgotPasswordPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: r.space(20)),
-              AuthHeader(moduleLabel: 'Récupération', showBackButton: true),
+              AuthHeader(moduleLabel: 'Récupération', showBackButton: false),
               SizedBox(height: r.space(8)),
               const ForgotPasswordForm(),
               SizedBox(height: r.space(40)),

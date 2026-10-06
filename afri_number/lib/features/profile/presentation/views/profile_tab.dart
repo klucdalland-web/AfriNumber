@@ -72,7 +72,7 @@ class ProfileTab extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed == true) controller.signOut();
+    if (confirmed == true) await controller.signOut();
   }
 
   @override
@@ -183,8 +183,11 @@ class ProfileTab extends StatelessWidget {
                           ],
                         ),
                         // Bouton de déconnexion en haut à droite
-                        ProfileLogoutButton(
-                          onPressed: () => _confirmSignOut(context, ctrl),
+                        Obx(
+                          () => ProfileLogoutButton(
+                            isLoading: ctrl.isSigningOut.value,
+                            onPressed: () => _confirmSignOut(context, ctrl),
+                          ),
                         ),
                       ],
                     ),

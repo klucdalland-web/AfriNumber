@@ -506,7 +506,10 @@ class AuthController extends GetxController {
       );
 
       isLoading.value = false;
-      Get.offAllNamed(AppRoutes.login);
+      // The login page is already below the forgot/reset pages in this flow.
+      // Keep it mounted and remove only the recovery pages to avoid tearing
+      // down the whole auth widget tree during the successful form callback.
+      Get.until((route) => route.settings.name == AppRoutes.login);
     } on ApiException catch (e) {
       isLoading.value = false;
       setError(e.message);

@@ -27,6 +27,9 @@ class ProfileController extends GetxController {
   /// Indicateur de chargement / rafraîchissement
   final isRefreshing = false.obs;
 
+  /// Indique qu'une déconnexion est en cours.
+  final isSigningOut = false.obs;
+
   /// Retourne vrai si le thème sombre est actif
   bool get isDark => _themeController.isDark;
 
@@ -80,6 +83,8 @@ class ProfileController extends GetxController {
 
   /// Déconnecte l'utilisateur et le redirige vers l'écran d'accueil
   Future<void> signOut() async {
+    if (isSigningOut.value) return;
+    isSigningOut.value = true;
     try {
       await _authRepository.logout();
     } catch (error) {
