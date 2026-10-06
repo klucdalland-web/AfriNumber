@@ -59,6 +59,7 @@ class KycProfile {
     final raw = (profileStatus ?? '').toLowerCase();
     return status == 'refuse' &&
         (raw == 'en_cours_de_verification' ||
+            raw == 'validation_manuelle' ||
             raw == 'pending' ||
             raw == 'manual_review');
   }

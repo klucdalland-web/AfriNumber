@@ -35,7 +35,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'guard_name' => 'web',
         ]);
         $operateur->syncPermissions([
-            PanelPermission::USERS_VIEW,
+            PanelPermission::CLIENTS_VIEW,
+            PanelPermission::CLIENTS_UPDATE,
             PanelPermission::PROFILES_VIEW,
             PanelPermission::PROFILES_CREATE,
             PanelPermission::PROFILES_UPDATE,

@@ -188,7 +188,7 @@ test('manual_review verdict sends fcm with kyc_manual_review type', function ():
 
     $this->assertDatabaseHas('profiles', [
         'id' => $profile->id,
-        'status' => 'en_cours_de_verification',
+        'status' => 'validation_manuelle',
     ]);
 });
 

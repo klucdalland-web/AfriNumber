@@ -14,6 +14,7 @@ return new class extends Migration
             $table->enum('status', [
                 'en_attente_d_upload',
                 'en_cours_de_verification',
+                'validation_manuelle',
                 'approuve',
                 'rejete',
             ])->default('en_attente_d_upload');

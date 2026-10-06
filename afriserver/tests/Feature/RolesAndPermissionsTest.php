@@ -41,12 +41,14 @@ test('super_admin can perform any panel permission', function (): void {
         ->and($admin->can(PanelPermission::PAYS_CREATE))->toBeTrue();
 });
 
-test('operateur can view users and manage profiles but not roles', function (): void {
+test('operateur can view clients and manage profiles but not roles', function (): void {
     $admin = User::factory()->admin()->create();
     $admin->assignRole('operateur');
 
-    expect($admin->can(PanelPermission::USERS_VIEW))->toBeTrue()
+    expect($admin->can(PanelPermission::CLIENTS_VIEW))->toBeTrue()
+        ->and($admin->can(PanelPermission::CLIENTS_UPDATE))->toBeTrue()
         ->and($admin->can(PanelPermission::PROFILES_UPDATE))->toBeTrue()
+        ->and($admin->can(PanelPermission::USERS_VIEW))->toBeFalse()
         ->and($admin->can(PanelPermission::ROLES_VIEW))->toBeFalse()
         ->and($admin->can(PanelPermission::PAYS_VIEW))->toBeFalse();
 });

@@ -65,6 +65,7 @@ class KycVerification {
       case 'en_attente_d_upload':
         return 'awaiting_upload';
       case 'manual_review':
+      case 'validation_manuelle':
       case 'en_cours_de_verification':
       case 'pending':
         return 'pending';

@@ -58,7 +58,7 @@ class ProfileVerificationController extends Controller
             // 2. Sécurité : Vérifier si une validation n'est pas déjà en cours
             $profilExistant = Profile::where('user_id', $user->id)->first();
 
-            if ($profilExistant && in_array($profilExistant->status, ['en_cours_de_verification', 'approuve'], true)) {
+            if ($profilExistant && $profilExistant->blocksNewVerification()) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Une vérification est déjà en cours ou votre compte est déjà approuvé.',
@@ -71,9 +71,10 @@ class ProfileVerificationController extends Controller
             $profil = Profile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'status' => 'en_attente_d_upload',
+                    'status' => Profile::STATUS_EN_ATTENTE_D_UPLOAD,
                     'document_url' => null,
                     'documents' => null,
+                    'rejection_reason' => null,
                 ]
             );
 
@@ -190,7 +191,7 @@ class ProfileVerificationController extends Controller
 
             // 2. Garde-fou : un profil déjà approuvé / en vérif / rejeté non réouvert
             //    ne peut pas être écrasé via Express (seul en_attente_d_upload est accepté).
-            if ($profil->status !== 'en_attente_d_upload') {
+            if ($profil->status !== Profile::STATUS_EN_ATTENTE_D_UPLOAD) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Ce profil n\'accepte plus d\'upload. Relancez /verifier/init si le statut le permet.',
@@ -209,7 +210,7 @@ class ProfileVerificationController extends Controller
 
             // 4. Enregistrement des documents et mise à jour du statut
             $profil->documents = $request->documents;
-            $profil->status = 'en_cours_de_verification';
+            $profil->status = Profile::STATUS_EN_COURS_DE_VERIFICATION;
             $profil->save();
 
             // 5. Déclenchement de n8n APRÈS l'envoi de la réponse à Express
@@ -349,8 +350,8 @@ class ProfileVerificationController extends Controller
             // 🗄️ 3. Mise à jour du profil en Base de Données
             $profil = Profile::find($request->profile_id);
 
-            // 🛡️ Anti-rejeu : on n'accepte un verdict que si le profil l'attend encore
-            if ($profil->status !== 'en_cours_de_verification') {
+            // 🛡️ Anti-rejeu : on n'accepte un verdict auto que si le profil est encore en vérif auto
+            if ($profil->status !== Profile::STATUS_EN_COURS_DE_VERIFICATION) {
                 return response()->json([
                     'statut' => 'refuse',
                     'erreur' => 'Ce profil n\'attend plus de verdict.',
@@ -359,9 +360,10 @@ class ProfileVerificationController extends Controller
 
             // Mapping des statuts n8n vers tes statuts de base de données
             $statutMapping = [
-                'approved' => 'approuve',
-                'rejected' => 'rejete',
-                'manual_review' => 'en_cours_de_verification', // Reste en traitement si vérification humaine requise
+                'approved' => Profile::STATUS_APPROUVE,
+                'rejected' => Profile::STATUS_REJETE,
+                // Revue humaine : statut dédié — seul le dashboard pourra trancher ensuite
+                'manual_review' => Profile::STATUS_VALIDATION_MANUELLE,
             ];
 
             $profil->status = $statutMapping[$request->kyc_status];
@@ -381,8 +383,8 @@ class ProfileVerificationController extends Controller
             }
 
             // 🧹 3 bis. Décision prise : suppression des documents (pas en revue manuelle)
-            if (in_array($request->kyc_status, ['approved', 'rejected'])) {
-                $this->supprimerDocuments($profil);
+            if (in_array($request->kyc_status, ['approved', 'rejected'], true)) {
+                $profil->clearStoredDocuments();
             }
 
             // 📢 4. Notifications push utilisateur (FCM)
@@ -483,30 +485,6 @@ class ProfileVerificationController extends Controller
                 'kyc_status' => $kycStatus,
                 'error' => $e->getMessage(),
             ]);
-        }
-    }
-
-    /**
-     * Supprime les documents du profil sur Storj. Le verdict est déjà enregistré :
-     * un échec ici est seulement journalisé, et les chemins restent en base pour un nouvel essai.
-     */
-    private function supprimerDocuments(Profile $profil): void
-    {
-        $paths = collect($profil->documents ?? [])->pluck('path')->all();
-
-        if (empty($paths)) {
-            return;
-        }
-
-        try {
-            if (Storage::disk('storj')->delete($paths)) {
-                $profil->documents = null;
-                $profil->save();
-            } else {
-                Log::error('Suppression des documents échouée pour le profil '.$profil->id);
-            }
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de la suppression des documents du profil '.$profil->id.' : '.$e->getMessage());
         }
     }
 }
