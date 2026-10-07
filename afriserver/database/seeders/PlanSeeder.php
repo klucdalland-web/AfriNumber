@@ -19,10 +19,10 @@ class PlanSeeder extends Seeder
             [
                 'code' => 'free',
                 'label' => 'Free',
-                'description' => 'Essai : 1 numéro virtuel pendant 14 jours',
+                'description' => 'Essai : 1 numéro virtuel pendant 7 jours',
                 'price' => 0,
                 'currency' => 'XOF',
-                'duration_days' => 14,
+                'duration_days' => 7,
                 'max_numbers' => 1,
                 'sort_order' => 0,
                 'services' => [
@@ -32,11 +32,11 @@ class PlanSeeder extends Seeder
             [
                 'code' => 'basic',
                 'label' => 'Basic',
-                'description' => '1 numéro virtuel avec SMS entrants',
+                'description' => '2 numéros virtuels avec SMS entrants',
                 'price' => 2500,
                 'currency' => 'XOF',
                 'duration_days' => 30,
-                'max_numbers' => 1,
+                'max_numbers' => 2,
                 'sort_order' => 1,
                 'services' => [
                     'virtual_number' => null,

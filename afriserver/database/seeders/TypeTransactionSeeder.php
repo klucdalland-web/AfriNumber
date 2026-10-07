@@ -32,6 +32,12 @@ class TypeTransactionSeeder extends Seeder
                 'sort_order' => 3,
             ],
             [
+                'code' => TypeTransaction::CODE_TOPUP,
+                'label' => 'Rechargement',
+                'description' => 'Rechargement du solde wallet',
+                'sort_order' => 6,
+            ],
+            [
                 'code' => TypeTransaction::CODE_NUMBER,
                 'label' => 'Achat numéro',
                 'description' => 'Paiement / achat d\'un numéro virtuel',

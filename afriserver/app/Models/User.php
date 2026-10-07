@@ -18,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'phone_number', 'statut', 'status_valide', 'pays_id', 'type_user_id', 'first_name', 'failed_login_attempts',
+#[Fillable(['name', 'email', 'password', 'phone_number', 'statut', 'status_valide', 'pays_id', 'type_user_id', 'balance', 'first_name', 'failed_login_attempts',
     'locked_until', ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
@@ -91,6 +91,14 @@ class User extends Authenticatable implements FilamentUser
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * @return HasMany<UserNumber, $this>
+     */
+    public function userNumbers(): HasMany
+    {
+        return $this->hasMany(UserNumber::class);
     }
 
     public function activeSubscription(): ?Subscription

@@ -29,6 +29,15 @@ return [
         'base_url' => 'https://zavu.dev',
     ],
 
+    'verifiedcore' => [
+        'key' => env('VERIFIEDCORE_API_KEY'),
+        'base_url' => env('VERIFIEDCORE_BASE_URL', 'https://api.verifiedcore.com/v1'),
+    ],
+
+    'numbers' => [
+        'default_provider' => env('NUMBER_PROVIDER', 'mock'),
+    ],
+
     'mail_api' => [
         'url' => env('MAIL_API_URL', 'https://serversmtp.vercel.app/api/send'),
         'secret' => env('MAIL_API_SECRET'),

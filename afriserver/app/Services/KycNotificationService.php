@@ -70,4 +70,33 @@ class KycNotificationService
             ]);
         }
     }
+
+    public function notifySmsReceived(User $user, SmsMessage $message): void
+    {
+        $title = 'Nouveau SMS reçu !';
+        $body = 'Vous avez reçu un message de ' . $message->sender;
+        $payload = [
+            'type' => 'sms_received',
+            'sms_id' => $message->id,
+            'sender' => $message->sender,
+        ];
+
+        try {
+            UserNotification::createForUser(
+                $user,
+                $title,
+                $body,
+                null, // We can add a specific SMS notification type later
+                $payload,
+            );
+        } catch (Throwable $e) {
+            Log::error('Échec notification inbox SMS', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        }
+
+        try {
+            $this->fcm->sendToUser($user, $title, $body, $payload);
+        } catch (Throwable $e) {
+            Log::error('Échec notification FCM SMS', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        }
+    }
 }

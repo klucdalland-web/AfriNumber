@@ -13,6 +13,8 @@ class TypeTransaction extends Model
 
     public const CODE_UPGRADE = 'upgrade';
 
+    public const CODE_TOPUP = 'topup';
+
     public const CODE_NUMBER = 'number';
 
     public const CODE_FORFAIT = 'forfait';
