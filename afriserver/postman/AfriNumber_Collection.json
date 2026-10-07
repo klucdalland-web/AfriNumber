@@ -1,0 +1,195 @@
+{
+	"info": {
+		"_postman_id": "afri-num-full-api-v2",
+		"name": "AfriNumber - COMPLETE API v2",
+		"description": "Professional API collection for AfriNumber. Integrated with automatic token management and environment variables.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 1. Authentication & Account",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Accept", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"phone_number\": \"+2348045678901\",\n    \"pays_id\": 1\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/register", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "register"] }
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Accept", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+						"description": "After login, the token is automatically saved to the collection variable."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log('Token updated successfully!');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Auth Utils",
+					"item": [
+						{
+							"name": "Verify OTP",
+							"request": {
+								"method": "POST",
+								"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+								"url": { "raw": "{{base_url}}/api/v1/auth/verify-otp", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "verify-otp"] },
+								"body": { "mode": "raw", "raw": "{\"otp\": \"123456\"}", "options": { "raw": { "language": "json" } } }
+							}
+						},
+						{
+							"name": "Logout",
+							"request": {
+								"method": "POST",
+								"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+								"url": { "raw": "{{base_url}}/api/v1/auth/logout", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "logout"] }
+							}
+						},
+						{
+							"//": "Other Auth routes",
+							"item": [
+								{ "name": "Resend OTP", "request": { "method": "POST", "url": { "raw": "{{base_url}}/api/v1/auth/resend-otp", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "resend-otp"] }, "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ] } },
+								{ "name": "Forgot Password", "request": { "method": "POST", "url": { "raw": "{{base_url}}/api/v1/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "forgot-password"] } } },
+								{ "name": "Reset Password", "request": { "method": "POST", "url": { "raw": "{{base_url}}/api/v1/auth/reset-password", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "reset-password"] } } },
+								{ "name": "Refresh Token", "request": { "method": "POST", "url": { "raw": "{{base_url}}/api/v1/auth/refresh-token", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "refresh-token"] }, "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ] } },
+								{ "name": "Me (Profile)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/v1/auth/me", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "me"] }, "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ] } }
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📞 2. Virtual Numbers",
+			"item": [
+				{
+					"name": "Search Numbers",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"url": { "raw": "{{base_url}}/api/numbers/search?country={{country_code}}&service={{service_slug}}", "host": ["{{base_url}}"], "path": ["api", "numbers", "search"], "query": [ { "key": "country", "value": "{{country_code}}" }, { "key": "service", "value": "{{service_slug}}" } ] }
+					}
+				},
+				{
+					"name": "Buy Number",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+						"body": { "mode": "raw", "raw": "{\n    \"phone_number\": \"{{selected_number}}\",\n    \"country\": \"{{country_code}}\"\n}", "options": { "raw": { "language": "json" } } },
+						"url": { "raw": "{{base_url}}/api/numbers/buy", "host": ["{{base_url}}"], "path": ["api", "numbers", "buy"] }
+					}
+				},
+				{
+					"name": "My Active Numbers",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"url": { "raw": "{{base_url}}/api/numbers/my", "host": ["{{base_url}}"], "path": ["api", "numbers", "my"] }
+					}
+				},
+				{
+					"name": "View SMS Inbox",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"url": { "raw": "{{base_//url}}/api/numbers/messages", "host": ["{{base_url}}"], "path": ["api", "numbers", "messages"] }
+					}
+				}
+			]
+		},
+		{
+			"//": "Wallet, KYC and Internal folders follow similar variable-based patterns",
+			"item": [
+				{
+					"name": "👛 3. Wallet & Finance",
+					"item": [
+						{
+							"name": "Check Balance",
+							"request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/wallet/balance", "host": ["{{base_url}}"], "path": ["api", "wallet", "balance"] } }
+						},
+						{
+							"name": "Top-up Balance",
+							"request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n    \"amount\": {{topup_amount}}\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{base_url}}/api/wallet/topup", "host": ["{{base_url}}"], "path": ["api", "wallet", "topup"] } }
+						}
+					]
+				},
+				{
+					"name": "🛡️ 4. KYC Verification Flow",
+					"item": [
+						{
+							"name": "Initialize Verification",
+							"request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/v1/profile/init", "host": ["{{base_url}}"], "path": ["api", "v1", "profile", "init"] } }
+						},
+						{
+							"name": "Check Profile Status",
+							"request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/v1/profile/status", "host": ["{{base_url}}"], "path": ["api", "v1", "profile", "status"] } }
+						},
+						{
+							"name": "n8n: Fetch Profile Info",
+							"request": { "method": "GET", "header": [ { "key": "X-Signature", "value": "{{signature}}" } ], "url": { "raw": "{{base_url}}/v1/n8n/profiles/{{profile_id}}", "host": ["{{base_url}}"], "path": ["v1", "n8n", "profiles", "{{profile_id}}"] } }
+						},
+						{
+							"name": "n8n: Post KYC Verdict",
+							"request": { "method": "POST", "header": [ { "key": "X-Signature", "value": "{{signature}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n    \"profile_id\": \"{{profile_id}}\",\n    \"kyc_status\": \"approved\",\n    \"reason\": null\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{base_url}}/v1/n8n/kyc-callback", "host": ["{{base_url}}"], "path": ["v1", "n8n", "kyc-callback"] } }
+						}
+					]
+				},
+				{
+					"name": "🔌 5. System Webhooks & Internal",
+					"item": [
+						{
+							"name": "Sms Webhook (External)",
+							"request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n    \"phone_number\": \"+2348045678901\",\n    \"sender\": \"+123456789\",\n    \"content\": \"Hello from VerifiedCore!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{base_url}}/webhooks/verifiedcore/sms", "host": ["{{base_url}}"], "path": ["webhooks", "verifiedcore", "sms"] } }
+						},
+						{
+							"name": "Simulate SMS (Test)",
+							"request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n    \"user_id\": \"{{user_id}}\",\n    \"sender\": \"+123456789\",\n    \"content\": \"Simulation Test Message\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{base_url}}/webhooks/simulate/sms", "host": ["{{base_url}}"], "path": ["webhooks", "simulate", "sms"] } }
+						},
+						{
+							"name": "Update Exchange Rates",
+							"request": { "method": "POST", "header": [ { "key": "X-Cron-Secret", "value": "{{cron_secret}}" }, { "key": "Accept", "value": "application/json" } ], "url": { "raw": "{{base_url}}/internal/update-rates", "host": ["{{base_url}}"], "path": ["internal", "update-rates"] } }
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
+		{ "key": "token", "value": "your-token", "type": "string" },
+		{ "key": "cron_secret", "value": "your-secret", "type": "string" },
+		{ "key": "profile_id", "value": "uuid", "type": "string" },
+		{ "key": "user_id", "value": "uuid", "type": "string" },
+		{ "key": "signature", "value": "hmac-signature", "type": "string" },
+		{ "key": "country_code", "value": "NG", "type": "string" },
+		{ "key": "service_slug", "value": "whatsapp", "type": "string" },
+		{ "key": "selected_number", "value": "+2348045678901", "type": "string" },
+		{ "key": "topup_amount", "value": "10.00", "type": "string" }
+	]
+}
