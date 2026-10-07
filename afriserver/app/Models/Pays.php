@@ -17,25 +17,25 @@ class Pays extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'continent_id',
-        'organisation_id',
-        'label',
-        'code',
-        'indicatif',
-        'timezone',
-        'description',
-        'actif',
-    ];
+    'continent_id',
+    'organisation_id',
+    'label',
+    'code',
+    'currency_code',
+    'exchange_rate',
+    'indicatif',
+    'timezone',
+    'description',
+    'actif',
+];
 
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'actif' => 'boolean',
-        ];
-    }
+protected function casts(): array
+{
+    return [
+        'actif' => 'boolean',
+        'exchange_rate' => 'decimal:4',
+    ];
+}
 
     public function continent(): BelongsTo
     {
