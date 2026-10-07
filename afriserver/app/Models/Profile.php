@@ -66,6 +66,14 @@ class Profile extends Model
         return $this->status === self::STATUS_VALIDATION_MANUELLE;
     }
 
+    public function canBeManuallyProcessed(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_VALIDATION_MANUELLE,
+            self::STATUS_REJETE,
+        ], true);
+    }
+
     public function blocksNewVerification(): bool
     {
         return in_array($this->status, [

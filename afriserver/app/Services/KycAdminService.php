@@ -95,9 +95,9 @@ class KycAdminService
 
     private function assertManualReview(Profile $profile): void
     {
-        if (! $profile->isAwaitingManualReview()) {
+        if (! $profile->canBeManuallyProcessed()) {
             throw new InvalidArgumentException(
-                'Seuls les profils en validation manuelle peuvent être approuvés ou rejetés.'
+                'Ce profil ne peut pas être traité manuellement dans son état actuel.'
             );
         }
     }
