@@ -1,40 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AfriNumber Web
 
-## Getting Started
+Le site web AfriNumber sert de vitrine commerciale et de point d’entrée pour présenter la solution, expliquer le concept et orienter les visiteurs vers l’inscription, l’achat d’un numéro international ou la découverte des offres.
 
-First, run the development server:
+## Objectif
+
+Présenter le produit de manière claire et convaincante pour un public africain, avec une communication orientée :
+
+- simplicité ;
+- paiement mobile ;
+- numéros internationaux ;
+- accès rapide au service ;
+- confiance et professionnalisme.
+
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- Zustand pour l’état local
+- composants UI customisés avec shadcn / Base UI
+
+## Structure du projet
+
+```text
+afri_web/
+├── app/                 # pages et layout Next.js
+├── components/          # composants UI réutilisables
+├── config/              # configuration globale
+├── features/            # modules métier du front
+├── lib/                 # utilitaires, helpers, intégrations
+├── public/              # assets statiques
+├── store/               # stores Zustand
+├── package.json
+├── next.config.ts
+├── tsconfig.json
+└── README.md
+```
+
+## Lancer le projet
+
+### Installation
+
+```bash
+cd afri_web
+npm install
+```
+
+### Mode développement
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Puis ouvrir :
 
-## API des pays
+```text
+http://localhost:3000
+```
 
-Copiez `.env.example` vers `.env.local` et renseignez les identifiants privés de l'API. La clé et le jeton sont lus par la route serveur `/api/pays` et ne sont pas envoyés au navigateur.
+### Build de production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Variables d’environnement
 
-## Learn More
+Le projet peut dépendre de variables de configuration selon les intégrations utilisées. En pratique :
 
-To learn more about Next.js, take a look at the following resources:
+- créer un fichier `.env.local` si nécessaire ;
+- ne jamais exposer les secrets dans le navigateur ;
+- conserver les valeurs sensibles côté serveur uniquement.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Fonctionnalités du site
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- page d’accueil avec proposition de valeur ;
+- sections de présentation des avantages ;
+- FAQ et informations pratiques ;
+- pages produit / à propos / mentions légales ;
+- formulaire de contact ;
+- navigation claire pour orienter vers l’achat et l’inscription.
 
-## Deploy on Vercel
+## Points forts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- interface moderne et orientée conversion ;
+- contenu adapté à un contexte africain et mobile-first ;
+- architecture simple et maintenable ;
+- compatible avec la stratégie de produit globale AfriNumber.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Déploiement
+
+Le site peut être déployé sur :
+
+- Vercel ;
+- un hébergement Node.js standard ;
+- une plateforme compatible Next.js avec build statique ou SSR.
+
+## Contribution
+
+Les modifications doivent rester cohérentes avec l’identité visuelle et la proposition de valeur AfriNumber : simplicité, confiance et accessibilité mobile.
