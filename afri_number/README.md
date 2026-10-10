@@ -1,8 +1,55 @@
-# AfriNumber (mobile)
+# AfriNumber Mobile
 
-Application Flutter AfriNumber — architecture **feature-first** + **GetX**, avec une couche **core** partagée pour le réseau et l’UI.
+L’application mobile AfriNumber est le cœur de l’expérience utilisateur. Elle permet à un utilisateur d’inscrire son compte, choisir un numéro international, gérer un abonnement et accéder à son espace personnel depuis un téléphone.
 
-## Démarrage
+## Objectif
+
+Mettre à disposition une application mobile simple, fiable et accessible pour :
+
+- créer un compte ;
+- choisir un numéro de téléphone international ;
+- payer via Mobile Money ;
+- gérer la communication professionnelle ;
+- recevoir des notifications et suivre son usage.
+
+## Stack technique
+
+- Flutter
+- Dart
+- GetX
+- Dio
+- GetStorage
+- Firebase Core + Firebase Messaging
+- PhoneFormField
+- Material 3
+
+## Architecture
+
+```text
+lib/
+├── app/                  # routes, bindings, thème, configuration de démarrage
+├── core/                 # services partagés, API, local storage, traductions
+├── features/             # modules métier : auth, dashboard, profile, kyc, etc.
+├── firebase_options.dart # configuration Firebase
+├── main.dart             # point d’entrée de l’application
+└── generated/            # fichiers générés selon le besoin de l’environnement
+```
+
+## Modules principaux
+
+- welcome : écran d’introduction et acquisition utilisateur ;
+- auth : inscription, connexion, OTP, mot de passe oublié ;
+- dashboard : vue centrale après connexion ;
+- country_search : recherche de pays et de numéros ;
+- abonnement : gestion des plans et paiements ;
+- profile : données utilisateur et compte ;
+- kyc : vérification d’identité et pièces justificatives ;
+- notifications : push notifications et messages ;
+- history : historique des usages et transactions ;
+- connectivity : gestion des services de connectivité ;
+- messages : gestion de messages et communications.
+
+## Démarrage rapide
 
 ```bash
 cd afri_number
@@ -10,148 +57,64 @@ flutter pub get
 flutter run
 ```
 
-## Architecture mobile
+## Lancer en mode debug
 
-### 1. Démarrage
-
-```
-main.dart
-  → GetStorage.init()
-  → GetMaterialApp (thème, routes)
-  → InitialBinding (services globaux)
+```bash
+flutter run --debug
 ```
 
-Au lancement : storage, Dio et thème sont injectés une fois pour toute l’app.
+## Build de production
 
-### 2. Les 3 grandes zones
+### Android
 
-```
-lib/
-├── app/        → “colonne vertébrale” (routes, thème, DI)
-├── core/       → outils partagés (API, widgets, storage)
-└── features/   → écrans métier (welcome, auth, dashboard)
+```bash
+flutter build apk
 ```
 
-| Zone | Question qu’elle répond |
-|------|-------------------------|
-| **app/** | Comment l’app démarre et navigue ? |
-| **core/** | Comment on parle au serveur / UI de base ? |
-| **features/** | Quelles fonctionnalités métier ? |
+### iOS
 
-### 3. Navigation (GetX)
-
-```
-AppRoutes   → noms des routes ("/", "/login"…)
-AppPages    → quelle page pour quelle route
+```bash
+flutter build ios
 ```
 
-Flux actuel :
+## Gestion de l’état et navigation
 
-```
-Accueil (/) → Connexion / Inscription → Dashboard
-```
+L’application s’appuie sur GetX pour :
 
-Navigation typique : `Get.toNamed(...)`, `Get.offAllNamed(...)`.
+- la navigation entre écrans ;
+- l’injection de dépendances ;
+- les contrôleurs d’écran ;
+- la gestion de l’état local.
 
-### 4. Feature Auth (modèle à suivre)
+Le point d’entrée configure le thème, les traductions et les bindings de l’application.
 
-Auth est découpé en **3 couches** (Clean Architecture allégée) :
+## Configuration Firebase
 
-```
-features/auth/
-├── presentation/   → ce que l’utilisateur voit
-│   ├── views/          LoginPage, RegisterPage
-│   └── controllers/    AuthController (logique écran)
-├── domain/         → règles métier (indépendant de Flutter/Dio)
-│   └── repositories/   AuthRepository (contrat)
-└── data/           → implémentation technique
-    ├── datasources/    AuthRemoteDataSource (appels API)
-    └── repositories/   AuthRepositoryImpl
-```
+Le projet initialise Firebase au démarrage dans [lib/main.dart](lib/main.dart). Les options de configuration sont définies dans [lib/firebase_options.dart](lib/firebase_options.dart).
 
-**Flux d’un login (quand le formulaire sera branché) :**
+## Bonnes pratiques du projet
 
-```
-LoginPage
-  → AuthController.login()
-    → AuthRepository.login()
-      → AuthRemoteDataSource (Dio)
-        → API backend
-      ← token
-    → StorageService.saveAccessToken()
-  → navigation Dashboard
-```
+- garder chaque feature dans son propre dossier ;
+- séparer la logique UI, le métier et les données ;
+- centraliser le chemin API dans les services dédiés ;
+- éviter de dupliquer les composants UI ;
+- documenter chaque nouveau flux métier.
 
-Chaque couche a un rôle clair : UI ≠ métier ≠ HTTP.
+## Déploiement
 
-### 5. Core réseau
+L’application est prête pour un déploiement sur :
 
-```
-DioClient
-  ├── AuthInterceptor   → ajoute Bearer token, gère 401
-  ├── ErrorInterceptor  → transforme erreurs en ApiException
-  └── PrettyDioLogger   → logs en debug
-```
+- Android Play Store ;
+- App Store iOS ;
+- environnement de test interne ;
+- build de QA avant mise en production.
 
-Tout appel API passe par `DioClient` → un seul endroit pour headers, token et erreurs.
+## Contribution
 
-Configurer l’URL de base dans `lib/core/constants/api_constants.dart`.
+Pour ajouter une nouvelle fonctionnalité, suivre la logique actuelle :
 
-### 6. Core UI
-
-```
-AppScaffold     → Scaffold Material / Cupertino iOS
-AppButton       → boutons adaptatifs
-AppText         → typo unifiée
-AppIconButton
-```
-
-Import unique :
-
-```dart
-import 'package:afri_number/core/widgets/widgets.dart';
-```
-
-Les pages n’utilisent pas `Scaffold` / `ElevatedButton` directement → UI cohérente.
-
-### 7. Schéma global
-
-```
-┌─────────────────────────────────────────┐
-│                 app/                    │
-│   routes · theme · bindings             │
-└─────────────────┬───────────────────────┘
-                  │
-     ┌────────────┼────────────┐
-     ▼            ▼            ▼
- welcome       auth        dashboard
-     │            │            │
-     │     ┌──────┴──────┐     │
-     │     │ presentation│     │
-     │     │ domain      │     │
-     │     │ data        │     │
-     │     └──────┬──────┘     │
-     │            │            │
-     └────────────┼────────────┘
-                  ▼
-            ┌──────────┐
-            │   core   │
-            │ Dio · UI │
-            │ storage  │
-            └────┬─────┘
-                 ▼
-              API backend
-```
-
-### 8. Ajouter une feature
-
-Exemple « profil » :
-
-1. Créer `features/profile/presentation/views/profile_page.dart`
-2. Déclarer la route dans `app_routes` + `app_pages`
-3. Si besoin API : ajouter `data/` + `domain/` comme pour auth
-4. Construire l’UI avec `AppScaffold` / `AppButton` / `AppText`
-
-### En une phrase
-
-**GetX pour la nav et l’état, features pour le métier, core pour l’API et les composants** — chaque fichier a une responsabilité unique.
+1. créer le module dans `lib/features/` ;
+2. créer les vues et contrôleurs associés ;
+3. brancher la route dans l’application ;
+4. intégrer le service API ou le stockage local nécessaire ;
+5. valider le flux complet côté interface.

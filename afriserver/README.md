@@ -1,82 +1,132 @@
-# AfriNumber (afriserver)
+# AfriNumber Backend
 
-API Laravel + panel d’administration Filament (`/afriNetAdmin`).
+Le backend AfriNumber est une API Laravel qui alimente l’application mobile et le site web. Il gère l’authentification, les abonnements, les rôles, les notifications, les fichiers et les services d’intégration.
 
-## Accès panel vs permissions
+## Objectif
 
-Deux couches distinctes :
+Centraliser les données et la logique métier du produit afin d’assurer :
 
-| Besoin | Mécanisme |
-|--------|-----------|
-| Entrer dans le dashboard | `TypeUser` avec `code = admin` |
-| Agir dans le dashboard | Rôles / permissions Spatie |
+- un accès sécurisé aux comptes ;
+- la gestion des utilisateurs et des organisations ;
+- les transactions de paiement et les plans d’abonnement ;
+- des notifications push fiables ;
+- un panel admin pour les opérations internes.
 
-Un compte `user` / `organisation` ne rentre jamais dans le panel, même avec un rôle Spatie.  
-Un admin **sans** rôle Spatie entre au dashboard mais n’a accès à aucune resource.
+## Stack technique
 
-Rôles seedés : `super_admin`, `operateur`, `gestionnaire`  
-(`php artisan db:seed --class=RolesAndPermissionsSeeder`)
+- Laravel 13
+- PHP 8.3
+- Laravel Sanctum
+- Filament
+- Spatie Permission
+- Firebase
+- SQLite en local pour le développement
+- MySQL ou PostgreSQL selon l’environnement de production
 
-## Ajouter une nouvelle table / Resource Filament
+## Structure du projet
 
-Pour chaque nouvelle table gérée dans le panel, suivre ces étapes.
-
-### 1. Permissions
-
-Ajouter les constantes dans `app/Support/PanelPermission.php` :
-
-```php
-public const ARTICLES_VIEW = 'articles.view';
-public const ARTICLES_CREATE = 'articles.create';
-public const ARTICLES_UPDATE = 'articles.update';
-public const ARTICLES_DELETE = 'articles.delete';
+```text
+afriserver/
+├── app/                 # logique applicative, modèles, policies, services
+├── bootstrap/           # initialisation Laravel
+├── config/              # configuration de l’application
+├── database/            # migrations, seeders, factories
+├── public/              # fichiers publics
+├── resources/           # vues et assets
+├── routes/              # définition des routes API et web
+├── tests/               # tests automatisés
+├── .env.example         # variables de configuration exemple
+├── artisan              # CLI Laravel
+├── composer.json
+├── phpunit.xml
+├── vite.config.js
+└── README.md
 ```
 
-Les inclure dans `all()`, puis les rattacher aux bons rôles dans `database/seeders/RolesAndPermissionsSeeder.php`.
+## Démarrage rapide
 
-Re-seed :
+```bash
+cd afriserver
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan serve
+```
+
+Le backend est ensuite accessible sur :
+
+```text
+http://localhost:8000
+```
+
+## Variables d’environnement
+
+Le fichier `.env` doit contenir au minimum :
+
+- `APP_NAME`
+- `APP_ENV`
+- `APP_KEY`
+- `APP_URL`
+- configuration de base de données ;
+- paramètres email ;
+- configuration Firebase ;
+- clés de services tiers.
+
+## Authentification et autorisations
+
+Le projet combine :
+
+- système d’authentification Laravel ;
+- gestion des rôles et autorisations via Spatie ;
+- panel administration avec Filament ;
+- logique spécifique selon le type d’utilisateur / organisation.
+
+### Rôles courants
+
+- `super_admin`
+- `operateur`
+- `gestionnaire`
+
+## Notifications
+
+Le backend prend en charge les notifications via Firebase Cloud Messaging. Cela permet d’envoyer des alertes, rappels et messages push à l’application mobile.
+
+## Tests
+
+```bash
+php artisan test
+```
+
+## Sécurité
+
+- ne jamais committer les fichiers `.env` réels ;
+- centraliser les accès sensibles ;
+- sécuriser les routes admin et les permissions ;
+- vérifier les politiques de données avant chaque release.
+
+## Déploiement
+
+Le backend peut être déployé sur :
+
+- Render ;
+- Railway ;
+- VPS Linux ;
+- plateforme Laravel compatible ;
+- environnement cloud avec base de données externe.
+
+## Maintenance
+
+Pour mettre à jour les permissions et les rôles :
 
 ```bash
 php artisan db:seed --class=RolesAndPermissionsSeeder
 ```
 
-### 2. Policy
+## Contribution
 
-```bash
-php artisan make:policy ArticlePolicy --model=Article --no-interaction
-```
+Chaque évolution backend doit être accompagnée :
 
-```php
-class ArticlePolicy extends ResourcePermissionPolicy
-{
-    protected function permissionPrefix(): string
-    {
-        return 'articles'; // même préfixe que les permissions
-    }
-}
-```
-
-Laravel découvre automatiquement la policy si le modèle est `App\Models\Article`.
-
-### 3. Resource Filament
-
-```bash
-php artisan make:filament-resource Article --generate --no-interaction
-```
-
-Rien de spécial à brancher pour l’auth : Filament appelle déjà la Policy (`viewAny`, `create`, `update`, `delete`).
-
-### 4. Vérifier
-
-- Un `super_admin` voit tout (via `Gate::before`)
-- Un `operateur` / `gestionnaire` ne voit que ce que son rôle autorise
-- Un admin sans rôle Spatie entre au dashboard mais n’ouvre pas la resource
-
-## Assigner un rôle à un admin
-
-Via le panel (**Administration → Administrateurs / Rôles**), ou en tinker :
-
-```php
-$user = \App\Models\User::where('email', '...')->first();
-$user->assignRole('super_admin');
-```
+- d’un test si le flux est critique ;
+- d’une mise à jour des permissions si l’accès change ;
+- d’une documentation claire pour les autres développeurs.
