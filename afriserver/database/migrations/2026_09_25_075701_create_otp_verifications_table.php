@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('attempts')->default(0);
             $table->unsignedTinyInteger('resend_count')->default(0);
             $table->timestamp('locked_until')->nullable();
-            $table->timestamp('expires_at');
+            $table->timestamp('expires_at')->useCurrent();
             $table->timestamps();
 
             $table->unique(['email', 'phone_number', 'purpose']);
