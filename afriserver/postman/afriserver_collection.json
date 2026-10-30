@@ -1,0 +1,1222 @@
+{
+  "info": {
+    "_postman_id": "afriserver-collection-v210",
+    "name": "AfriServer API",
+    "description": "Collection Postman v2.1.0 pour AfriServer (Laravel) et AfriServeur-Files (Node). Auth Bearer héritée, variables d'environnement auto-alimentées (bearer_token, file_id).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearer_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('base_url')) {",
+          "    pm.environment.set('base_url', 'http://127.0.0.1:8000');",
+          "}",
+          "if (!pm.environment.get('files_base_url')) {",
+          "    pm.environment.set('files_base_url', 'http://127.0.0.1:3000');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('HTTP status is not 5xx', function () {",
+          "    pm.expect(pm.response.code).to.be.below(500);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "files_base_url", "value": "http://127.0.0.1:3000" },
+    { "key": "bearer_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "file_id", "value": "" },
+    { "key": "x_api_key", "value": "testing-api-key" },
+    { "key": "device_id", "value": "postman-device-001" },
+    { "key": "profile_id", "value": "" },
+    { "key": "user_email", "value": "jean@example.com" },
+    { "key": "user_password", "value": "password123" },
+    { "key": "country_code", "value": "CI" },
+    { "key": "service_slug", "value": "whatsapp" },
+    { "key": "selected_number", "value": "+2250700000001" },
+    { "key": "topup_amount", "value": "1000" },
+    { "key": "organisation_id", "value": "1" },
+    { "key": "pays_id", "value": "1" },
+    { "key": "piece_id", "value": "1" },
+    { "key": "device_db_id", "value": "1" },
+    { "key": "notification_id", "value": "1" },
+    { "key": "plan_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "01 - Authentification",
+      "description": "Login, OTP, refresh token et logout. Les routes publiques désactivent l'auth Bearer héritée.",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.token) {",
+                  "    pm.environment.set(\"bearer_token\", response.token);",
+                  "}",
+                  "",
+                  "const data = response.data || response;",
+                  "const access = data.access_token || data.token;",
+                  "if (access) {",
+                  "    pm.environment.set(\"bearer_token\", access);",
+                  "    pm.collectionVariables.set(\"bearer_token\", access);",
+                  "}",
+                  "if (data.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", data.refresh_token);",
+                  "    pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+                  "}",
+                  "",
+                  "pm.test('Login accepted or OTP challenge returned', function () {",
+                  "    pm.expect([200, 201, 202]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\",\n  \"platform\": \"android\",\n  \"device_id\": \"{{device_id}}\",\n  \"device_name\": \"Postman\",\n  \"device_model\": \"CLI\",\n  \"os_version\": \"14\",\n  \"app_version\": \"1.0.0\",\n  \"fcm_token\": \"postman-fcm-token\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Démarre le flux de connexion (OTP). Si un token est renvoyé, il est stocké dans bearer_token."
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const data = response.data || response;",
+                  "const access = data.access_token || data.token || response.token;",
+                  "if (access) {",
+                  "    pm.environment.set(\"bearer_token\", access);",
+                  "    pm.collectionVariables.set(\"bearer_token\", access);",
+                  "}",
+                  "if (data.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", data.refresh_token);",
+                  "    pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+                  "}",
+                  "if (data.user && data.user.id) {",
+                  "    pm.environment.set(\"user_id\", String(data.user.id));",
+                  "}",
+                  "",
+                  "pm.test('OTP verified and tokens issued', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "    pm.expect(access).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"purpose\": \"login\",\n  \"code\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "verify-otp"]
+            },
+            "description": "Valide l'OTP et enregistre access_token / refresh_token dans l'environnement."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const data = response.data || response;",
+                  "if (data.access_token) {",
+                  "    pm.environment.set(\"bearer_token\", data.access_token);",
+                  "    pm.collectionVariables.set(\"bearer_token\", data.access_token);",
+                  "}",
+                  "if (data.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", data.refresh_token);",
+                  "    pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+                  "}",
+                  "",
+                  "pm.test('Access token refreshed', function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "    pm.expect(data.access_token).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{refresh_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            },
+            "description": "Utilise le refresh_token (ability issue-access-token) pour renouveler le couple de jetons."
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrie_id\": {{pays_id}},\n  \"name\": \"Dupont\",\n  \"first_name\": \"Jean\",\n  \"email\": \"{{user_email}}\",\n  \"phone_number\": \"0700000001\",\n  \"password\": \"{{user_password}}\",\n  \"password_confirmation\": \"{{user_password}}\",\n  \"platform\": \"android\",\n  \"device_id\": \"{{device_id}}\",\n  \"device_name\": \"Postman\",\n  \"device_model\": \"CLI\",\n  \"os_version\": \"14\",\n  \"app_version\": \"1.0.0\",\n  \"fcm_token\": \"postman-fcm-token\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"purpose\": \"login\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "resend-otp"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"code\": \"123456\",\n  \"password\": \"{{user_password}}\",\n  \"password_confirmation\": \"{{user_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Gestion du Profil & Utilisateurs",
+      "description": "Profil authentifié, utilisateur courant, devices, KYC et pièces d'identité.",
+      "item": [
+        {
+          "name": "Me (Auth Profile)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{user_password}}\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "password"]
+            }
+          }
+        },
+        {
+          "name": "List Devices",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/devices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "devices"]
+            }
+          }
+        },
+        {
+          "name": "Update FCM Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"postman-fcm-token-updated\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/devices/fcm-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "devices", "fcm-token"]
+            }
+          }
+        },
+        {
+          "name": "Delete Other Devices",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/devices/others",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "devices", "others"]
+            }
+          }
+        },
+        {
+          "name": "Delete Device",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/devices/{{device_db_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "devices", "{{device_db_id}}"]
+            }
+          }
+        },
+        {
+          "name": "KYC - Initialize Verification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const profileId = response.profile_id || (response.data && response.data.profile_id);",
+                  "if (profileId) {",
+                  "    pm.environment.set(\"profile_id\", String(profileId));",
+                  "    pm.collectionVariables.set(\"profile_id\", String(profileId));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/verifier/init",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "verifier", "init"]
+            }
+          }
+        },
+        {
+          "name": "KYC - Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/verifier/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "verifier", "status"]
+            }
+          }
+        },
+        {
+          "name": "KYC - Status By Profile Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/verifier/status/{{profile_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "verifier", "status", "{{profile_id}}"]
+            }
+          }
+        },
+        {
+          "name": "List Pieces Identite",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces"]
+            }
+          }
+        },
+        {
+          "name": "Create Piece Identite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type_piece_identite_id\": 1,\n  \"numero\": \"CI123456789\",\n  \"date_delivrance\": \"2024-01-15\",\n  \"lieu_delivrance\": \"Abidjan\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces"]
+            }
+          }
+        },
+        {
+          "name": "Get Piece Identite",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces/{{piece_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces", "{{piece_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Piece Identite",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"CI987654321\",\n  \"lieu_delivrance\": \"Yamoussoukro\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces/{{piece_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces", "{{piece_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Piece Identite",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces/{{piece_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces", "{{piece_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Upload Fichiers Piece",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fichiers[]",
+                  "type": "file",
+                  "src": [],
+                  "description": "Sélectionner un ou plusieurs fichiers image"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces/{{piece_id}}/fichiers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces", "{{piece_id}}", "fichiers"]
+            }
+          }
+        },
+        {
+          "name": "Piece Identite Statut",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{x_api_key}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pieces/{{piece_id}}/statut",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pieces", "{{piece_id}}", "statut"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Afriserveur-Files",
+      "description": "Service Node Afriserveur-Files. Upload KYC (multipart), détail, liste et suppression. Utilise {{files_base_url}}.",
+      "item": [
+        {
+          "name": "Upload File",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.id) {",
+                  "    pm.environment.set(\"file_id\", response.id);",
+                  "}",
+                  "",
+                  "const data = response.data || {};",
+                  "const fileId = data.id || response.id || data.idprofile || response.idprofile;",
+                  "if (fileId) {",
+                  "    pm.environment.set(\"file_id\", String(fileId));",
+                  "    pm.collectionVariables.set(\"file_id\", String(fileId));",
+                  "}",
+                  "if (data.idprofile) {",
+                  "    pm.environment.set(\"profile_id\", String(data.idprofile));",
+                  "    pm.collectionVariables.set(\"profile_id\", String(data.idprofile));",
+                  "}",
+                  "",
+                  "pm.test('Upload accepted', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "idprofile",
+                  "value": "{{profile_id}}",
+                  "type": "text",
+                  "description": "UUID du profil KYC"
+                },
+                {
+                  "key": "photopath",
+                  "type": "file",
+                  "src": [],
+                  "description": "Photo selfie"
+                },
+                {
+                  "key": "pieceavantpath",
+                  "type": "file",
+                  "src": [],
+                  "description": "Recto pièce"
+                },
+                {
+                  "key": "piecearrierepath",
+                  "type": "file",
+                  "src": [],
+                  "description": "Verso pièce"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{files_base_url}}/files/upload",
+              "host": ["{{files_base_url}}"],
+              "path": ["files", "upload"]
+            },
+            "description": "Upload multipart KYC. Enregistre file_id (ou idprofile) pour Download/Delete."
+          }
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{files_base_url}}/files/{{file_id}}",
+              "host": ["{{files_base_url}}"],
+              "path": ["files", "{{file_id}}"]
+            },
+            "description": "Récupère le détail / métadonnées d'un fichier via {{file_id}}."
+          }
+        },
+        {
+          "name": "List Files",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{files_base_url}}/files?idprofile={{profile_id}}",
+              "host": ["{{files_base_url}}"],
+              "path": ["files"],
+              "query": [
+                { "key": "idprofile", "value": "{{profile_id}}" }
+              ]
+            },
+            "description": "Liste les fichiers (contrat REST prévu / à activer côté service si absent)."
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{files_base_url}}/files/{{file_id}}",
+              "host": ["{{files_base_url}}"],
+              "path": ["files", "{{file_id}}"]
+            },
+            "description": "Supprime un fichier via {{file_id}} (contrat REST prévu / à activer côté service si absent)."
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{files_base_url}}/health",
+              "host": ["{{files_base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Core Services Afriser",
+      "description": "Services cœur : référentiels, portefeuille, numéros virtuels, plans, abonnements, notifications.",
+      "item": [
+        {
+          "name": "Referentiels",
+          "item": [
+            {
+              "name": "List Organisations",
+              "request": {
+                "auth": { "type": "noauth" },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/organisations",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "organisations"]
+                }
+              }
+            },
+            {
+              "name": "Get Organisation",
+              "request": {
+                "auth": { "type": "noauth" },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/organisations/{{organisation_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "organisations", "{{organisation_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Organisation Pays",
+              "request": {
+                "auth": { "type": "noauth" },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/organisations/{{organisation_id}}/pays",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "organisations", "{{organisation_id}}", "pays"]
+                }
+              }
+            },
+            {
+              "name": "List Pays",
+              "request": {
+                "auth": { "type": "noauth" },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/pays",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "pays"]
+                }
+              }
+            },
+            {
+              "name": "Get Pays",
+              "request": {
+                "auth": { "type": "noauth" },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/pays/{{pays_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "pays", "{{pays_id}}"]
+                }
+              }
+            },
+            {
+              "name": "List Type Piece Identites",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/type-piece-identites",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "type-piece-identites"]
+                }
+              }
+            },
+            {
+              "name": "List Type Notifications",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/type-notifications",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "type-notifications"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wallet",
+          "item": [
+            {
+              "name": "Get Balance",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/wallet/balance",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "wallet", "balance"]
+                }
+              }
+            },
+            {
+              "name": "Top Up",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": {{topup_amount}}\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/wallet/topup",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "wallet", "topup"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Virtual Numbers",
+          "item": [
+            {
+              "name": "Search Numbers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/numbers/search?country={{country_code}}&service={{service_slug}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "numbers", "search"],
+                  "query": [
+                    { "key": "country", "value": "{{country_code}}" },
+                    { "key": "service", "value": "{{service_slug}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Buy Number",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{selected_number}}\",\n  \"country\": \"{{country_code}}\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/numbers/buy",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "numbers", "buy"]
+                }
+              }
+            },
+            {
+              "name": "My Numbers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/numbers/my",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "numbers", "my"]
+                }
+              }
+            },
+            {
+              "name": "My Messages",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/numbers/messages",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "numbers", "messages"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Plans & Abonnements",
+          "item": [
+            {
+              "name": "List Plans",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plans",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plans"]
+                }
+              }
+            },
+            {
+              "name": "List Abonnements",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/abonnements",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "abonnements"]
+                }
+              }
+            },
+            {
+              "name": "Current Abonnement",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/abonnement",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "abonnement"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Notifications",
+          "item": [
+            {
+              "name": "List Notifications",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/notifications",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "notifications"]
+                }
+              }
+            },
+            {
+              "name": "Unread Count",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/notifications/unread-count",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "notifications", "unread-count"]
+                }
+              }
+            },
+            {
+              "name": "Mark All As Read",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/notifications/read-all",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "notifications", "read-all"]
+                }
+              }
+            },
+            {
+              "name": "Get Notification",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "notifications", "{{notification_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Mark Notification As Read",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}/read",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "notifications", "{{notification_id}}", "read"]
+                }
+              }
+            },
+            {
+              "name": "Delete Notification",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "notifications", "{{notification_id}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Observability",
+          "item": [
+            {
+              "name": "List Logs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "x-api-key", "value": "{{x_api_key}}" },
+                  { "key": "X-Device-Id", "value": "{{device_id}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/observability/logs",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "observability", "logs"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
