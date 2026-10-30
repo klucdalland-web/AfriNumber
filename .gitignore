@@ -30,7 +30,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
-
 # Build / generated
 dist/
 build/
