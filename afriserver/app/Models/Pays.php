@@ -58,4 +58,12 @@ class Pays extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * @return HasMany<FraisTransaction, $this>
+     */
+    public function fraisTransactions(): HasMany
+    {
+        return $this->hasMany(FraisTransaction::class);
+    }
 }

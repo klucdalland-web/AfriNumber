@@ -128,6 +128,8 @@ final class PanelPermission
 
     public const NOTIFICATION_CAMPAIGNS_DELETE = 'notification_campaigns.delete';
 
+    public const FRAIS_GERER = 'frais.gerer';
+
     /**
      * @return list<string>
      */
@@ -196,6 +198,7 @@ final class PanelPermission
             self::NOTIFICATION_CAMPAIGNS_CREATE,
             self::NOTIFICATION_CAMPAIGNS_UPDATE,
             self::NOTIFICATION_CAMPAIGNS_DELETE,
+            self::FRAIS_GERER,
         ];
     }
 

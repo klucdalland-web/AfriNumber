@@ -59,6 +59,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ...PanelPermission::forResource('transactions'),
             ...PanelPermission::forResource('type_notifications'),
             ...PanelPermission::forResource('notification_campaigns'),
+            PanelPermission::FRAIS_GERER,
         ]);
     }
 }

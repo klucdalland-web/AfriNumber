@@ -211,3 +211,27 @@ Ce projet est sous licence MIT. Consultez le fichier LICENSE pour plus de détai
 ## Contributeurs
 
 Le dépôt est conçu pour favoriser le développement collaboratif autour d’un produit orienté "numéro international + Mobile Money + Afrique".
+<?php
+$type = App\Models\TypeUser::firstOrCreate(
+    ['code' => 'admin'],
+    [
+        'label' => 'Administrateur',
+        'description' => 'Administrateur système',
+        'actif' => true,
+    ]
+);
+
+$user = App\Models\User::create([
+    'name' => 'Super Admin',
+    'first_name' => 'Super',
+    'email' => 'superadmin@afri.local',
+    'phone_number' => '+221771234567',
+    'password' => bcrypt('Password123!'),
+    'type_user_id' => $type->id,
+    'statut' => 'actif',
+    'status_valide' => 'non_valide',
+]);
+
+$user->assignRole('super_admin');
+
+dd($user->email, $user->hasRole('super_admin'));

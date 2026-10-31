@@ -32,8 +32,8 @@ return new class extends Migration
                 DB::table('comptes')->insert([
                     // en haut du fichier
 
-// dans l'insert
-                    'numero_compte' => 'AFN' . strtoupper(base_convert($user->id, 10, 36)) . strtoupper(Str::random(4)),
+                    // dans l'insert
+                    'numero_compte' => 'AFN'.strtoupper(base_convert($user->id, 10, 36)).strtoupper(Str::random(4)),
                     'solde' => $solde,
                     'statut' => Compte::STATUT_ACTIF,
                     'user_id' => $user->id,

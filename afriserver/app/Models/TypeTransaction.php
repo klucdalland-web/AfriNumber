@@ -19,6 +19,14 @@ class TypeTransaction extends Model
 
     public const CODE_FORFAIT = 'forfait';
 
+    public const CODE_TRANSFER_W2W = 'transfer_w2w';
+
+    public const CODE_TRANSFER_W2E = 'transfer_w2e';
+
+    public const CODE_FEE = 'fee';
+
+    public const CODE_REFUND = 'refund';
+
     /**
      * @var list<string>
      */
@@ -47,5 +55,13 @@ class TypeTransaction extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * @return HasMany<FraisTransaction, $this>
+     */
+    public function frais(): HasMany
+    {
+        return $this->hasMany(FraisTransaction::class);
     }
 }

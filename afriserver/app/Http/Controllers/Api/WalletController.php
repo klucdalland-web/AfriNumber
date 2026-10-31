@@ -42,7 +42,7 @@ class WalletController extends Controller
         // Convertit le montant local en USD avant crédit sur le compte
         $usdAmount = $this->currencyService->convertLocalToUsd($localAmount, $pays);
 
-        DB::transaction(function () use ($user, $localAmount, $usdAmount) {
+        DB::transaction(function () use ($user, $usdAmount) {
             $this->compteService->credit($user, $usdAmount);
 
             $typeTransaction = TypeTransaction::where('code', 'topup')->first();

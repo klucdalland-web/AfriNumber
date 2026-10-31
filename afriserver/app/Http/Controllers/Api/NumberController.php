@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\SmsMessage;
 use App\Models\TypeTransaction;
 use App\Models\UserNumber;
 use App\Services\CompteService;
@@ -37,8 +38,9 @@ class NumberController extends Controller
         // Ajouter le prix local pour le pays de l'utilisateur
         if ($user && $user->pays) {
             $numbers = array_map(function ($num) use ($user) {
-                $num['price_local'] = $this->currencyService->convertUsdToLocal((float)($num['price'] ?? 0), $user->pays);
+                $num['price_local'] = $this->currencyService->convertUsdToLocal((float) ($num['price'] ?? 0), $user->pays);
                 $num['currency'] = $user->pays->currency_code;
+
                 return $num;
             }, $numbers);
         }
@@ -46,7 +48,7 @@ class NumberController extends Controller
         return response()->json([
             'success' => true,
             'provider' => config('services.numbers.default_provider'),
-            'numbers' => $numbers
+            'numbers' => $numbers,
         ]);
     }
 
@@ -70,7 +72,7 @@ class NumberController extends Controller
         if ($maxNumbers > 0 && $currentNumbersCount >= $maxNumbers) {
             return response()->json([
                 'success' => false,
-                'message' => "Votre plan actuel limite à {$maxNumbers} numéros actifs."
+                'message' => "Votre plan actuel limite à {$maxNumbers} numéros actifs.",
             ], 403);
         }
 
@@ -167,7 +169,7 @@ class NumberController extends Controller
 
         return response()->json([
             'success' => true,
-            'numbers' => $numbers
+            'numbers' => $numbers,
         ]);
     }
 
@@ -179,15 +181,15 @@ class NumberController extends Controller
             return response()->json(['success' => false, 'message' => 'Utilisateur non authentifié.'], 401);
         }
 
-        $messages = \App\Models\SmsMessage::whereHas('userNumber', function ($query) use ($user) {
+        $messages = SmsMessage::whereHas('userNumber', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })
-        ->orderBy('received_at', 'desc')
-        ->paginate(20);
+            ->orderBy('received_at', 'desc')
+            ->paginate(20);
 
         return response()->json([
             'success' => true,
-            'messages' => $messages
+            'messages' => $messages,
         ]);
     }
 }
