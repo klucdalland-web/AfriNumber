@@ -80,7 +80,7 @@ class WalletController extends Controller
         $balanceLocal = $pays
             ? $this->currencyService->convertUsdToLocal($balanceUsd, $pays)
             : $balanceUsd;
-
+$devise = \App\Models\Devise::where('code', $pays->currency_code)->first();
         return response()->json([
             'success' => true,
             'balance_usd' => $balanceUsd,
@@ -88,6 +88,7 @@ class WalletController extends Controller
             'currency' => $pays->currency_code ?? 'USD',
             'numero_compte' => $compte->numero_compte,
             'statut_compte' => $compte->statut,
+            "label"=>$devise->label??null
         ]);
     }
 }
