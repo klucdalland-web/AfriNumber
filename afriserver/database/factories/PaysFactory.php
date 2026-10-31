@@ -21,8 +21,12 @@ class PaysFactory extends Factory
         return [
             'continent_id' => Continent::factory(),
             'organisation_id' => null,
+            'devise_id' => null,
             'label' => fake()->unique()->country(),
             'code' => fake()->unique()->countryCode(),
+            'currency_code' => null,
+            'currency_symbol' => null,
+            'exchange_rate' => 1,
             'indicatif' => '+'.fake()->numberBetween(1, 999),
             'timezone' => 'Africa/Abidjan',
             'description' => fake()->optional()->sentence(),

@@ -21,8 +21,21 @@ class PaysResource extends JsonResource
             'label' => $this->label,
             'code' => $this->code,
             'indicatif' => $this->indicatif,
+            'timezone' => $this->timezone,
+            'currency_code' => $this->currency_code,
+            'currency_symbol' => $this->currency_symbol,
+            'exchange_rate' => $this->exchange_rate,
+            'devise_id' => $this->devise_id,
             'actif' => $this->when(isset($this->actif), (bool) $this->actif),
             'organisation_id' => $this->organisation_id,
+            'devise' => $this->whenLoaded('devise', function () {
+                return [
+                    'id' => $this->devise?->id,
+                    'code' => $this->devise?->code,
+                    'label' => $this->devise?->label,
+                    'symbole' => $this->devise?->symbole,
+                ];
+            }),
             'organisation' => $this->whenLoaded('organisation', function () {
                 return [
                     'id' => $this->organisation?->id,

@@ -19,7 +19,10 @@ class PaysController extends Controller
         $pays = Pays::query()
             ->whereNotNull('organisation_id')
             ->where('actif', true)
-            ->with('organisation:id,label,description')
+            ->with([
+                'organisation:id,label,description',
+                'devise:id,code,label,symbole',
+            ])
             ->orderBy('label')
             ->get();
 
@@ -39,7 +42,10 @@ class PaysController extends Controller
         $pays = Pays::query()
             ->whereNotNull('organisation_id')
             ->where('actif', true)
-            ->with('organisation:id,label,description')
+            ->with([
+                'organisation:id,label,description',
+                'devise:id,code,label,symbole',
+            ])
             ->find($pay);
 
         if (! $pays) {

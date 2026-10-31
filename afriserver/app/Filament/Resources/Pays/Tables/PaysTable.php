@@ -29,6 +29,15 @@ class PaysTable
                 TextColumn::make('indicatif')
                     ->label('Indicatif')
                     ->toggleable(),
+                TextColumn::make('devise.code')
+                    ->label('Devise')
+                    ->badge()
+                    ->placeholder('—')
+                    ->toggleable(),
+                TextColumn::make('exchange_rate')
+                    ->label('Taux')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('timezone')
                     ->label('Fuseau')
                     ->placeholder('—')

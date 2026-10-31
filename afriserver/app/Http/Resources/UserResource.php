@@ -26,6 +26,14 @@ class UserResource extends JsonResource
             'phone_number' => $this->phone_number,
             'statut' => $this->statut,
             'status_valide' => $this->status_valide,
+            'solde' => $this->when(
+                $this->relationLoaded('compte'),
+                fn () => (float) ($this->compte?->solde ?? 0)
+            ),
+            'numero_compte' => $this->when(
+                $this->relationLoaded('compte'),
+                fn () => $this->compte?->numero_compte
+            ),
             'type_user' => TypeUserResource::make($this->whenLoaded('typeUser')),
             'pays' => PaysResource::make($this->whenLoaded('pays')),
             'organisation' => $this->when(

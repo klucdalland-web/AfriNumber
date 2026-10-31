@@ -3,18 +3,24 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Services\NumberProviderManager;
+use App\Models\TypeTransaction;
 use App\Models\UserNumber;
+use App\Services\CompteService;
+use App\Services\CurrencyService;
+use App\Services\NumberProviderManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class NumberController extends Controller
 {
     protected NumberProviderManager $providerManager;
 
-    public function __construct(NumberProviderManager $providerManager, protected \App\Services\CurrencyService $currencyService)
-    {
+    public function __construct(
+        NumberProviderManager $providerManager,
+        protected CurrencyService $currencyService,
+        protected CompteService $compteService,
+    ) {
         $this->providerManager = $providerManager;
     }
 
@@ -80,17 +86,18 @@ class NumberController extends Controller
 
         $price = (float) ($selectedNumber['price'] ?? 0);
 
-        // --- ÉTAPE C : Vérification du solde ---
-        if ($user->balance < $price) {
+        // --- ÉTAPE C : Vérification du solde (comptes.solde) ---
+        $solde = $this->compteService->solde($user);
+        if ($solde < $price) {
             return response()->json([
                 'success' => false,
-                'message' => "Solde insuffisant. Il vous manque " . ($price - $user->balance) . " $."
+                'message' => 'Solde insuffisant. Il vous manque '.($price - $solde).' $.',
             ], 402);
         }
 
         // --- ÉTAPE D : Transaction Atomique ---
         try {
-            return DB::transaction(function () use ($user, $provider, $request, $selectedNumber, $price) {
+            return DB::transaction(function () use ($user, $provider, $request, $price) {
                 // 1. Appel au fournisseur pour l'achat réel
                 $result = $provider->purchaseNumber(
                     $request->phone_number,
@@ -101,16 +108,16 @@ class NumberController extends Controller
                     throw new \Exception($result['message'] ?? 'Échec de l\'achat chez le fournisseur.');
                 }
 
-                // 2. Débit du solde utilisateur
-                $user->decrement('balance', $price);
+                // 2. Débit du compte wallet
+                $compte = $this->compteService->debit($user, $price);
 
                 // 3. Enregistrement de la transaction financière
                 $user->transactions()->create([
-                    'type_transaction_id' => \App\Models\TypeTransaction::where('code', 'number')->first()?->id,
+                    'type_transaction_id' => TypeTransaction::where('code', 'number')->first()?->id,
                     'amount' => $price,
                     'currency' => $user->pays->currency_code ?? 'USD',
+                    'payment_method' => 'wallet',
                     'status' => 'paid',
-                    'description' => 'Achat du numéro ' . $request->phone_number,
                     'paid_at' => now(),
                 ]);
 
@@ -132,15 +139,15 @@ class NumberController extends Controller
                     'message' => 'Numéro activé et lié à votre compte avec succès !',
                     'data' => [
                         'number' => $userNumber->phone_number,
-                        'remaining_balance' => $user->fresh()->balance,
-                        'user_number_id' => $userNumber->id
-                    ]
+                        'remaining_balance' => (float) $compte->solde,
+                        'user_number_id' => $userNumber->id,
+                    ],
                 ]);
             });
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la finalisation de l\'achat : ' . $e->getMessage(),
+                'message' => 'Erreur lors de la finalisation de l\'achat : '.$e->getMessage(),
             ], 500);
         }
     }

@@ -21,7 +21,9 @@ class RequiredDataSeeder extends Seeder
         return [
             TypeUserSeeder::class,
             ContinentSeeder::class,
+            DeviseSeeder::class,
             PaysSeeder::class,
+            PaysCurrencySeeder::class,
             OrganisationSeeder::class,
             PlatformSeeder::class,
             TypePieceIdentiteSeeder::class,

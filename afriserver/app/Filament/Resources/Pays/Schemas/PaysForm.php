@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Pays\Schemas;
 
+use App\Models\Devise;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -47,6 +48,40 @@ class PaysForm
                             ->searchable()
                             ->preload()
                             ->nullable(),
+                        Select::make('devise_id')
+                            ->label('Devise')
+                            ->relationship('devise', 'label')
+                            ->getOptionLabelFromRecordUsing(
+                                fn ($record): string => "{$record->code} — {$record->label} ({$record->symbole})"
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->live()
+                            ->afterStateUpdated(function ($state, callable $set): void {
+                                if (! $state) {
+                                    return;
+                                }
+
+                                $devise = Devise::query()->find($state);
+                                if ($devise) {
+                                    $set('currency_code', $devise->code);
+                                    $set('currency_symbol', $devise->symbole);
+                                }
+                            }),
+                        TextInput::make('currency_code')
+                            ->label('Code devise')
+                            ->maxLength(3)
+                            ->placeholder('XAF'),
+                        TextInput::make('currency_symbol')
+                            ->label('Symbole')
+                            ->maxLength(10)
+                            ->placeholder('FCFA'),
+                        TextInput::make('exchange_rate')
+                            ->label('Taux de conversion')
+                            ->numeric()
+                            ->default(1)
+                            ->helperText('Taux local → USD (ex. 600 pour XAF).'),
                         TextInput::make('description')
                             ->label('Description')
                             ->maxLength(500),

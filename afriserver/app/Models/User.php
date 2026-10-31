@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\CompteService;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -18,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'phone_number', 'statut', 'status_valide', 'pays_id', 'type_user_id', 'balance', 'first_name', 'failed_login_attempts',
+#[Fillable(['name', 'email', 'password', 'phone_number', 'statut', 'status_valide', 'pays_id', 'type_user_id', 'first_name', 'failed_login_attempts',
     'locked_until', ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
@@ -48,6 +49,18 @@ class User extends Authenticatable implements FilamentUser
         'statut' => 'actif',
         'status_valide' => 'non_valide',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            // Un compte wallet par utilisateur API (évite les doublons via user_id unique)
+            if ($user->compte()->exists()) {
+                return;
+            }
+
+            app(CompteService::class)->ensureCompte($user);
+        });
+    }
 
     public function pays(): BelongsTo
     {
@@ -99,6 +112,22 @@ class User extends Authenticatable implements FilamentUser
     public function userNumbers(): HasMany
     {
         return $this->hasMany(UserNumber::class);
+    }
+
+    /**
+     * @return HasOne<Compte, $this>
+     */
+    public function compte(): HasOne
+    {
+        return $this->hasOne(Compte::class);
+    }
+
+    /**
+     * Solde wallet (USD) via la table comptes. 0 si pas encore de compte.
+     */
+    public function solde(): float
+    {
+        return (float) ($this->compte?->solde ?? 0);
     }
 
     public function activeSubscription(): ?Subscription
