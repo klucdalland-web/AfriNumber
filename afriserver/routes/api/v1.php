@@ -8,12 +8,37 @@ use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PaysController;
 use App\Http\Controllers\Api\V1\PieceIdentiteController;
 use App\Http\Controllers\Api\V1\PlanController;
-use App\Http\Controllers\Api\V1\ProfileVerificationController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\TypeNotificationController;
 use App\Http\Controllers\Api\V1\TypePieceIdentiteController;
 use App\Http\Controllers\Api\V1\UserController;
+
+
+
+
+
+
+use App\Http\Controllers\API\NumberController;
+use App\Http\Controllers\Api\V1\ProfileVerificationController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/numbers/search', [NumberController::class, 'search']);
+    Route::post('/numbers/buy', [NumberController::class, 'buy']);
+    Route::get('/numbers/my', [NumberController::class, 'myNumbers']);
+    Route::get('/numbers/messages', [NumberController::class, 'myMessages']);
+
+    Route::get('/wallet/balance', [\App\Http\Controllers\Api\WalletController::class, 'balance']);
+    Route::post('/wallet/topup', [\App\Http\Controllers\Api\WalletController::class, 'topUp']);
+});
+
+
+
+
+
+
+
+
 
 // Référentiel organisations / pays — public (inscription)
 Route::get('/organisations', [OrganisationController::class, 'index'])->name('organisations.index');
